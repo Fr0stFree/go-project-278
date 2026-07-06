@@ -2,11 +2,14 @@ GOLANGCI_LINT_VERSION := v2.12.2
 GOLANGCI_LINT := $(shell go env GOPATH)/bin/golangci-lint
 GOLANGCI_LINT_CONFIG := .golangci.yml
 
+AIR_VERSION := latest
+AIR := $(shell go env GOPATH)/bin/air
+
 BINARY_PATH := ./bin/shortener
 ENTRYPOINT_PATH := ./cmd/shortener
 COVERAGE_PROFILE := coverage.out
 
-.PHONY: build run test test-coverage lint lint-fix fmt install-lint require-lint
+.PHONY: build run dev test test-coverage lint lint-fix fmt install-lint require-lint
 
 build:
 	@go build -o $(BINARY_PATH) $(ENTRYPOINT_PATH)
@@ -16,6 +19,9 @@ run:
 
 test:
 	@go test ./... -v
+
+dev:
+	@$(AIR)
 
 test-coverage:
 	@go test ./... -coverprofile=$(COVERAGE_PROFILE)
