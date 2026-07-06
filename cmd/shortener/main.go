@@ -1,21 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"log"
+	"shortener/internal/app"
+	"shortener/internal/config"
 )
 
 func main() {
-	const Port int = 8080
-	router := gin.Default()
+	cfg := config.New()
+	runner := app.New(cfg)
 
-	router.GET("/health", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{})
-	})
-
-	if err := router.Run(fmt.Sprintf(":%d", Port)); err != nil {
-		panic(err)
+	if err := runner.Run(); err != nil {
+		log.Fatal(err)
 	}
 }
