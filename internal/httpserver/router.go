@@ -2,6 +2,8 @@ package httpserver
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"shortener/internal/httpserver/handler"
 )
 
 func newRouter() *gin.Engine {
@@ -9,7 +11,8 @@ func newRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.GET("/ping", pingHandler)
+	healthHandler := handler.NewHealthHandler()
+	router.GET("/ping", healthHandler.Ping)
 
 	return router
 }

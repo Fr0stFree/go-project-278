@@ -17,8 +17,9 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Config) *App {
+	server := httpserver.New(cfg.HTTP)
 	return &App{
-		server: httpserver.New(cfg.HTTP),
+		server: server,
 		cfg:    cfg,
 	}
 }
