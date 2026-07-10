@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"shortener/internal/config"
 	"shortener/internal/httpserver"
+	"shortener/internal/shortener"
+	"shortener/internal/storage/memory"
 )
 
 // App represents the main application structure
@@ -17,7 +19,10 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Config) *App {
-	server := httpserver.New(cfg.HTTP)
+	storage := memory.NewStorage()
+	service := shortener.NewService(storage)
+	server := httpserver.New(cfg.HTTP, service)
+
 	return &App{
 		server: server,
 		cfg:    cfg,

@@ -6,13 +6,12 @@ import (
 	"shortener/internal/httpserver/handler"
 )
 
-func newRouter() *gin.Engine {
+func newRouter(h *handler.Handler) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	healthHandler := handler.NewHealthHandler()
-	router.GET("/ping", healthHandler.Ping)
+	router.GET("/ping", h.Health.Ping)
 
 	return router
 }

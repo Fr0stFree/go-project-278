@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type HealthHandler struct{}
+type healthHandler struct{}
 
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
+func newHealthHandler() *healthHandler {
+	return &healthHandler{}
 }
 
-func (h *HealthHandler) Ping(ctx *gin.Context) {
+func (h *healthHandler) Ping(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "pong")
 }
