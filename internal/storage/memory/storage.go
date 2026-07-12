@@ -7,29 +7,37 @@ import (
 
 // Storage is an in-memory implementation of the Storage interface.
 type Storage struct {
-	data map[string]string
+	data       map[int]storage.LinkDBOut
+	sequenceID int
 }
 
 // NewStorage creates a new instance of the in-memory storage.
 func NewStorage() *Storage {
 	return &Storage{
-		data: make(map[string]string),
+		data:       make(map[int]storage.LinkDBOut),
+		sequenceID: 0,
 	}
 }
 
-// SaveURL saves the original URL and its corresponding short URL in memory.
-func (s *Storage) SaveURL(originalURL, shortURL string) error {
-	s.data[shortURL] = originalURL
+// SaveLink saves the original link and its corresponding short name in memory.
+func (s *Storage) SaveLink(link storage.LinkDBIn) (storage.LinkDBOut, error) {
+	s.sequenceID++
+	obj := storage.LinkDBOut{
+		ID:          s.sequenceID,
+		OriginalURL: link.OriginalURL,
+		ShortName:   link.ShortName,
+	}
+	s.data[s.sequenceID] = obj
 
-	return nil
+	return obj, nil
 }
 
-// GetOriginalURL retrieves the original URL corresponding to the given short URL from memory.
-func (s *Storage) GetOriginalURL(shortURL string) (string, error) {
-	originalURL, exists := s.data[shortURL]
+// GetLink retrieves the original URL corresponding to the given link ID from memory.
+func (s *Storage) GetLink(ID int) (storage.LinkDBOut, error) {
+	link, exists := s.data[ID]
 	if !exists {
-		return "", storage.ErrURLNotFound
+		return storage.LinkDBOut{}, storage.ErrLinkNotFound
 	}
 
-	return originalURL, nil
+	return link, nil
 }

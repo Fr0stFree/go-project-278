@@ -3,6 +3,6 @@ package storage
 import "errors"
 
 var (
-	// ErrURLNotFound is returned when a requested URL is not found in the storage.
-	ErrURLNotFound = errors.New("URL not found")
+	// ErrLinkNotFound is returned when a requested link is not found in the storage.
+	ErrLinkNotFound = errors.New("link not found")
 )

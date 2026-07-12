@@ -1,8 +1,21 @@
-// Package storage defines the interface, errors and common types for URL storage systems.
+// Package storage defines the interface, errors and common types for link storage systems.
 package storage
 
-// Storage defines the interface for a URL storage system.
+// LinkDBOut represents the output data returned when retrieving a link from the storage system.
+type LinkDBOut struct {
+	ID          int
+	OriginalURL string
+	ShortName   string
+}
+
+// LinkDBIn represents the input data required to save a link in the storage system.
+type LinkDBIn struct {
+	OriginalURL string
+	ShortName   string
+}
+
+// Storage defines the interface for a link storage system.
 type Storage interface {
-	SaveURL(originalURL, shortURL string) error
-	GetOriginalURL(shortURL string) (string, error)
+	SaveLink(link LinkDBIn) (LinkDBOut, error)
+	GetLink(ID int) (LinkDBOut, error)
 }

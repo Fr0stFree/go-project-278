@@ -5,7 +5,8 @@ import "time"
 
 // Config represents the overall configuration for the application.
 type Config struct {
-	HTTP HTTPConfig
+	HTTP    HTTPConfig
+	BaseURL string
 }
 
 // HTTPConfig represents the configuration for the HTTP server.
@@ -23,5 +24,6 @@ func New() *Config {
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		},
+		BaseURL: "http://localhost:8080", // TODO: make it configurable via environment variable or config file
 	}
 }
