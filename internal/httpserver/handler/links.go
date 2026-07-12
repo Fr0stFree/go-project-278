@@ -46,7 +46,7 @@ func (l *linkHandler) Get(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
 	}
 
-	link, err := l.Service.GetOriginalLink(linkID)
+	link, err := l.Service.GetLink(linkID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -54,4 +54,16 @@ func (l *linkHandler) Get(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, getLinkResponseBody(link))
+}
+
+// List retrieves a list of all shortened links.
+func (l *linkHandler) List(ctx *gin.Context) {
+	links, err := l.Service.ListLinks()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }

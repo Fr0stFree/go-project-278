@@ -41,8 +41,8 @@ func (s *Service) ShortenLink(originalURL, shortName string) (Link, error) {
 	}, nil
 }
 
-// GetOriginalLink retrieves the original URL corresponding to the given short URL.
-func (s *Service) GetOriginalLink(id int) (Link, error) {
+// GetLink retrieves the original URL corresponding to the given short URL.
+func (s *Service) GetLink(id int) (Link, error) {
 	linkDBOut, err := s.storage.GetLink(id)
 	if err != nil {
 		return Link{}, err
@@ -54,4 +54,24 @@ func (s *Service) GetOriginalLink(id int) (Link, error) {
 		ShortName:   linkDBOut.ShortName,
 		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
 	}, nil
+}
+
+// ListLinks retrieves a list of all shortened links stored in the service.
+func (s *Service) ListLinks() ([]Link, error) {
+	linksDBOut, err := s.storage.ListLinks()
+	if err != nil {
+		return nil, err
+	}
+
+	links := make([]Link, len(linksDBOut))
+	for idx, linkDBOut := range linksDBOut {
+		links[idx] = Link{
+			ID:          linkDBOut.ID,
+			OriginalURL: linkDBOut.OriginalURL,
+			ShortName:   linkDBOut.ShortName,
+			ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
+		}
+	}
+
+	return links, nil
 }

@@ -13,7 +13,7 @@ type createLinkResponseBody shortener.Link
 
 type getLinkResponseBody shortener.Link
 
-// type listLinksResponseBody []shortener.Link
+type listLinksResponseBody []shortener.Link
 
 // type updateLinkRequestBody struct {
 // 	OriginalURL string `json:"original_url" binding:"required"`

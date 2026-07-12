@@ -41,3 +41,13 @@ func (s *Storage) GetLink(ID int) (storage.LinkDBOut, error) {
 
 	return link, nil
 }
+
+// ListLinks retrieves a list of all shortened links stored in memory.
+func (s *Storage) ListLinks() ([]storage.LinkDBOut, error) {
+	links := make([]storage.LinkDBOut, 0, len(s.data))
+	for _, link := range s.data {
+		links = append(links, link)
+	}
+
+	return links, nil
+}
