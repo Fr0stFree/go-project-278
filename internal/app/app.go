@@ -19,7 +19,7 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Config) *App {
-	repo := memory.NewRepository()
+	repo := memory.NewLinkRepository()
 	shortener := shortener.NewService(repo, cfg.BaseURL)
 	server := httpserver.New(cfg.HTTP, shortener)
 

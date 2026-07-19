@@ -14,8 +14,8 @@ type LinkDBIn struct {
 	ShortName   string
 }
 
-// LinkRepository defines the interface for link storage systems.
-type LinkRepository interface {
+// AbstractLinkRepository defines the interface for link storage systems.
+type AbstractLinkRepository interface {
 	SaveLink(link LinkDBIn) (LinkDBOut, error)
 	GetLink(ID int) (LinkDBOut, error)
 	ListLinks() ([]LinkDBOut, error)

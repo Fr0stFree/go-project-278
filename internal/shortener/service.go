@@ -7,12 +7,12 @@ import (
 
 // Service provides methods to shorten URLs and retrieve original URLs.
 type Service struct {
-	repo    storage.LinkRepository
+	repo    storage.AbstractLinkRepository
 	baseURL string
 }
 
 // NewService creates a new instance of the Service with the provided storage implementation.
-func NewService(repo storage.LinkRepository, baseURL string) *Service {
+func NewService(repo storage.AbstractLinkRepository, baseURL string) *Service {
 	return &Service{
 		repo:    repo,
 		baseURL: baseURL,
