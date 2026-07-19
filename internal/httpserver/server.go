@@ -10,7 +10,7 @@ import (
 )
 
 // New creates a new HTTP server with the specified configuration.
-func New(cfg config.HTTPConfig, service *shortener.Service) *http.Server {
+func New(cfg *config.HTTP, service *shortener.Service) *http.Server {
 	handler := handler.New(service)
 	router := newRouter(handler)
 	address := fmt.Sprintf(":%d", cfg.Port)

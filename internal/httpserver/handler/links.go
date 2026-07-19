@@ -72,19 +72,23 @@ func (l *linkHandler) Update(ctx *gin.Context) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+
 		return
 	}
 
 	var body updateLinkRequestBody
+
 	err = ctx.ShouldBindJSON(&body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
 		return
 	}
 
 	link, err := l.Service.UpdateLink(linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
 		return
 	}
 
@@ -95,12 +99,14 @@ func (l *linkHandler) Delete(ctx *gin.Context) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+
 		return
 	}
 
 	err = l.Service.DeleteLink(linkID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
 		return
 	}
 

@@ -2,20 +2,21 @@
 package shortener
 
 import (
+	"shortener/internal/config"
 	"shortener/internal/storage"
 )
 
 // Service provides methods to shorten URLs and retrieve original URLs.
 type Service struct {
 	linkRepository storage.AbstractLinkRepository
-	baseURL        string
+	config         *config.App
 }
 
 // NewService creates a new instance of the Service with the provided storage implementation.
-func NewService(linkRepository storage.AbstractLinkRepository, baseURL string) *Service {
+func NewService(linkRepository storage.AbstractLinkRepository, config *config.App) *Service {
 	return &Service{
 		linkRepository: linkRepository,
-		baseURL:        baseURL,
+		config:         config,
 	}
 }
 
@@ -24,10 +25,12 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 	if shortName == "" {
 		shortName = toHashString(originalURL, 6)
 	}
+
 	linkDBIn := storage.LinkDBIn{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
 	}
+
 	linkDBOut, err := s.linkRepository.SaveLink(linkDBIn)
 	if err != nil {
 		return Link{}, err
@@ -84,6 +87,6 @@ func (s *Service) buildLink(linkDBOut storage.LinkDBOut) Link {
 		ID:          linkDBOut.ID,
 		OriginalURL: linkDBOut.OriginalURL,
 		ShortName:   linkDBOut.ShortName,
-		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
+		ShortURL:    s.config.BaseURL + "/" + linkDBOut.ShortName,
 	}
 }

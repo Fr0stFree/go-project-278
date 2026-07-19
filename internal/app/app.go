@@ -13,14 +13,14 @@ import (
 // App represents the main application structure
 type App struct {
 	server *http.Server
-	cfg    *config.Config
+	cfg    *config.Root
 }
 
 // New creates a new App instance with the provided configuration
-func New(cfg *config.Config) *App {
-	linkRepo := newLinkRepository(cfg.Storage)
-	shortener := shortener.NewService(linkRepo, cfg.BaseURL)
-	server := httpserver.New(cfg.HTTP, shortener)
+func New(cfg *config.Root) *App {
+	linkRepo := selectLinkRepository(&cfg.Storage)
+	shortener := shortener.NewService(linkRepo, &cfg.App)
+	server := httpserver.New(&cfg.HTTP, shortener)
 
 	return &App{
 		server: server,

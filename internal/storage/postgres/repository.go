@@ -2,15 +2,20 @@
 package postgres
 
 import (
+	"shortener/internal/config"
 	"shortener/internal/storage"
 )
 
 // LinkRepository is a PostgreSQL implementation of storage.AbstractLinkRepository.
-type LinkRepository struct{}
+type LinkRepository struct {
+	config *config.Storage
+}
 
 // NewLinkRepository creates a new PostgreSQL link repository with the provided DSN.
-func NewLinkRepository(dsn string) *LinkRepository {
-	return nil
+func NewLinkRepository(config *config.Storage) *LinkRepository {
+	return &LinkRepository{
+		config: config,
+	}
 }
 
 func (r *LinkRepository) SaveLink(link storage.LinkDBIn) (storage.LinkDBOut, error) {

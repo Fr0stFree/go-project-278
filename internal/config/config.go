@@ -3,38 +3,56 @@ package config
 
 import "time"
 
-// Config represents the overall configuration for the application.
-type Config struct {
-	HTTP    HTTPConfig
-	Storage StorageConfig
+// Root represents the overall configuration for the application.
+type Root struct {
+	App     App
+	HTTP    HTTP
+	Storage Storage
+}
+
+// App represents the configuration for business logic of the application.
+type App struct {
 	BaseURL string
 }
 
-// HTTPConfig represents the configuration for the HTTP server.
-type HTTPConfig struct {
+// HTTP represents the configuration for the HTTP server.
+type HTTP struct {
 	Port         int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 }
 
-type StorageConfig struct {
-	Type string
-	DSN  string
+// Storage represents the configuration for the storage backend.
+type Storage struct {
+	Type         string
+	Host         string
+	Port         int
+	User         string
+	Password     string
+	DBName       string
+	IsSSLEnabled bool
 }
 
 // New creates a new Config instance with default values.
-func New() *Config {
+func New() *Root {
 	// TODO: make it configurable via environment variable or config file
-	return &Config{
-		HTTP: HTTPConfig{
+	return &Root{
+		HTTP: HTTP{
 			Port:         8080,
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		},
-		Storage: StorageConfig{
-			Type: "memory",
-			DSN:  "",
+		Storage: Storage{
+			Type:         "memory",
+			Host:         "localhost",
+			Port:         5432,
+			User:         "postgres",
+			Password:     "password",
+			DBName:       "shortener",
+			IsSSLEnabled: false,
 		},
-		BaseURL: "http://localhost:8080",
+		App: App{
+			BaseURL: "http://localhost:8080",
+		},
 	}
 }

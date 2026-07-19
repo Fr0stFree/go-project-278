@@ -57,6 +57,7 @@ func (r *LinkRepository) UpdateLink(ID int, update storage.LinkDBIn) (storage.Li
 	if !exists {
 		return storage.LinkDBOut{}, storage.ErrLinkNotFound
 	}
+
 	link.OriginalURL = update.OriginalURL
 	link.ShortName = update.ShortName
 	r.data[ID] = link
@@ -69,6 +70,7 @@ func (r *LinkRepository) DeleteLink(ID int) error {
 	if !exists {
 		return storage.ErrLinkNotFound
 	}
+
 	delete(r.data, ID)
 
 	return nil
