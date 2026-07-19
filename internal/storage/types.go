@@ -14,8 +14,8 @@ type LinkDBIn struct {
 	ShortName   string
 }
 
-// Storage defines the interface for a link storage system.
-type Storage interface {
+// LinkRepository defines the interface for link storage systems.
+type LinkRepository interface {
 	SaveLink(link LinkDBIn) (LinkDBOut, error)
 	GetLink(ID int) (LinkDBOut, error)
 	ListLinks() ([]LinkDBOut, error)

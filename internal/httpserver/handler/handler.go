@@ -12,9 +12,9 @@ type Handler struct {
 }
 
 // New creates a new Handler.
-func New(service *shortener.Service) *Handler {
+func New(shortener *shortener.Service) *Handler {
 	return &Handler{
 		Health: newHealthHandler(),
-		Link:   newLinkHandler(service),
+		Link:   newLinkHandler(shortener),
 	}
 }

@@ -7,14 +7,14 @@ import (
 
 // Service provides methods to shorten URLs and retrieve original URLs.
 type Service struct {
-	storage storage.Storage
+	repo    storage.LinkRepository
 	baseURL string
 }
 
 // NewService creates a new instance of the Service with the provided storage implementation.
-func NewService(storage storage.Storage, baseURL string) *Service {
+func NewService(repo storage.LinkRepository, baseURL string) *Service {
 	return &Service{
-		storage: storage,
+		repo:    repo,
 		baseURL: baseURL,
 	}
 }
@@ -28,7 +28,7 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 		OriginalURL: originalURL,
 		ShortName:   shortName,
 	}
-	linkDBOut, err := s.storage.SaveLink(linkDBIn)
+	linkDBOut, err := s.repo.SaveLink(linkDBIn)
 	if err != nil {
 		return Link{}, err
 	}
@@ -38,7 +38,7 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 
 // GetLink retrieves the original URL corresponding to the given short URL.
 func (s *Service) GetLink(id int) (Link, error) {
-	linkDBOut, err := s.storage.GetLink(id)
+	linkDBOut, err := s.repo.GetLink(id)
 	if err != nil {
 		return Link{}, err
 	}
@@ -48,7 +48,7 @@ func (s *Service) GetLink(id int) (Link, error) {
 
 // ListLinks retrieves a list of all shortened links stored in the service.
 func (s *Service) ListLinks() ([]Link, error) {
-	linksDBOut, err := s.storage.ListLinks()
+	linksDBOut, err := s.repo.ListLinks()
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error
 		ShortName:   shortName,
 	}
 
-	linkDBOut, err := s.storage.UpdateLink(id, linkDBIn)
+	linkDBOut, err := s.repo.UpdateLink(id, linkDBIn)
 	if err != nil {
 		return Link{}, err
 	}
@@ -76,7 +76,7 @@ func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error
 }
 
 func (s *Service) DeleteLink(id int) error {
-	return s.storage.DeleteLink(id)
+	return s.repo.DeleteLink(id)
 }
 
 func (s *Service) buildLink(linkDBOut storage.LinkDBOut) Link {
