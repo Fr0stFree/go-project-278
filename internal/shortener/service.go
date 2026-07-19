@@ -26,67 +26,67 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 		shortName = toHashString(originalURL, 6)
 	}
 
-	linkDBIn := storage.LinkDBIn{
+	insert := storage.LinkInsert{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
 	}
 
-	linkDBOut, err := s.linkRepository.SaveLink(linkDBIn)
+	record, err := s.linkRepository.SaveLink(insert)
 	if err != nil {
 		return Link{}, err
 	}
 
-	return s.buildLink(linkDBOut), nil
+	return s.buildLink(record), nil
 }
 
 // GetLink retrieves the original URL corresponding to the given short URL.
 func (s *Service) GetLink(id int) (Link, error) {
-	linkDBOut, err := s.linkRepository.GetLink(id)
+	record, err := s.linkRepository.GetLink(id)
 	if err != nil {
 		return Link{}, err
 	}
 
-	return s.buildLink(linkDBOut), nil
+	return s.buildLink(record), nil
 }
 
 // ListLinks retrieves a list of all shortened links stored in the service.
 func (s *Service) ListLinks() ([]Link, error) {
-	linksDBOut, err := s.linkRepository.ListLinks()
+	records, err := s.linkRepository.ListLinks()
 	if err != nil {
 		return nil, err
 	}
 
-	links := make([]Link, len(linksDBOut))
-	for idx, linkDBOut := range linksDBOut {
-		links[idx] = s.buildLink(linkDBOut)
+	links := make([]Link, len(records))
+	for idx, record := range records {
+		links[idx] = s.buildLink(record)
 	}
 
 	return links, nil
 }
 
 func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error) {
-	linkDBIn := storage.LinkDBIn{
+	update := storage.LinkUpdate{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
 	}
 
-	linkDBOut, err := s.linkRepository.UpdateLink(id, linkDBIn)
+	record, err := s.linkRepository.UpdateLink(id, update)
 	if err != nil {
 		return Link{}, err
 	}
 
-	return s.buildLink(linkDBOut), nil
+	return s.buildLink(record), nil
 }
 
 func (s *Service) DeleteLink(id int) error {
 	return s.linkRepository.DeleteLink(id)
 }
 
-func (s *Service) buildLink(linkDBOut storage.LinkDBOut) Link {
+func (s *Service) buildLink(record storage.LinkRecord) Link {
 	return Link{
-		ID:          linkDBOut.ID,
-		OriginalURL: linkDBOut.OriginalURL,
-		ShortName:   linkDBOut.ShortName,
-		ShortURL:    s.config.BaseURL + "/" + linkDBOut.ShortName,
+		ID:          record.ID,
+		OriginalURL: record.OriginalURL,
+		ShortName:   record.ShortName,
+		ShortURL:    s.config.BaseURL + "/" + record.ShortName,
 	}
 }

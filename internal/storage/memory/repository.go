@@ -7,44 +7,44 @@ import (
 
 // LinkRepository is an in-memory implementation of storage.AbstractLinkRepository.
 type LinkRepository struct {
-	data       map[int]storage.LinkDBOut
+	data       map[int]storage.LinkRecord
 	sequenceID int
 }
 
 // NewLinkRepository creates a new in-memory link repository.
 func NewLinkRepository() *LinkRepository {
 	return &LinkRepository{
-		data:       make(map[int]storage.LinkDBOut),
+		data:       make(map[int]storage.LinkRecord),
 		sequenceID: 0,
 	}
 }
 
 // SaveLink saves the original link and its corresponding short name in memory.
-func (r *LinkRepository) SaveLink(link storage.LinkDBIn) (storage.LinkDBOut, error) {
+func (r *LinkRepository) SaveLink(insert storage.LinkInsert) (storage.LinkRecord, error) {
 	r.sequenceID++
-	obj := storage.LinkDBOut{
+	link := storage.LinkRecord{
 		ID:          r.sequenceID,
-		OriginalURL: link.OriginalURL,
-		ShortName:   link.ShortName,
+		OriginalURL: insert.OriginalURL,
+		ShortName:   insert.ShortName,
 	}
-	r.data[r.sequenceID] = obj
+	r.data[r.sequenceID] = link
 
-	return obj, nil
+	return link, nil
 }
 
 // GetLink retrieves the original URL corresponding to the given link ID from memory.
-func (r *LinkRepository) GetLink(ID int) (storage.LinkDBOut, error) {
+func (r *LinkRepository) GetLink(ID int) (storage.LinkRecord, error) {
 	link, exists := r.data[ID]
 	if !exists {
-		return storage.LinkDBOut{}, storage.ErrLinkNotFound
+		return storage.LinkRecord{}, storage.ErrLinkNotFound
 	}
 
 	return link, nil
 }
 
 // ListLinks retrieves a list of all shortened links stored in memory.
-func (r *LinkRepository) ListLinks() ([]storage.LinkDBOut, error) {
-	links := make([]storage.LinkDBOut, 0, len(r.data))
+func (r *LinkRepository) ListLinks() ([]storage.LinkRecord, error) {
+	links := make([]storage.LinkRecord, 0, len(r.data))
 	for _, link := range r.data {
 		links = append(links, link)
 	}
@@ -52,10 +52,10 @@ func (r *LinkRepository) ListLinks() ([]storage.LinkDBOut, error) {
 	return links, nil
 }
 
-func (r *LinkRepository) UpdateLink(ID int, update storage.LinkDBIn) (storage.LinkDBOut, error) {
+func (r *LinkRepository) UpdateLink(ID int, update storage.LinkUpdate) (storage.LinkRecord, error) {
 	link, exists := r.data[ID]
 	if !exists {
-		return storage.LinkDBOut{}, storage.ErrLinkNotFound
+		return storage.LinkRecord{}, storage.ErrLinkNotFound
 	}
 
 	link.OriginalURL = update.OriginalURL

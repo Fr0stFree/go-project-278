@@ -24,13 +24,16 @@ type HTTP struct {
 
 // Storage represents the configuration for the storage backend.
 type Storage struct {
-	Type         string
-	Host         string
-	Port         int
-	User         string
-	Password     string
-	DBName       string
-	IsSSLEnabled bool
+	Type                  string
+	Host                  string
+	Port                  int
+	User                  string
+	Password              string
+	DBName                string
+	IsSSLEnabled          bool
+	MaxOpenConnections    int
+	MaxIdleConnections    int
+	ConnectionMaxLifetime time.Duration
 }
 
 // New creates a new Config instance with default values.
@@ -43,13 +46,16 @@ func New() *Root {
 			WriteTimeout: 10 * time.Second,
 		},
 		Storage: Storage{
-			Type:         "memory",
-			Host:         "localhost",
-			Port:         5432,
-			User:         "postgres",
-			Password:     "password",
-			DBName:       "shortener",
-			IsSSLEnabled: false,
+			Type:               "postgres",
+			Host:               "localhost",
+			Port:               5432,
+			User:               "postgres",
+			Password:           "postgres",
+			DBName:             "postgres",
+			IsSSLEnabled:       false,
+			MaxOpenConnections: 10,
+			MaxIdleConnections: 5,
+			ConnectionMaxLifetime:    5 * time.Minute,
 		},
 		App: App{
 			BaseURL: "http://localhost:8080",

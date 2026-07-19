@@ -18,7 +18,7 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Root) *App {
-	linkRepo := selectLinkRepository(&cfg.Storage)
+	linkRepo := startLinkRepository(&cfg.Storage)
 	shortener := shortener.NewService(linkRepo, &cfg.App)
 	server := httpserver.New(&cfg.HTTP, shortener)
 
