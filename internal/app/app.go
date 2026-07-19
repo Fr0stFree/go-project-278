@@ -8,7 +8,6 @@ import (
 	"shortener/internal/config"
 	"shortener/internal/httpserver"
 	"shortener/internal/shortener"
-	"shortener/internal/storage/memory"
 )
 
 // App represents the main application structure
@@ -19,8 +18,8 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Config) *App {
-	repo := memory.NewLinkRepository()
-	shortener := shortener.NewService(repo, cfg.BaseURL)
+	linkRepo := newLinkRepository(cfg.Storage)
+	shortener := shortener.NewService(linkRepo, cfg.BaseURL)
 	server := httpserver.New(cfg.HTTP, shortener)
 
 	return &App{
