@@ -24,21 +24,16 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 	if shortName == "" {
 		shortName = toHashString(originalURL, 6)
 	}
-
-	linkDBOut, err := s.storage.SaveLink(storage.LinkDBIn{
+	linkDBIn := storage.LinkDBIn{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
-	})
+	}
+	linkDBOut, err := s.storage.SaveLink(linkDBIn)
 	if err != nil {
 		return Link{}, err
 	}
 
-	return Link{
-		ID:          linkDBOut.ID,
-		OriginalURL: linkDBOut.OriginalURL,
-		ShortName:   linkDBOut.ShortName,
-		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
-	}, nil
+	return s.buildLink(linkDBOut), nil
 }
 
 // GetLink retrieves the original URL corresponding to the given short URL.
@@ -48,12 +43,7 @@ func (s *Service) GetLink(id int) (Link, error) {
 		return Link{}, err
 	}
 
-	return Link{
-		ID:          linkDBOut.ID,
-		OriginalURL: linkDBOut.OriginalURL,
-		ShortName:   linkDBOut.ShortName,
-		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
-	}, nil
+	return s.buildLink(linkDBOut), nil
 }
 
 // ListLinks retrieves a list of all shortened links stored in the service.
@@ -65,12 +55,7 @@ func (s *Service) ListLinks() ([]Link, error) {
 
 	links := make([]Link, len(linksDBOut))
 	for idx, linkDBOut := range linksDBOut {
-		links[idx] = Link{
-			ID:          linkDBOut.ID,
-			OriginalURL: linkDBOut.OriginalURL,
-			ShortName:   linkDBOut.ShortName,
-			ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
-		}
+		links[idx] = s.buildLink(linkDBOut)
 	}
 
 	return links, nil
@@ -87,14 +72,18 @@ func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error
 		return Link{}, err
 	}
 
+	return s.buildLink(linkDBOut), nil
+}
+
+func (s *Service) DeleteLink(id int) error {
+	return s.storage.DeleteLink(id)
+}
+
+func (s *Service) buildLink(linkDBOut storage.LinkDBOut) Link {
 	return Link{
 		ID:          linkDBOut.ID,
 		OriginalURL: linkDBOut.OriginalURL,
 		ShortName:   linkDBOut.ShortName,
 		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
-	}, nil
-}
-
-func (s *Service) DeleteLink(id int) error {
-	return s.storage.DeleteLink(id)
+	}
 }
