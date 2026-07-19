@@ -90,3 +90,19 @@ func (l *linkHandler) Update(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, updateLinkResponseBody(link))
 }
+
+func (l *linkHandler) Delete(ctx *gin.Context) {
+	linkID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+		return
+	}
+
+	err = l.Service.DeleteLink(linkID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}

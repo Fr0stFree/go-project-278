@@ -16,7 +16,7 @@ func newRouter(h *handler.Handler) *gin.Engine {
 	router.GET("/api/links/:id", h.Link.Get)
 	router.GET("/api/links", h.Link.List)
 	router.PUT("/api/links/:id", h.Link.Update)
-	// router.DELETE("/api/links/:id", h.Link.Delete)
+	router.DELETE("/api/links/:id", h.Link.Delete)
 
 	return router
 }

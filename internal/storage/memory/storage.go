@@ -63,3 +63,13 @@ func (s *Storage) UpdateLink(ID int, update storage.LinkDBIn) (storage.LinkDBOut
 
 	return link, nil
 }
+
+func (s *Storage) DeleteLink(ID int) error {
+	_, exists := s.data[ID]
+	if !exists {
+		return storage.ErrLinkNotFound
+	}
+	delete(s.data, ID)
+	
+	return nil
+}

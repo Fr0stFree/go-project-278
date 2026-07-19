@@ -20,4 +20,5 @@ type Storage interface {
 	GetLink(ID int) (LinkDBOut, error)
 	ListLinks() ([]LinkDBOut, error)
 	UpdateLink(ID int, update LinkDBIn) (LinkDBOut, error)
+	DeleteLink(ID int) error
 }

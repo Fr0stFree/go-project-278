@@ -94,3 +94,7 @@ func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error
 		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
 	}, nil
 }
+
+func (s *Service) DeleteLink(id int) error {
+	return s.storage.DeleteLink(id)
+}
