@@ -51,3 +51,15 @@ func (s *Storage) ListLinks() ([]storage.LinkDBOut, error) {
 
 	return links, nil
 }
+
+func (s *Storage) UpdateLink(ID int, update storage.LinkDBIn) (storage.LinkDBOut, error) {
+	link, exists := s.data[ID]
+	if !exists {
+		return storage.LinkDBOut{}, storage.ErrLinkNotFound
+	}
+	link.OriginalURL = update.OriginalURL
+	link.ShortName = update.ShortName
+	s.data[ID] = link
+
+	return link, nil
+}

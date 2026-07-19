@@ -19,8 +19,8 @@ func NewService(storage storage.Storage, baseURL string) *Service {
 	}
 }
 
-// ShortenLink generates a short code for the given original URL and saves the mapping in storage.
-func (s *Service) ShortenLink(originalURL, shortName string) (Link, error) {
+// CreateLink generates a short code for the given original URL and saves the mapping in storage.
+func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 	if shortName == "" {
 		shortName = toHashString(originalURL, 6)
 	}
@@ -74,4 +74,23 @@ func (s *Service) ListLinks() ([]Link, error) {
 	}
 
 	return links, nil
+}
+
+func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error) {
+	linkDBIn := storage.LinkDBIn{
+		OriginalURL: originalURL,
+		ShortName:   shortName,
+	}
+
+	linkDBOut, err := s.storage.UpdateLink(id, linkDBIn)
+	if err != nil {
+		return Link{}, err
+	}
+
+	return Link{
+		ID:          linkDBOut.ID,
+		OriginalURL: linkDBOut.OriginalURL,
+		ShortName:   linkDBOut.ShortName,
+		ShortURL:    s.baseURL + "/" + linkDBOut.ShortName,
+	}, nil
 }

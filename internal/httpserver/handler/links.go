@@ -29,7 +29,7 @@ func (l *linkHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	link, err := l.Service.ShortenLink(body.OriginalURL, body.ShortName)
+	link, err := l.Service.CreateLink(body.OriginalURL, body.ShortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -66,4 +66,27 @@ func (l *linkHandler) List(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
+}
+
+func (l *linkHandler) Update(ctx *gin.Context) {
+	linkID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+		return
+	}
+
+	var body updateLinkRequestBody
+	err = ctx.ShouldBindJSON(&body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	link, err := l.Service.UpdateLink(linkID, body.OriginalURL, body.ShortName)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, updateLinkResponseBody(link))
 }
