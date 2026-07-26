@@ -1,4 +1,3 @@
-// Package handler provides HTTP handlers for the application.
 package httpserver
 
 import (
@@ -7,14 +6,13 @@ import (
 	"shortener/internal/shortener"
 )
 
-// Handler provides HTTP handlers for the whole application.
-type Handler struct {
+type combinedHandlers struct {
 	Health *health.Handler
 	Link   *link.Handler
 }
 
-func newHandler(shortener *shortener.Service) *Handler {
-	return &Handler{
+func newHandlers(shortener *shortener.Service) *combinedHandlers {
+	return &combinedHandlers{
 		Health: health.NewHandler(),
 		Link:   link.NewHandler(shortener),
 	}

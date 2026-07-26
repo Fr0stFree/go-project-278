@@ -4,17 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func newRouter(h *Handler) *gin.Engine {
+func newRouter(c *combinedHandlers) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.GET("/ping", h.Health.Ping)
-	router.POST("/api/links", h.Link.Create)
-	router.GET("/api/links/:id", h.Link.Get)
-	router.GET("/api/links", h.Link.List)
-	router.PUT("/api/links/:id", h.Link.Update)
-	router.DELETE("/api/links/:id", h.Link.Delete)
+	router.GET("/ping", c.Health.Ping)
+	router.POST("/api/links", c.Link.Create)
+	router.GET("/api/links/:id", c.Link.Get)
+	router.GET("/api/links", c.Link.List)
+	router.PUT("/api/links/:id", c.Link.Update)
+	router.DELETE("/api/links/:id", c.Link.Delete)
 
 	return router
 }
