@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"shortener/internal/config"
-	"shortener/internal/httpserver/handler"
 	"shortener/internal/shortener"
 )
 
 // New creates a new HTTP server with the specified configuration.
 func New(cfg *config.HTTP, service *shortener.Service) *http.Server {
-	handler := handler.New(service)
+	handler := newHandler(service)
 	router := newRouter(handler)
 	address := fmt.Sprintf(":%d", cfg.Port)
 

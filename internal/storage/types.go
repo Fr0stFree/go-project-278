@@ -5,7 +5,7 @@ package storage
 type LinkRecord struct {
 	ID          int    `gorm:"primaryKey"`
 	OriginalURL string `gorm:"column:original_url;not null"`
-	ShortName   string `gorm:"column:short_name;not null"`
+	ShortName   string `gorm:"column:short_name;not null;uniqueIndex"`
 }
 
 func (LinkRecord) TableName() string {
@@ -27,7 +27,7 @@ type LinkUpdate struct {
 type AbstractLinkRepository interface {
 	SaveLink(insert LinkInsert) (LinkRecord, error)
 	GetLink(ID int) (LinkRecord, error)
-	ListLinks() ([]LinkRecord, error)
+	ListLinks(options listLinksOptions) ([]LinkRecord, error)
 	UpdateLink(ID int, update LinkUpdate) (LinkRecord, error)
 	DeleteLink(ID int) error
 }

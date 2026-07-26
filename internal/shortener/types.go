@@ -7,3 +7,8 @@ type Link struct {
 	ShortName   string `json:"short_name"`
 	ShortURL    string `json:"short_url"`
 }
+
+type LinkRange struct {
+	From int
+	To   int
+}

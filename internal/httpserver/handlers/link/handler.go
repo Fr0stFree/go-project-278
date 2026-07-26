@@ -1,4 +1,4 @@
-package handler
+package link
 
 import (
 	"net/http"
@@ -8,18 +8,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type linkHandler struct {
+type Handler struct {
 	Service *shortener.Service
 }
 
-func newLinkHandler(service *shortener.Service) *linkHandler {
-	return &linkHandler{
+func NewHandler(service *shortener.Service) *Handler {
+	return &Handler{
 		Service: service,
 	}
 }
 
 // Create generates a short URL for the given original URL and returns it in the response.
-func (l *linkHandler) Create(ctx *gin.Context) {
+func (l *Handler) Create(ctx *gin.Context) {
 	var body createLinkRequestBody
 
 	err := ctx.ShouldBindJSON(&body)
@@ -40,7 +40,7 @@ func (l *linkHandler) Create(ctx *gin.Context) {
 }
 
 // Get retrieves the original URL corresponding to the given short URL.
-func (l *linkHandler) Get(ctx *gin.Context) {
+func (l *Handler) Get(ctx *gin.Context) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
@@ -57,8 +57,16 @@ func (l *linkHandler) Get(ctx *gin.Context) {
 }
 
 // List retrieves a list of all shortened links.
-func (l *linkHandler) List(ctx *gin.Context) {
-	links, err := l.Service.ListLinks()
+func (l *Handler) List(ctx *gin.Context) {
+	var linkRange *shortener.LinkRange
+	linkRange, err := parseLinksRange(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+		return
+	}
+
+	links, err := l.Service.ListLinks(linkRange)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -68,7 +76,7 @@ func (l *linkHandler) List(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 
-func (l *linkHandler) Update(ctx *gin.Context) {
+func (l *Handler) Update(ctx *gin.Context) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
@@ -95,7 +103,7 @@ func (l *linkHandler) Update(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, updateLinkResponseBody(link))
 }
 
-func (l *linkHandler) Delete(ctx *gin.Context) {
+func (l *Handler) Delete(ctx *gin.Context) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
