@@ -1,7 +1,7 @@
 package link
 
 import (
-	"shortener/internal/shortener"
+	"shortener/internal/services/shortener"
 )
 
 type createLinkRequestBody struct {

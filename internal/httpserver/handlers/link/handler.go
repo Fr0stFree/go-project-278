@@ -2,7 +2,7 @@ package link
 
 import (
 	"net/http"
-	"shortener/internal/shortener"
+	"shortener/internal/services/shortener"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +12,13 @@ type Handler struct {
 	Service *shortener.Service
 }
 
-func NewHandler(service *shortener.Service) *Handler {
-	return &Handler{
-		Service: service,
-	}
+func RegisterRoutes(service *shortener.Service, router gin.IRouter) {
+	h := &Handler{Service: service}
+	router.POST("/api/links", h.Create)
+	router.GET("/api/links/:id", h.Get)
+	router.GET("/api/links", h.List)
+	router.PUT("/api/links/:id", h.Update)
+	router.DELETE("/api/links/:id", h.Delete)
 }
 
 // Create generates a short URL for the given original URL and returns it in the response.

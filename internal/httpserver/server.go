@@ -5,18 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"shortener/internal/config"
-	"shortener/internal/shortener"
 )
 
 // New creates a new HTTP server with the specified configuration.
-func New(cfg *config.HTTP, service *shortener.Service) *http.Server {
-	handlers := newHandlers(service)
-	router := newRouter(handlers)
-	address := fmt.Sprintf(":%d", cfg.Port)
-
+func New(cfg *config.HTTP, handler http.Handler) *http.Server {
 	return &http.Server{
-		Addr:         address,
-		Handler:      router,
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
+		Handler:      handler,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 	}

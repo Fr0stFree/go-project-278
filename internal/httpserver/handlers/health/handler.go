@@ -6,12 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct{}
 
-func NewHandler() *Handler {
-	return &Handler{}
+func RegisterRoutes(router gin.IRouter) {
+	router.GET("/ping", ping)
 }
 
-func (h *Handler) Ping(ctx *gin.Context) {
+func ping(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "pong")
 }

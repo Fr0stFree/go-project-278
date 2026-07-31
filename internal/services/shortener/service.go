@@ -3,17 +3,17 @@ package shortener
 
 import (
 	"shortener/internal/config"
-	"shortener/internal/storage"
+	"shortener/internal/database/repositories/link"
 )
 
 // Service provides methods to shorten URLs and retrieve original URLs.
 type Service struct {
-	linkRepository storage.AbstractLinkRepository
+	linkRepository link.AbstractRepository
 	config         *config.App
 }
 
 // NewService creates a new instance of the Service with the provided storage implementation.
-func NewService(linkRepository storage.AbstractLinkRepository, config *config.App) *Service {
+func NewService(linkRepository link.AbstractRepository, config *config.App) *Service {
 	return &Service{
 		linkRepository: linkRepository,
 		config:         config,
@@ -26,12 +26,12 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 		shortName = toHashString(originalURL, 6)
 	}
 
-	insert := storage.LinkInsert{
+	insert := link.Insert{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
 	}
 
-	record, err := s.linkRepository.SaveLink(insert)
+	record, err := s.linkRepository.CreateOne(insert)
 	if err != nil {
 		return Link{}, err
 	}
@@ -41,7 +41,7 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 
 // GetLink retrieves the original URL corresponding to the given short URL.
 func (s *Service) GetLink(id int) (Link, error) {
-	record, err := s.linkRepository.GetLink(id)
+	record, err := s.linkRepository.GetByID(id)
 	if err != nil {
 		return Link{}, err
 	}
@@ -51,13 +51,13 @@ func (s *Service) GetLink(id int) (Link, error) {
 
 // ListLinks retrieves a list of all shortened links stored in the service.
 func (s *Service) ListLinks(linkRange *LinkRange) ([]Link, error) {
-	options := storage.NewListLinksOptions()
+	options := link.NewFilterOpts()
 
 	if linkRange != nil {
 		options.WithRange(linkRange.From, linkRange.To)
 	}
 
-	records, err := s.linkRepository.ListLinks(options)
+	records, err := s.linkRepository.GetMany(options)
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +71,12 @@ func (s *Service) ListLinks(linkRange *LinkRange) ([]Link, error) {
 }
 
 func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error) {
-	update := storage.LinkUpdate{
+	update := link.Update{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
 	}
 
-	record, err := s.linkRepository.UpdateLink(id, update)
+	record, err := s.linkRepository.UpdateByID(id, update)
 	if err != nil {
 		return Link{}, err
 	}
@@ -85,10 +85,10 @@ func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error
 }
 
 func (s *Service) DeleteLink(id int) error {
-	return s.linkRepository.DeleteLink(id)
+	return s.linkRepository.DeleteByID(id)
 }
 
-func (s *Service) buildLink(record storage.LinkRecord) Link {
+func (s *Service) buildLink(record link.Record) Link {
 	return Link{
 		ID:          record.ID,
 		OriginalURL: record.OriginalURL,

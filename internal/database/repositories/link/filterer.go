@@ -1,4 +1,4 @@
-package storage
+package link
 
 const (
 	defaultLimit     = 10
@@ -7,15 +7,15 @@ const (
 	defaultSortOrder = "ASC"
 )
 
-type listLinksOptions struct {
+type filterOpts struct {
 	limit     int
 	offset    int
 	sortBy    string
 	sortOrder string
 }
 
-func NewListLinksOptions() listLinksOptions {
-	return listLinksOptions{
+func NewFilterOpts() filterOpts {
+	return filterOpts{
 		limit:     defaultLimit,
 		offset:    defaultOffset,
 		sortBy:    defaultSortBy,
@@ -23,12 +23,12 @@ func NewListLinksOptions() listLinksOptions {
 	}
 }
 
-func (o *listLinksOptions) WithRange(from, to int) {
+func (o *filterOpts) WithRange(from, to int) {
 	o.limit = to - from + 1
 	o.offset = from
 }
 
-func (o *listLinksOptions) WithSort(sortBy, sortOrder string) {
+func (o *filterOpts) WithSort(sortBy, sortOrder string) {
 	o.sortBy = sortBy
 	o.sortOrder = sortOrder
 }

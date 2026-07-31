@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"shortener/internal/shortener"
+	"shortener/internal/services/shortener"
 )
 
 func parseLinksRange(ctx *gin.Context) (*shortener.LinkRange, error) {

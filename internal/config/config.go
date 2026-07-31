@@ -7,7 +7,7 @@ import "time"
 type Root struct {
 	App     App
 	HTTP    HTTP
-	Storage Storage
+	DataBase DataBase
 }
 
 // App represents the configuration for business logic of the application.
@@ -22,8 +22,8 @@ type HTTP struct {
 	WriteTimeout time.Duration
 }
 
-// Storage represents the configuration for the storage backend.
-type Storage struct {
+// DataBase represents the configuration for the storage backend.
+type DataBase struct {
 	Host                  string
 	Port                  int
 	User                  string
@@ -44,7 +44,7 @@ func New() *Root {
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		},
-		Storage: Storage{
+		DataBase: DataBase{
 			Host:                  "localhost",
 			Port:                  5432,
 			User:                  "postgres",

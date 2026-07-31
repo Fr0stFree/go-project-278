@@ -1,0 +1,33 @@
+// Package storage defines the interface, errors and common types for link storage systems.
+package link
+
+// Record represents the output data returned when retrieving a link from the storage system.
+type Record struct {
+	ID          int    `gorm:"primaryKey"`
+	OriginalURL string `gorm:"column:original_url;not null"`
+	ShortName   string `gorm:"column:short_name;not null;uniqueIndex"`
+}
+
+func (Record) TableName() string {
+	return "shortened_links"
+}
+
+// Insert represents the input data required to save a link in the storage system.
+type Insert struct {
+	OriginalURL string
+	ShortName   string
+}
+
+type Update struct {
+	OriginalURL string
+	ShortName   string
+}
+
+// AbstractRepository defines the interface for link storage systems.
+type AbstractRepository interface {
+	CreateOne(insert Insert) (Record, error)
+	GetByID(ID int) (Record, error)
+	GetMany(options filterOpts) ([]Record, error)
+	UpdateByID(ID int, update Update) (Record, error)
+	DeleteByID(ID int) error
+}

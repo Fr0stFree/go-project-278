@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"shortener/internal/config"
-	"shortener/internal/httpserver"
-	"shortener/internal/shortener"
-	"shortener/internal/storage"
 )
 
 // App represents the main application structure
@@ -19,10 +16,9 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Root) *App {
-	linkRepo := startLinkRepository(&cfg.Storage)
-	shortener := shortener.NewService(linkRepo, &cfg.App)
-	server := httpserver.New(&cfg.HTTP, shortener)
-
+	repos := prepareRepos(&cfg.DataBase)
+	services :=  prepareServices(&cfg.App, repos)
+	server := prepareServer(&cfg.HTTP, services)
 	return &App{
 		server: server,
 		cfg:    cfg,
@@ -37,14 +33,4 @@ func (a *App) Run() error {
 	}
 
 	return nil
-}
-
-
-func startLinkRepository(config *config.Storage) storage.AbstractLinkRepository {
-	repository, err := storage.NewLinkRepository(config)
-	if err != nil {
-		panic("Failed to initialize PostgreSQL repository: " + err.Error())
-	}
-
-	return repository
 }
