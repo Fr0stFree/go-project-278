@@ -26,19 +26,21 @@ var sortOrderOptions = map[string]string{
 
 // FilterOpts represents the filtering options for retrieving links from the database.
 type FilterOpts struct {
-	limit     int
-	offset    int
-	sortBy    string
-	sortOrder string
+	limit      int
+	offset     int
+	sortBy     string
+	sortOrder  string
+	shortNames []string
 }
 
 // NewFilterOpts creates a new instance of FilterOpts with default values.
 func NewFilterOpts() *FilterOpts {
 	return &FilterOpts{
-		limit:     defaultLimit,
-		offset:    defaultOffset,
-		sortBy:    defaultSortBy,
-		sortOrder: defaultSortOrder,
+		limit:      defaultLimit,
+		offset:     defaultOffset,
+		sortBy:     defaultSortBy,
+		sortOrder:  defaultSortOrder,
+		shortNames: []string{},
 	}
 }
 
@@ -51,31 +53,38 @@ func (o *FilterOpts) Range() (from, to int) {
 }
 
 // WithRange sets the range of records to retrieve based on the provided from and to indices.
-func (o *FilterOpts) WithRange(from, to int) error {
+func (o *FilterOpts) WithRange(from, to int) (*FilterOpts, error) {
 	if from < 0 || to < 0 || from > to {
-		return fmt.Errorf("invalid range: from=%d, to=%d", from, to)
+		return nil, fmt.Errorf("invalid range: from=%d, to=%d", from, to)
 	}
 
 	o.limit = to - from + 1
 	o.offset = from
 
-	return nil
+	return o, nil
 }
 
 // WithSort sets the sorting criteria for the records to retrieve based on the provided sortBy and sortOrder values.
-func (o *FilterOpts) WithSort(sortBy, sortOrder string) error {
+func (o *FilterOpts) WithSort(sortBy, sortOrder string) (*FilterOpts, error) {
 	sortOption, exists := sortOptions[sortBy]
 	if !exists {
-		return fmt.Errorf("invalid sort by: %s", sortBy)
+		return nil, fmt.Errorf("invalid sort by: %s", sortBy)
 	}
 
 	orderOption, exists := sortOrderOptions[sortOrder]
 	if !exists {
-		return fmt.Errorf("invalid sort order: %s", sortOrder)
+		return nil, fmt.Errorf("invalid sort order: %s", sortOrder)
 	}
 
 	o.sortBy = sortOption
 	o.sortOrder = orderOption
 
-	return nil
+	return o, nil
+}
+
+// WithShortNames sets the short names to filter the records to retrieve based on the provided shortNames values.
+func (o *FilterOpts) WithShortNames(shortNames ...string) *FilterOpts {
+	o.shortNames = append(o.shortNames, shortNames...)
+
+	return o
 }

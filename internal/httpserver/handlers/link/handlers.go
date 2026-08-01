@@ -13,7 +13,20 @@ type handler struct {
 	Service *shortener.Service
 }
 
-func (l *handler) create(ctx *gin.Context) {
+func (h *handler) redirect(ctx *gin.Context) {
+	shortName := ctx.Param("short_name")
+
+	link, err := h.Service.GetRedirectLink(shortName)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+		return
+	}
+
+	ctx.Redirect(http.StatusFound, link.OriginalURL)
+}
+
+func (h *handler) create(ctx *gin.Context) {
 	var body createLinkRequestBody
 
 	err := ctx.ShouldBindJSON(&body)
@@ -23,7 +36,7 @@ func (l *handler) create(ctx *gin.Context) {
 		return
 	}
 
-	link, err := l.Service.CreateLink(body.OriginalURL, body.ShortName)
+	link, err := h.Service.CreateLink(body.OriginalURL, body.ShortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -33,7 +46,7 @@ func (l *handler) create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, createLinkResponseBody(link))
 }
 
-func (l *handler) get(ctx *gin.Context) {
+func (h *handler) get(ctx *gin.Context) {
 	linkID, err := parseLinkID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -41,7 +54,7 @@ func (l *handler) get(ctx *gin.Context) {
 		return
 	}
 
-	link, err := l.Service.GetLink(linkID)
+	link, err := h.Service.GetLink(linkID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -51,7 +64,7 @@ func (l *handler) get(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, getLinkResponseBody(link))
 }
 
-func (l *handler) list(ctx *gin.Context) {
+func (h *handler) list(ctx *gin.Context) {
 	filterOpts, err := parseFilterOpts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -59,14 +72,14 @@ func (l *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	links, err := l.Service.ListLinks(filterOpts)
+	links, err := h.Service.ListLinks(filterOpts)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	amount, err := l.Service.CountLinks()
+	amount, err := h.Service.CountLinks()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -78,7 +91,7 @@ func (l *handler) list(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 
-func (l *handler) update(ctx *gin.Context) {
+func (h *handler) update(ctx *gin.Context) {
 	linkID, err := parseLinkID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -95,7 +108,7 @@ func (l *handler) update(ctx *gin.Context) {
 		return
 	}
 
-	link, err := l.Service.UpdateLink(linkID, body.OriginalURL, body.ShortName)
+	link, err := h.Service.UpdateLink(linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -105,7 +118,7 @@ func (l *handler) update(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, updateLinkResponseBody(link))
 }
 
-func (l *handler) delete(ctx *gin.Context) {
+func (h *handler) delete(ctx *gin.Context) {
 	linkID, err := parseLinkID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -113,7 +126,7 @@ func (l *handler) delete(ctx *gin.Context) {
 		return
 	}
 
-	err = l.Service.DeleteLink(linkID)
+	err = h.Service.DeleteLink(linkID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 

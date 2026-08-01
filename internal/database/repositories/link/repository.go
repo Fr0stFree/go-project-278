@@ -56,19 +56,24 @@ func (r *Repository) GetByID(ID int) (Record, error) {
 // GetMany lists all links in the database with optional
 // filtering, sorting, and pagination based on the provided FilterOpts.
 func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
-	links := make([]Record, 0)
+	records := make([]Record, 0)
 
-	result := r.DB.
-		Order(fmt.Sprintf("%s %s", options.sortBy, options.sortOrder)).
-		Offset(options.offset).
+	statement := r.DB.Model(&Record{})
+	if len(options.shortNames) > 0 {
+		statement = statement.Where("short_name IN ?", options.shortNames)
+	}
+
+	result := statement.
 		Limit(options.limit).
-		Find(&links)
+		Offset(options.offset).
+		Order(fmt.Sprintf("%s %s", options.sortBy, options.sortOrder)).
+		Find(&records)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return links, nil
+	return records, nil
 }
 
 // Count returns the total number of links in the database.

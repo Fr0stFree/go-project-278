@@ -49,6 +49,25 @@ func (s *Service) GetLink(id int) (Link, error) {
 	return s.buildLink(record), nil
 }
 
+// GetRedirectLink retrieves the original URL corresponding to the given short name for redirection purposes.
+func (s *Service) GetRedirectLink(shortName string) (Link, error) {
+	opts, err := link.NewFilterOpts().WithShortNames(shortName).WithRange(0, 0)
+	if err != nil {
+		return Link{}, err
+	}
+
+	records, err := s.repo.GetMany(*opts)
+	if err != nil {
+		return Link{}, err
+	}
+
+	if len(records) == 0 {
+		return Link{}, link.ErrNotFound
+	}
+
+	return s.buildLink(records[0]), nil
+}
+
 // ListLinks retrieves a list of all shortened links stored in the service.
 func (s *Service) ListLinks(opts link.FilterOpts) ([]Link, error) {
 	records, err := s.repo.GetMany(opts)
@@ -99,6 +118,6 @@ func (s *Service) buildLink(record link.Record) Link {
 		ID:          record.ID,
 		OriginalURL: record.OriginalURL,
 		ShortName:   record.ShortName,
-		ShortURL:    s.config.BaseURL + "/" + record.ShortName,
+		ShortURL:    s.config.BaseURL + "/r/" + record.ShortName,
 	}
 }

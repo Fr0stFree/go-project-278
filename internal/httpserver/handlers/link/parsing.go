@@ -29,7 +29,7 @@ func parseFilterOpts(ctx *gin.Context) (link.FilterOpts, error) {
 			return *opts, err
 		}
 
-		if err := opts.WithRange(from, to); err != nil {
+		if _, err := opts.WithRange(from, to); err != nil {
 			return *opts, err
 		}
 	}
@@ -41,7 +41,7 @@ func parseFilterOpts(ctx *gin.Context) (link.FilterOpts, error) {
 			return *opts, err
 		}
 
-		if err := opts.WithSort(sortBy, sortOrder); err != nil {
+		if _, err := opts.WithSort(sortBy, sortOrder); err != nil {
 			return *opts, err
 		}
 	}

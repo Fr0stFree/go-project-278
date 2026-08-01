@@ -13,4 +13,5 @@ func RegisterRoutes(service *shortener.Service, router gin.IRouter) {
 	router.GET("/api/links", h.list)
 	router.PUT("/api/links/:id", h.update)
 	router.DELETE("/api/links/:id", h.delete)
+	router.GET("/r/:short_name", h.redirect)
 }
