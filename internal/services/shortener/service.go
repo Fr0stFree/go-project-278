@@ -8,15 +8,15 @@ import (
 
 // Service provides methods to shorten URLs and retrieve original URLs.
 type Service struct {
-	repo   link.AbstractRepository
-	config *config.App
+	repo link.AbstractRepository
+	cfg  *config.App
 }
 
 // NewService creates a new instance of the Service with the provided storage implementation.
 func NewService(linkRepository link.AbstractRepository, config *config.App) *Service {
 	return &Service{
-		repo:   linkRepository,
-		config: config,
+		repo: linkRepository,
+		cfg:  config,
 	}
 }
 
@@ -118,6 +118,6 @@ func (s *Service) buildLink(record link.Record) Link {
 		ID:          record.ID,
 		OriginalURL: record.OriginalURL,
 		ShortName:   record.ShortName,
-		ShortURL:    s.config.BaseURL + "/r/" + record.ShortName,
+		ShortURL:    s.cfg.BaseURL + "/r/" + record.ShortName,
 	}
 }
