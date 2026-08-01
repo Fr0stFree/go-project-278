@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"shortener/internal/services/shortener"
+	"shortener/internal/database/repositories/link"
 )
 
 func parseLinkID(ctx *gin.Context) (int, error) {
@@ -19,22 +19,32 @@ func parseLinkID(ctx *gin.Context) (int, error) {
 	return linkID, nil
 }
 
-func parseLinksRange(ctx *gin.Context) (*shortener.LinkRange, error) {
+func parseFilterOpts(ctx *gin.Context) (link.FilterOpts, error) {
+	opts := link.NewFilterOpts()
+
 	rangeRaw := ctx.Query("range")
-	if rangeRaw == "" {
-		return nil, nil
+	if rangeRaw != "" {
+		var from, to int
+		if _, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &from, &to); err != nil {
+			return *opts, err
+		}
+
+		if err := opts.WithRange(from, to); err != nil {
+			return *opts, err
+		}
 	}
 
-	var LinkRange shortener.LinkRange
+	sortRaw := ctx.Query("sort")
+	if sortRaw != "" {
+		var sortBy, sortOrder string
+		if _, err := fmt.Sscanf(sortRaw, "[%q,%q]", &sortBy, &sortOrder); err != nil {
+			return *opts, err
+		}
 
-	_, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &LinkRange.From, &LinkRange.To)
-	if err != nil {
-		return nil, errors.New("invalid range: expected format '[from-to]' with integers")
+		if err := opts.WithSort(sortBy, sortOrder); err != nil {
+			return *opts, err
+		}
 	}
 
-	if !LinkRange.IsValid() {
-		return nil, errors.New("invalid range: 'from' must be less than or equal to 'to', and both must be greater than or equal to 1")
-	}
-
-	return &LinkRange, nil
+	return *opts, nil
 }

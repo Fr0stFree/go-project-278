@@ -1,8 +1,11 @@
 // Package link provides types and interfaces for managing shortened links in the storage system.
 package link
 
+import "gorm.io/gorm"
+
 // Record represents the output data returned when retrieving a link from the storage system.
 type Record struct {
+	gorm.Model
 	ID          int    `gorm:"primaryKey"`
 	OriginalURL string `gorm:"column:original_url;not null"`
 	ShortName   string `gorm:"column:short_name;not null;uniqueIndex"`

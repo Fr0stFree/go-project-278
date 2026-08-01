@@ -52,16 +52,14 @@ func (l *handler) get(ctx *gin.Context) {
 }
 
 func (l *handler) list(ctx *gin.Context) {
-	var linkRange *shortener.LinkRange
-
-	linkRange, err := parseLinksRange(ctx)
+	filterOpts, err := parseFilterOpts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	links, err := l.Service.ListLinks(linkRange)
+	links, err := l.Service.ListLinks(filterOpts)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -75,7 +73,8 @@ func (l *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", linkRange.From, linkRange.To, amount))
+	from, to := filterOpts.Range()
+	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", from, to, amount))
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 

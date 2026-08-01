@@ -50,14 +50,8 @@ func (s *Service) GetLink(id int) (Link, error) {
 }
 
 // ListLinks retrieves a list of all shortened links stored in the service.
-func (s *Service) ListLinks(linkRange *LinkRange) ([]Link, error) {
-	options := link.NewFilterOpts()
-
-	if linkRange != nil {
-		options.WithRange(linkRange.From, linkRange.To)
-	}
-
-	records, err := s.repo.GetMany(options)
+func (s *Service) ListLinks(opts link.FilterOpts) ([]Link, error) {
+	records, err := s.repo.GetMany(opts)
 	if err != nil {
 		return nil, err
 	}
