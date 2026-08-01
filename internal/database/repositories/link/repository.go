@@ -13,7 +13,8 @@ type Repository struct {
 	*postgres.DataBase
 }
 
-func NewRepository (db *postgres.DataBase) *Repository {
+// NewRepository creates a new instance of the Repository with the provided database connection.
+func NewRepository(db *postgres.DataBase) *Repository {
 	return &Repository{db}
 }
 
@@ -29,6 +30,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 			return Record{}, ErrShortNameAlreadyTaken
 		}
+
 		return Record{}, result.Error
 	}
 
@@ -51,8 +53,8 @@ func (r *Repository) GetByID(ID int) (Record, error) {
 	return link, nil
 }
 
-// GetMany lists all links in the PostgreSQL database.
-func (r *Repository) GetMany(options filterOpts) ([]Record, error) {
+// GetMany lists all links in the PosFilterOptstabase.
+func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
 	links := make([]Record, 0)
 
 	result := r.DB.

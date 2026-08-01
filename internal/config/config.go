@@ -5,8 +5,8 @@ import "time"
 
 // Root represents the overall configuration for the application.
 type Root struct {
-	App     App
-	HTTP    HTTP
+	App      App
+	HTTP     HTTP
 	DataBase DataBase
 }
 

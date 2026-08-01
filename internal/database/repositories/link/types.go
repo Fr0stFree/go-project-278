@@ -1,4 +1,4 @@
-// Package storage defines the interface, errors and common types for link storage systems.
+// Package link provides types and interfaces for managing shortened links in the storage system.
 package link
 
 // Record represents the output data returned when retrieving a link from the storage system.
@@ -8,6 +8,7 @@ type Record struct {
 	ShortName   string `gorm:"column:short_name;not null;uniqueIndex"`
 }
 
+// TableName specifies the table name for the Record struct in the database.
 func (Record) TableName() string {
 	return "shortened_links"
 }
@@ -18,6 +19,7 @@ type Insert struct {
 	ShortName   string
 }
 
+// Update represents the input data required to update a link in the storage system.
 type Update struct {
 	OriginalURL string
 	ShortName   string
@@ -27,7 +29,7 @@ type Update struct {
 type AbstractRepository interface {
 	CreateOne(insert Insert) (Record, error)
 	GetByID(ID int) (Record, error)
-	GetMany(options filterOpts) ([]Record, error)
+	GetMany(options FilterOpts) ([]Record, error)
 	UpdateByID(ID int, update Update) (Record, error)
 	DeleteByID(ID int) error
 }

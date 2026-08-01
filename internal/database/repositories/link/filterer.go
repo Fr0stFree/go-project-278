@@ -7,15 +7,17 @@ const (
 	defaultSortOrder = "ASC"
 )
 
-type filterOpts struct {
+// FilterOpts represents the filtering options for retrieving links from the database.
+type FilterOpts struct {
 	limit     int
 	offset    int
 	sortBy    string
 	sortOrder string
 }
 
-func NewFilterOpts() filterOpts {
-	return filterOpts{
+// NewFilterOpts creates a new instance of FilterOpts with default values.
+func NewFilterOpts() FilterOpts {
+	return FilterOpts{
 		limit:     defaultLimit,
 		offset:    defaultOffset,
 		sortBy:    defaultSortBy,
@@ -23,12 +25,14 @@ func NewFilterOpts() filterOpts {
 	}
 }
 
-func (o *filterOpts) WithRange(from, to int) {
+// WithRange sets the range of records to retrieve based on the provided from and to indices.
+func (o *FilterOpts) WithRange(from, to int) {
 	o.limit = to - from + 1
 	o.offset = from
 }
 
-func (o *filterOpts) WithSort(sortBy, sortOrder string) {
+// WithSort sets the sorting criteria for the records to retrieve based on the provided sortBy and sortOrder values.
+func (o *FilterOpts) WithSort(sortBy, sortOrder string) {
 	o.sortBy = sortBy
 	o.sortOrder = sortOrder
 }

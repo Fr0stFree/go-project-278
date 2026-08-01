@@ -1,3 +1,4 @@
+// Package postgres provides a PostgreSQL database implementation of the storage system.
 package postgres
 
 import (
@@ -8,12 +9,13 @@ import (
 	"gorm.io/gorm"
 )
 
-
+// DataBase represents a PostgreSQL database connection and configuration.
 type DataBase struct {
 	config *config.DataBase
-	DB *gorm.DB
+	DB     *gorm.DB
 }
 
+// NewDataBase creates a new instance of the DataBase with the provided configuration and models to be migrated.
 func NewDataBase(cfg *config.DataBase, models ...any) (*DataBase, error) {
 	sslMode := "disable"
 	if cfg.IsSSLEnabled {

@@ -8,6 +8,7 @@ type Link struct {
 	ShortURL    string `json:"short_url"`
 }
 
+// LinkRange represents a range of links to be retrieved, specified by the starting and ending indices.
 type LinkRange struct {
 	From int
 	To   int

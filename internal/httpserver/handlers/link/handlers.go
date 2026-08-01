@@ -1,3 +1,4 @@
+// Package link provides HTTP handlers for managing shortened links.
 package link
 
 import (
@@ -12,8 +13,6 @@ type handler struct {
 	Service *shortener.Service
 }
 
-
-// Create generates a short URL for the given original URL and returns it in the response.
 func (l *handler) create(ctx *gin.Context) {
 	var body createLinkRequestBody
 
@@ -34,7 +33,6 @@ func (l *handler) create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, createLinkResponseBody(link))
 }
 
-// Get retrieves the original URL corresponding to the given short URL.
 func (l *handler) get(ctx *gin.Context) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -51,9 +49,9 @@ func (l *handler) get(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, getLinkResponseBody(link))
 }
 
-// List retrieves a list of all shortened links.
 func (l *handler) list(ctx *gin.Context) {
 	var linkRange *shortener.LinkRange
+
 	linkRange, err := parseLinksRange(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

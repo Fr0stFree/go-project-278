@@ -14,5 +14,6 @@ func prepareServer(cfg *config.HTTP, services combinedServices) *http.Server {
 	health.RegisterRoutes(router)
 	link.RegisterRoutes(services.Shortener, router)
 	server := httpserver.New(cfg, router)
+
 	return server
 }
