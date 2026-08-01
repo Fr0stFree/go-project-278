@@ -15,5 +15,5 @@ type LinkRange struct {
 }
 
 func (l *LinkRange) IsValid() bool {
-	return l.From >= 1 && l.To >= 1 && l.From <= l.To
+	return l.From >= 0 && l.To >= 0 && l.From <= l.To
 }

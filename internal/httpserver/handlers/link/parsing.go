@@ -27,7 +27,7 @@ func parseLinksRange(ctx *gin.Context) (*shortener.LinkRange, error) {
 
 	var LinkRange shortener.LinkRange
 
-	_, err := fmt.Sscanf(rangeRaw, "[%d-%d]", &LinkRange.From, &LinkRange.To)
+	_, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &LinkRange.From, &LinkRange.To)
 	if err != nil {
 		return nil, errors.New("invalid range: expected format '[from-to]' with integers")
 	}
