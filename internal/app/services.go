@@ -2,15 +2,18 @@ package app
 
 import (
 	"shortener/internal/config"
+	"shortener/internal/services/metrics"
 	"shortener/internal/services/shortener"
 )
 
 type combinedServices struct {
-	Shortener *shortener.Service
+	shortener *shortener.Service
+	metrics   *metrics.Service
 }
 
 func prepareServices(cfg *config.App, repos *combinedRepos) combinedServices {
 	return combinedServices{
-		Shortener: shortener.NewService(repos.Link, cfg),
+		shortener: shortener.NewService(repos.link, cfg),
+		metrics:   metrics.NewService(repos.linkVisit, cfg),
 	}
 }

@@ -4,26 +4,40 @@ package link
 import (
 	"fmt"
 	"net/http"
+	"shortener/internal/services/metrics"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
-	Service *shortener.Service
+	shortener *shortener.Service
+	metrics   *metrics.Service
 }
 
 func (h *handler) redirect(ctx *gin.Context) {
 	shortName := ctx.Param("short_name")
 
-	link, err := h.Service.GetRedirectLink(shortName)
+	link, err := h.shortener.GetRedirectLink(shortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	ctx.Redirect(http.StatusFound, link.OriginalURL)
+	ip := ctx.ClientIP()
+	userAgent := ctx.GetHeader("User-Agent")
+	referrer := ctx.GetHeader("Referer")
+	status := http.StatusFound
+
+	_, err = h.metrics.SaveLinkVisit(link.ID, ip, userAgent, referrer, status)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+		return
+	}
+
+	ctx.Redirect(status, link.OriginalURL)
 }
 
 func (h *handler) create(ctx *gin.Context) {
@@ -36,7 +50,7 @@ func (h *handler) create(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.Service.CreateLink(body.OriginalURL, body.ShortName)
+	link, err := h.shortener.CreateLink(body.OriginalURL, body.ShortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -54,7 +68,7 @@ func (h *handler) get(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.Service.GetLink(linkID)
+	link, err := h.shortener.GetLink(linkID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -72,14 +86,14 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	links, err := h.Service.ListLinks(filterOpts)
+	links, err := h.shortener.ListLinks(filterOpts)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	amount, err := h.Service.CountLinks()
+	amount, err := h.shortener.CountLinks()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -87,6 +101,7 @@ func (h *handler) list(ctx *gin.Context) {
 	}
 
 	from, to := filterOpts.Range()
+
 	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", from, to, amount))
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
@@ -108,7 +123,7 @@ func (h *handler) update(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.Service.UpdateLink(linkID, body.OriginalURL, body.ShortName)
+	link, err := h.shortener.UpdateLink(linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -126,7 +141,7 @@ func (h *handler) delete(ctx *gin.Context) {
 		return
 	}
 
-	err = h.Service.DeleteLink(linkID)
+	err = h.shortener.DeleteLink(linkID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 

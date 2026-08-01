@@ -19,18 +19,18 @@ func parseLinkID(ctx *gin.Context) (int, error) {
 	return linkID, nil
 }
 
-func parseFilterOpts(ctx *gin.Context) (link.FilterOpts, error) {
+func parseFilterOpts(ctx *gin.Context) (*link.FilterOpts, error) {
 	opts := link.NewFilterOpts()
 
 	rangeRaw := ctx.Query("range")
 	if rangeRaw != "" {
 		var from, to int
 		if _, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &from, &to); err != nil {
-			return *opts, err
+			return nil, err
 		}
 
 		if _, err := opts.WithRange(from, to); err != nil {
-			return *opts, err
+			return nil, err
 		}
 	}
 
@@ -38,13 +38,13 @@ func parseFilterOpts(ctx *gin.Context) (link.FilterOpts, error) {
 	if sortRaw != "" {
 		var sortBy, sortOrder string
 		if _, err := fmt.Sscanf(sortRaw, "[%q,%q]", &sortBy, &sortOrder); err != nil {
-			return *opts, err
+			return nil, err
 		}
 
 		if _, err := opts.WithSort(sortBy, sortOrder); err != nil {
-			return *opts, err
+			return nil, err
 		}
 	}
 
-	return *opts, nil
+	return opts, nil
 }

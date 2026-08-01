@@ -69,8 +69,12 @@ func (s *Service) GetRedirectLink(shortName string) (Link, error) {
 }
 
 // ListLinks retrieves a list of all shortened links stored in the service.
-func (s *Service) ListLinks(opts link.FilterOpts) ([]Link, error) {
-	records, err := s.repo.GetMany(opts)
+func (s *Service) ListLinks(opts *link.FilterOpts) ([]Link, error) {
+	if opts == nil {
+		opts = link.NewFilterOpts()
+	}
+
+	records, err := s.repo.GetMany(*opts)
 	if err != nil {
 		return nil, err
 	}

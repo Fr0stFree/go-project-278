@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Repository is a PostgreSQL implementation of storage.AbstractLinkRepository.
+// Repository is a PostgreSQL implementation of AbstractRepository.
 type Repository struct {
 	*postgres.DataBase
 }
@@ -20,12 +20,12 @@ func NewRepository(db *postgres.DataBase) *Repository {
 
 // CreateOne creates the original link and its corresponding short name in the database.
 func (r *Repository) CreateOne(insert Insert) (Record, error) {
-	link := Record{
+	record := Record{
 		OriginalURL: insert.OriginalURL,
 		ShortName:   insert.ShortName,
 	}
 
-	result := r.DB.Create(&link)
+	result := r.DB.Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 			return Record{}, ErrShortNameAlreadyTaken
@@ -34,14 +34,14 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 		return Record{}, result.Error
 	}
 
-	return link, nil
+	return record, nil
 }
 
 // GetByID retrieves the original URL corresponding to the given link ID from the database.
 func (r *Repository) GetByID(ID int) (Record, error) {
-	var link Record
+	var record Record
 
-	result := r.DB.First(&link, ID)
+	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return Record{}, ErrNotFound
@@ -50,7 +50,7 @@ func (r *Repository) GetByID(ID int) (Record, error) {
 		return Record{}, result.Error
 	}
 
-	return link, nil
+	return record, nil
 }
 
 // GetMany lists all links in the database with optional
@@ -90,9 +90,9 @@ func (r *Repository) Count() (int, error) {
 
 // UpdateByID updates the original URL and short name for the given link ID in the database.
 func (r *Repository) UpdateByID(ID int, update Update) (Record, error) {
-	var link Record
+	var record Record
 
-	result := r.DB.First(&link, ID)
+	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return Record{}, ErrNotFound
@@ -101,15 +101,15 @@ func (r *Repository) UpdateByID(ID int, update Update) (Record, error) {
 		return Record{}, result.Error
 	}
 
-	link.OriginalURL = update.OriginalURL
-	link.ShortName = update.ShortName
+	record.OriginalURL = update.OriginalURL
+	record.ShortName = update.ShortName
 
-	result = r.DB.Save(&link)
+	result = r.DB.Save(&record)
 	if result.Error != nil {
 		return Record{}, result.Error
 	}
 
-	return link, nil
+	return record, nil
 }
 
 // DeleteByID deletes the link with the given ID from the database.
