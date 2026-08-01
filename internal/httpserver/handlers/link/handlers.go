@@ -2,9 +2,9 @@
 package link
 
 import (
+	"fmt"
 	"net/http"
 	"shortener/internal/services/shortener"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,9 +34,11 @@ func (l *handler) create(ctx *gin.Context) {
 }
 
 func (l *handler) get(ctx *gin.Context) {
-	linkID, err := strconv.Atoi(ctx.Param("id"))
+	linkID, err := parseLinkID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
+		return
 	}
 
 	link, err := l.Service.GetLink(linkID)
@@ -66,13 +68,21 @@ func (l *handler) list(ctx *gin.Context) {
 		return
 	}
 
+	amount, err := l.Service.CountLinks()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+		return
+	}
+
+	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", linkRange.From, linkRange.To, amount))
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 
 func (l *handler) update(ctx *gin.Context) {
-	linkID, err := strconv.Atoi(ctx.Param("id"))
+	linkID, err := parseLinkID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 
 		return
 	}
@@ -97,9 +107,9 @@ func (l *handler) update(ctx *gin.Context) {
 }
 
 func (l *handler) delete(ctx *gin.Context) {
-	linkID, err := strconv.Atoi(ctx.Param("id"))
+	linkID, err := parseLinkID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid link ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 
 		return
 	}

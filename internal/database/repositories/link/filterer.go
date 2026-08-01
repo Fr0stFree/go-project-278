@@ -28,7 +28,7 @@ func NewFilterOpts() FilterOpts {
 // WithRange sets the range of records to retrieve based on the provided from and to indices.
 func (o *FilterOpts) WithRange(from, to int) {
 	o.limit = to - from + 1
-	o.offset = from
+	o.offset = from - 1 // Convert to 0-based index
 }
 
 // WithSort sets the sorting criteria for the records to retrieve based on the provided sortBy and sortOrder values.

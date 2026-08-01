@@ -70,6 +70,16 @@ func (s *Service) ListLinks(linkRange *LinkRange) ([]Link, error) {
 	return links, nil
 }
 
+// CountLinks returns the total number of shortened links stored in the service.
+func (s *Service) CountLinks() (int, error) {
+	count, err := s.repo.Count()
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 // UpdateLink updates the original URL and/or short name for the link with the specified ID.
 func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error) {
 	update := link.Update{

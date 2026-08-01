@@ -18,7 +18,7 @@ func NewRepository(db *postgres.DataBase) *Repository {
 	return &Repository{db}
 }
 
-// CreateOne creates the original link and its corresponding short name in PostgreSQL.
+// CreateOne creates the original link and its corresponding short name in the database.
 func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	link := Record{
 		OriginalURL: insert.OriginalURL,
@@ -37,7 +37,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	return link, nil
 }
 
-// GetByID retrieves the original URL corresponding to the given link ID from PostgreSQL.
+// GetByID retrieves the original URL corresponding to the given link ID from the database.
 func (r *Repository) GetByID(ID int) (Record, error) {
 	var link Record
 
@@ -53,7 +53,8 @@ func (r *Repository) GetByID(ID int) (Record, error) {
 	return link, nil
 }
 
-// GetMany lists all links in the PosFilterOptstabase.
+// GetMany lists all links in the database with optional
+// filtering, sorting, and pagination based on the provided FilterOpts.
 func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
 	links := make([]Record, 0)
 
@@ -70,7 +71,19 @@ func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
 	return links, nil
 }
 
-// UpdateByID updates the original URL and short name for the given link ID in PostgreSQL.
+// Count returns the total number of links in the database.
+func (r *Repository) Count() (int, error) {
+	var count int64
+
+	result := r.DB.Model(&Record{}).Count(&count)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return int(count), nil
+}
+
+// UpdateByID updates the original URL and short name for the given link ID in the database.
 func (r *Repository) UpdateByID(ID int, update Update) (Record, error) {
 	var link Record
 
@@ -94,7 +107,7 @@ func (r *Repository) UpdateByID(ID int, update Update) (Record, error) {
 	return link, nil
 }
 
-// DeleteByID deletes the link with the given ID from PostgreSQL.
+// DeleteByID deletes the link with the given ID from the database.
 func (r *Repository) DeleteByID(ID int) error {
 	result := r.DB.Where("id = ?", ID).Delete(&Record{})
 	if result.Error != nil {

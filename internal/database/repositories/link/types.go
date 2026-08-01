@@ -30,6 +30,7 @@ type AbstractRepository interface {
 	CreateOne(insert Insert) (Record, error)
 	GetByID(ID int) (Record, error)
 	GetMany(options FilterOpts) ([]Record, error)
+	Count() (int, error)
 	UpdateByID(ID int, update Update) (Record, error)
 	DeleteByID(ID int) error
 }

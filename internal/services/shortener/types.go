@@ -13,3 +13,7 @@ type LinkRange struct {
 	From int
 	To   int
 }
+
+func (l *LinkRange) IsValid() bool {
+	return l.From >= 1 && l.To >= 1 && l.From <= l.To
+}
