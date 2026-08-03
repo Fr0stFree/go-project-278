@@ -1,4 +1,4 @@
-package metrics
+package linkvisit
 
 import (
 	"fmt"

@@ -16,9 +16,9 @@ type App struct {
 
 // New creates a new App instance with the provided configuration
 func New(cfg *config.Root) *App {
-	repos := prepareRepos(&cfg.DataBase)
-	services := prepareServices(&cfg.App, repos)
-	server := prepareServer(&cfg.HTTP, services)
+	repos := buildRepos(&cfg.DataBase)
+	services := buildServices(&cfg.App, repos)
+	server := buildServer(&cfg.HTTP, services)
 
 	return &App{
 		server: server,

@@ -12,7 +12,7 @@ type combinedRepos struct {
 	linkVisit *linkvisit.Repository
 }
 
-func prepareRepos(cfg *config.DataBase) *combinedRepos {
+func buildRepos(cfg *config.DataBase) *combinedRepos {
 	db, err := postgres.NewDataBase(cfg, &link.Record{}, &linkvisit.Record{})
 	if err != nil {
 		panic("Failed to initialize PostgreSQL repository: " + err.Error())

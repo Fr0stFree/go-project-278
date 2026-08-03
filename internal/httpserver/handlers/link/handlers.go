@@ -4,7 +4,6 @@ package link
 import (
 	"fmt"
 	"net/http"
-	"shortener/internal/services/metrics"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +11,6 @@ import (
 
 type handler struct {
 	shortener *shortener.Service
-	metrics   *metrics.Service
 }
 
 func (h *handler) redirect(ctx *gin.Context) {
@@ -30,7 +28,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 	referrer := ctx.GetHeader("Referer")
 	status := http.StatusFound
 
-	_, err = h.metrics.SaveLinkVisit(link.ID, ip, userAgent, referrer, status)
+	_, err = h.shortener.SaveLinkVisit(link.ID, ip, userAgent, referrer, status)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -86,14 +84,7 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	links, err := h.shortener.ListLinks(filterOpts)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-
-		return
-	}
-
-	amount, err := h.shortener.CountLinks()
+	links, count, err := h.shortener.ListLinksWithCount(filterOpts)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
@@ -102,7 +93,7 @@ func (h *handler) list(ctx *gin.Context) {
 
 	from, to := filterOpts.Range()
 
-	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", from, to, amount))
+	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", from, to, count))
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 

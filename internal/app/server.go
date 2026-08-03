@@ -7,14 +7,14 @@ import (
 	"shortener/internal/httpserver"
 	"shortener/internal/httpserver/handlers/health"
 	"shortener/internal/httpserver/handlers/link"
-	"shortener/internal/httpserver/handlers/metrics"
+	"shortener/internal/httpserver/handlers/linkvisit"
 )
 
-func prepareServer(cfg *config.HTTP, services combinedServices) *http.Server {
+func buildServer(cfg *config.HTTP, services combinedServices) *http.Server {
 	router := httpserver.NewRouter()
 	health.RegisterRoutes(router)
-	link.RegisterRoutes(services.shortener, services.metrics, router)
-	metrics.RegisterRoutes(services.metrics, router)
+	link.RegisterRoutes(services.shortener, router)
+	linkvisit.RegisterRoutes(services.shortener, router)
 	server := httpserver.New(cfg, router)
 
 	return server

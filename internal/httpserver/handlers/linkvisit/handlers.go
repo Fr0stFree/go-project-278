@@ -1,16 +1,16 @@
-// Package metrics provides services for managing link visits and interacting with the link visit repository.
-package metrics
+package linkvisit
 
 import (
 	"fmt"
 	"net/http"
-	"shortener/internal/services/metrics"
+
+	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
 )
 
 type handler struct {
-	metrics *metrics.Service
+	shortener *shortener.Service
 }
 
 func (h *handler) listLinkVisits(ctx *gin.Context) {
@@ -21,14 +21,7 @@ func (h *handler) listLinkVisits(ctx *gin.Context) {
 		return
 	}
 
-	visits, err := h.metrics.ListLinkVisits(opts)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-
-		return
-	}
-
-	count, err := h.metrics.CountLinkVisits()
+	visits, count, err := h.shortener.ListLinkVisitsWithCount(opts)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
