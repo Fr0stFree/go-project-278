@@ -44,7 +44,7 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 }
 
 // GetLink retrieves the original URL corresponding to the given short URL.
-func (s *Service) GetLink(id int) (Link, error) {
+func (s *Service) GetLink(id uint) (Link, error) {
 	record, err := s.linkRepo.GetByID(id)
 	if err != nil {
 		return Link{}, err
@@ -96,7 +96,7 @@ func (s *Service) ListLinksWithCount(opts *link.FilterOpts) ([]Link, int, error)
 }
 
 // UpdateLink updates the original URL and/or short name for the link with the specified ID.
-func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error) {
+func (s *Service) UpdateLink(id uint, originalURL, shortName string) (Link, error) {
 	update := link.Update{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
@@ -111,7 +111,7 @@ func (s *Service) UpdateLink(id int, originalURL, shortName string) (Link, error
 }
 
 // DeleteLink removes the link with the specified ID from the storage.
-func (s *Service) DeleteLink(id int) error {
+func (s *Service) DeleteLink(id uint) error {
 	return s.linkRepo.DeleteByID(id)
 }
 
@@ -125,7 +125,7 @@ func (s *Service) buildLink(record link.Record) Link {
 }
 
 // SaveLinkVisit saves a new link visit record in the repository with the provided details.
-func (s *Service) SaveLinkVisit(linkID int, ip, userAgent, referrer string, status int) (LinkVisit, error) {
+func (s *Service) SaveLinkVisit(linkID uint, ip, userAgent, referrer string, status uint) (LinkVisit, error) {
 	insert := linkvisit.Insert{
 		LinkID:    linkID,
 		IP:        ip,

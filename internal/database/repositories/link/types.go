@@ -6,7 +6,6 @@ import "gorm.io/gorm"
 // Record represents the output data returned when retrieving a link from the storage system.
 type Record struct {
 	gorm.Model
-	ID          int    `gorm:"primaryKey"`
 	OriginalURL string `gorm:"column:original_url;not null"`
 	ShortName   string `gorm:"column:short_name;not null;uniqueIndex"`
 }
@@ -31,9 +30,9 @@ type Update struct {
 // AbstractRepository defines the interface for link storage systems.
 type AbstractRepository interface {
 	CreateOne(insert Insert) (Record, error)
-	GetByID(ID int) (Record, error)
+	GetByID(ID uint) (Record, error)
 	GetMany(options FilterOpts) ([]Record, error)
 	Count() (int, error)
-	UpdateByID(ID int, update Update) (Record, error)
-	DeleteByID(ID int) error
+	UpdateByID(ID uint, update Update) (Record, error)
+	DeleteByID(ID uint) error
 }

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"shortener/internal/config"
 	"shortener/internal/database/postgres"
 	"shortener/internal/database/repositories/link"
@@ -12,11 +14,11 @@ type combinedRepos struct {
 	linkVisit *linkvisit.Repository
 }
 
-func buildRepos(cfg *config.DataBase) *combinedRepos {
+func buildRepos(cfg *config.DataBase) (*combinedRepos, error) {
 	db, err := postgres.NewDataBase(cfg, &link.Record{}, &linkvisit.Record{})
 	if err != nil {
-		panic("Failed to initialize PostgreSQL repository: " + err.Error())
+		return nil, fmt.Errorf("failed to initialize PostgreSQL repository: %w", err)
 	}
 
-	return &combinedRepos{link: link.NewRepository(db), linkVisit: linkvisit.NewRepository(db)}
+	return &combinedRepos{link: link.NewRepository(db), linkVisit: linkvisit.NewRepository(db)}, nil
 }

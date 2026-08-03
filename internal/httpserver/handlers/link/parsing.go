@@ -10,13 +10,17 @@ import (
 	"shortener/internal/database/repositories/link"
 )
 
-func parseLinkID(ctx *gin.Context) (int, error) {
+func parseLinkID(ctx *gin.Context) (uint, error) {
 	linkID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		return 0, errors.New("invalid link ID")
 	}
 
-	return linkID, nil
+	if linkID < 0 {
+		return 0, fmt.Errorf("link ID must be a non-negative integer, got %d", linkID)
+	}
+
+	return uint(linkID), nil
 }
 
 func parseFilterOpts(ctx *gin.Context) (*link.FilterOpts, error) {

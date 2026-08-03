@@ -38,7 +38,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 }
 
 // GetByID retrieves the original URL corresponding to the given link ID from the database.
-func (r *Repository) GetByID(ID int) (Record, error) {
+func (r *Repository) GetByID(ID uint) (Record, error) {
 	var record Record
 
 	result := r.DB.First(&record, ID)
@@ -89,7 +89,7 @@ func (r *Repository) Count() (int, error) {
 }
 
 // UpdateByID updates the original URL and short name for the given link ID in the database.
-func (r *Repository) UpdateByID(ID int, update Update) (Record, error) {
+func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	var record Record
 
 	result := r.DB.First(&record, ID)
@@ -113,7 +113,7 @@ func (r *Repository) UpdateByID(ID int, update Update) (Record, error) {
 }
 
 // DeleteByID deletes the link with the given ID from the database.
-func (r *Repository) DeleteByID(ID int) error {
+func (r *Repository) DeleteByID(ID uint) error {
 	result := r.DB.Where("id = ?", ID).Delete(&Record{})
 	if result.Error != nil {
 		return result.Error

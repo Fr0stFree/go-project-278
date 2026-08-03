@@ -9,7 +9,11 @@ import (
 
 func main() {
 	cfg := config.New()
-	runner := app.New(cfg)
+
+	runner, err := app.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if err := runner.Run(); err != nil {
 		log.Fatal(err)

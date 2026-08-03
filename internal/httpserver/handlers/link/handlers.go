@@ -28,7 +28,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 	referrer := ctx.GetHeader("Referer")
 	status := http.StatusFound
 
-	_, err = h.shortener.SaveLinkVisit(link.ID, ip, userAgent, referrer, status)
+	_, err = h.shortener.SaveLinkVisit(link.ID, ip, userAgent, referrer, uint(status))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 

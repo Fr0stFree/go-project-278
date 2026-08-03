@@ -9,12 +9,11 @@ import (
 // Record represents a record of a link visit, including the associated link, IP address, user agent, and status.
 type Record struct {
 	gorm.Model
-	ID        int         `gorm:"primaryKey"`
-	LinkID    int         `gorm:"column:link_id;not null"`
+	LinkID    uint        `gorm:"column:link_id;not null"`
 	Link      link.Record `gorm:"foreignKey:LinkID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	IP        string      `gorm:"column:ip;not null"`
 	UserAgent string      `gorm:"column:user_agent;not null"`
-	Status    int         `gorm:"column:status;not null"`
+	Status    uint        `gorm:"column:status;not null"`
 	Referrer  string      `gorm:"column:referrer"`
 }
 
@@ -25,10 +24,10 @@ func (Record) TableName() string {
 
 // Insert represents the input data required to save a link visit in the storage system.
 type Insert struct {
-	LinkID    int
+	LinkID    uint
 	IP        string
 	UserAgent string
-	Status    int
+	Status    uint
 	Referrer  string
 }
 
