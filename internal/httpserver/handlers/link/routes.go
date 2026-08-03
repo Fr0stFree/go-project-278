@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers the link-related routes with the provided router.
+// RegisterRoutes mounts link management and redirect routes.
 func RegisterRoutes(shortener *shortener.Service, router gin.IRouter) {
 	h := &handler{shortener: shortener}
 	router.POST("/api/links", h.create)

@@ -1,6 +1,6 @@
 package shortener
 
-// Link represents a shortened link with its original URL, short name, and the generated short URL.
+// Link is the service response model for a shortened link.
 type Link struct {
 	ID          uint   `json:"id"`
 	OriginalURL string `json:"original_url"`
@@ -8,7 +8,7 @@ type Link struct {
 	ShortURL    string `json:"short_url"`
 }
 
-// LinkVisit represents a record of a link visit, including details.
+// LinkVisit is the service response model for a redirect visit.
 type LinkVisit struct {
 	ID        uint   `json:"id"`
 	LinkID    uint   `json:"link_id"`

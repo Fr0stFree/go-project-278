@@ -1,3 +1,4 @@
+// Package linkvisit handles redirect visit HTTP requests.
 package linkvisit
 
 import (

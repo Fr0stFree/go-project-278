@@ -5,8 +5,8 @@ import (
 
 	"shortener/internal/config"
 	"shortener/internal/database/postgres"
-	"shortener/internal/database/repositories/link"
-	"shortener/internal/database/repositories/linkvisit"
+	"shortener/internal/database/storage/link"
+	"shortener/internal/database/storage/linkvisit"
 )
 
 type combinedRepos struct {

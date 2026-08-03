@@ -14,21 +14,21 @@ type handler struct {
 }
 
 func (h *handler) listLinkVisits(ctx *gin.Context) {
-	opts, err := parseFilterOpts(ctx)
+	optsBuilder, err := parseFilterOpts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	visits, count, err := h.shortener.ListLinkVisitsWithCount(opts)
+	visits, count, err := h.shortener.ListLinkVisitsWithCount(optsBuilder)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	from, to := opts.Range()
+	from, to := optsBuilder.Range()
 
 	ctx.Header("Content-Range", fmt.Sprintf("link_visits %d-%d/%d", from, to, count))
 	ctx.JSON(http.StatusOK, listLinksVisitsResponseBody(visits))

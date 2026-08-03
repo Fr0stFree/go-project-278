@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"shortener/internal/database/repositories/link"
+	"shortener/internal/services/shortener"
 )
 
 func parseLinkID(ctx *gin.Context) (uint, error) {
@@ -23,8 +23,8 @@ func parseLinkID(ctx *gin.Context) (uint, error) {
 	return uint(linkID), nil
 }
 
-func parseFilterOpts(ctx *gin.Context) (*link.FilterOpts, error) {
-	opts := link.NewFilterOpts()
+func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error) {
+	builder := shortener.NewLinkListOptionsBuilder()
 
 	rangeRaw := ctx.Query("range")
 	if rangeRaw != "" {
@@ -33,9 +33,7 @@ func parseFilterOpts(ctx *gin.Context) (*link.FilterOpts, error) {
 			return nil, err
 		}
 
-		if _, err := opts.WithRange(from, to); err != nil {
-			return nil, err
-		}
+		builder.WithRange(from, to)
 	}
 
 	sortRaw := ctx.Query("sort")
@@ -45,10 +43,12 @@ func parseFilterOpts(ctx *gin.Context) (*link.FilterOpts, error) {
 			return nil, err
 		}
 
-		if _, err := opts.WithSort(sortBy, sortOrder); err != nil {
-			return nil, err
-		}
+		builder.WithSort(sortBy, sortOrder)
 	}
 
-	return opts, nil
+	if builder.Error() != nil {
+		return nil, builder.Error()
+	}
+
+	return builder, nil
 }

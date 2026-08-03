@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterRoutes registers the health check routes with the provided router.
+// RegisterRoutes mounts health check routes.
 func RegisterRoutes(router gin.IRouter) {
 	router.GET("/ping", ping)
 }

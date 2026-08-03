@@ -1,28 +1,28 @@
-// Package config provides configuration structures for the application, including HTTP server settings.
+// Package config defines application, HTTP, and database settings.
 package config
 
 import "time"
 
-// Root represents the overall configuration for the application.
+// Root groups all application configuration sections.
 type Root struct {
 	App      App
 	HTTP     HTTP
 	DataBase DataBase
 }
 
-// App represents the configuration for business logic of the application.
+// App contains settings used by business logic.
 type App struct {
 	BaseURL string
 }
 
-// HTTP represents the configuration for the HTTP server.
+// HTTP contains server address and timeout settings.
 type HTTP struct {
 	Port         int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 }
 
-// DataBase represents the configuration for the storage backend.
+// DataBase contains PostgreSQL connection pool settings.
 type DataBase struct {
 	Host                  string
 	Port                  int
@@ -35,7 +35,7 @@ type DataBase struct {
 	ConnectionMaxLifetime time.Duration
 }
 
-// New creates a new Config instance with default values.
+// New returns the default local development configuration.
 func New() *Root {
 	// TODO: make it configurable via environment variable or config file
 	return &Root{

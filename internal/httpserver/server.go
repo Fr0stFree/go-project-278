@@ -1,4 +1,4 @@
-// Package httpserver provides functionality to create and run an HTTP server for the application.
+// Package httpserver builds the HTTP router and server.
 package httpserver
 
 import (
@@ -7,7 +7,7 @@ import (
 	"shortener/internal/config"
 )
 
-// New creates a new HTTP server with the specified configuration.
+// New creates an HTTP server for the provided handler and configuration.
 func New(cfg *config.HTTP, handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),

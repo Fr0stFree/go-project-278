@@ -1,12 +1,13 @@
 package linkvisit
 
 import (
-	"shortener/internal/database/repositories/link"
+	"shortener/internal/database/storage"
+	"shortener/internal/database/storage/link"
 
 	"gorm.io/gorm"
 )
 
-// Record represents a record of a link visit, including the associated link, IP address, user agent, and status.
+// Record maps a redirect visit row.
 type Record struct {
 	gorm.Model
 	LinkID    uint        `gorm:"column:link_id;not null"`
@@ -17,12 +18,12 @@ type Record struct {
 	Referrer  string      `gorm:"column:referrer"`
 }
 
-// TableName specifies the table name for the Record struct in the database.
+// TableName returns the database table for visit records.
 func (Record) TableName() string {
 	return "shortened_link_visits"
 }
 
-// Insert represents the input data required to save a link visit in the storage system.
+// Insert contains values for creating a visit row.
 type Insert struct {
 	LinkID    uint
 	IP        string
@@ -31,9 +32,20 @@ type Insert struct {
 	Referrer  string
 }
 
-// AbstractRepository defines the interface for link visit storage systems.
+// Filters contains visit-specific query filters.
+type Filters struct {
+	LinkIDs []uint
+}
+
+// ListOptions combines pagination, sorting, and visit filters.
+type ListOptions struct {
+	storage.ListOptions
+	Filters
+}
+
+// AbstractRepository describes storage operations required for visits.
 type AbstractRepository interface {
 	CreateOne(insert Insert) (Record, error)
-	GetMany(options FilterOpts) ([]Record, error)
+	GetMany(options ListOptions) ([]Record, error)
 	Count() (int, error)
 }

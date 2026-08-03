@@ -1,4 +1,4 @@
-// Package link provides HTTP handlers for managing shortened links.
+// Package link handles shortened link HTTP requests.
 package link
 
 import (
@@ -77,21 +77,21 @@ func (h *handler) get(ctx *gin.Context) {
 }
 
 func (h *handler) list(ctx *gin.Context) {
-	filterOpts, err := parseFilterOpts(ctx)
+	optsBuilder, err := parseFilterOpts(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	links, count, err := h.shortener.ListLinksWithCount(filterOpts)
+	links, count, err := h.shortener.ListLinksWithCount(optsBuilder)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 
 		return
 	}
 
-	from, to := filterOpts.Range()
+	from, to := optsBuilder.Range()
 
 	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", from, to, count))
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))

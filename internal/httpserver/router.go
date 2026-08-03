@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// NewRouter creates a new instance of the Gin router with default middleware applied.
+// NewRouter creates a Gin router with logging and recovery middleware.
 func NewRouter() *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())

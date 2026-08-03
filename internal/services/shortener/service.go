@@ -1,21 +1,21 @@
-// Package shortener provides the service layer for the URL shortening application.
+// Package shortener implements link shortening use cases.
 package shortener
 
 import (
 	"shortener/internal/config"
-	"shortener/internal/database/repositories/link"
-	"shortener/internal/database/repositories/linkvisit"
+	"shortener/internal/database/storage/link"
+	"shortener/internal/database/storage/linkvisit"
 	"time"
 )
 
-// Service provides methods to shorten URLs and retrieve original URLs.
+// Service coordinates link and visit repositories.
 type Service struct {
 	linkRepo      link.AbstractRepository
 	linkVisitRepo linkvisit.AbstractRepository
 	cfg           *config.App
 }
 
-// NewService creates a new instance of the Service with the provided storage implementation.
+// NewService creates a shortener service with link and visit repositories.
 func NewService(linkRepository link.AbstractRepository, linkVisitRepository linkvisit.AbstractRepository, config *config.App) *Service {
 	return &Service{
 		linkRepo:      linkRepository,
@@ -24,7 +24,7 @@ func NewService(linkRepository link.AbstractRepository, linkVisitRepository link
 	}
 }
 
-// CreateLink generates a short code for the given original URL and saves the mapping in storage.
+// CreateLink creates a shortened link, generating a short name when one is not provided.
 func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 	if shortName == "" {
 		shortName = toHashString(originalURL, 6)
@@ -37,49 +37,57 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 
 	record, err := s.linkRepo.CreateOne(insert)
 	if err != nil {
-		return Link{}, err
+		return Link{}, mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLink(record), nil
 }
 
-// GetLink retrieves the original URL corresponding to the given short URL.
+// GetLink returns a shortened link by ID.
 func (s *Service) GetLink(id uint) (Link, error) {
 	record, err := s.linkRepo.GetByID(id)
 	if err != nil {
-		return Link{}, err
+		return Link{}, mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLink(record), nil
 }
 
-// GetRedirectLink retrieves the original URL corresponding to the given short name for redirection purposes.
+// GetRedirectLink returns a shortened link by short name.
 func (s *Service) GetRedirectLink(shortName string) (Link, error) {
-	opts, err := link.NewFilterOpts().WithShortNames(shortName).WithRange(0, 0)
-	if err != nil {
-		return Link{}, err
+	builder := NewLinkListOptionsBuilder()
+	builder.WithShortNames(shortName)
+	builder.WithRange(0, 0)
+
+	if builder.Error() != nil {
+		return Link{}, builder.Error()
 	}
 
-	records, err := s.linkRepo.GetMany(*opts)
+	records, err := s.linkRepo.GetMany(builder.build())
 	if err != nil {
-		return Link{}, err
+		return Link{}, mapStorageErrorToServiceError(err)
 	}
 
 	if len(records) == 0 {
-		return Link{}, link.ErrNotFound
+		return Link{}, ErrLinkNotFound
 	}
 
 	return s.buildLink(records[0]), nil
 }
 
-func (s *Service) ListLinksWithCount(opts *link.FilterOpts) ([]Link, int, error) {
-	if opts == nil {
-		opts = link.NewFilterOpts()
+// ListLinksWithCount returns filtered links and the total link count.
+func (s *Service) ListLinksWithCount(builder *LinkListOptionsBuilder) ([]Link, int, error) {
+	if builder == nil {
+		builder = NewLinkListOptionsBuilder()
 	}
 
-	records, err := s.linkRepo.GetMany(*opts)
+	if builder.Error() != nil {
+		return nil, 0, builder.Error()
+	}
+
+	records, err := s.linkRepo.GetMany(builder.build())
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, mapStorageErrorToServiceError(err)
 	}
 
 	links := make([]Link, len(records))
@@ -89,13 +97,13 @@ func (s *Service) ListLinksWithCount(opts *link.FilterOpts) ([]Link, int, error)
 
 	count, err := s.linkRepo.Count()
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, mapStorageErrorToServiceError(err)
 	}
 
 	return links, count, nil
 }
 
-// UpdateLink updates the original URL and/or short name for the link with the specified ID.
+// UpdateLink replaces URL fields for a shortened link by ID.
 func (s *Service) UpdateLink(id uint, originalURL, shortName string) (Link, error) {
 	update := link.Update{
 		OriginalURL: originalURL,
@@ -104,15 +112,20 @@ func (s *Service) UpdateLink(id uint, originalURL, shortName string) (Link, erro
 
 	record, err := s.linkRepo.UpdateByID(id, update)
 	if err != nil {
-		return Link{}, err
+		return Link{}, mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLink(record), nil
 }
 
-// DeleteLink removes the link with the specified ID from the storage.
+// DeleteLink removes a shortened link by ID.
 func (s *Service) DeleteLink(id uint) error {
-	return s.linkRepo.DeleteByID(id)
+	err := s.linkRepo.DeleteByID(id)
+	if err != nil {
+		return mapStorageErrorToServiceError(err)
+	}
+
+	return nil
 }
 
 func (s *Service) buildLink(record link.Record) Link {
@@ -124,7 +137,7 @@ func (s *Service) buildLink(record link.Record) Link {
 	}
 }
 
-// SaveLinkVisit saves a new link visit record in the repository with the provided details.
+// SaveLinkVisit records a redirect attempt for a shortened link.
 func (s *Service) SaveLinkVisit(linkID uint, ip, userAgent, referrer string, status uint) (LinkVisit, error) {
 	insert := linkvisit.Insert{
 		LinkID:    linkID,
@@ -136,20 +149,25 @@ func (s *Service) SaveLinkVisit(linkID uint, ip, userAgent, referrer string, sta
 
 	record, err := s.linkVisitRepo.CreateOne(insert)
 	if err != nil {
-		return LinkVisit{}, err
+		return LinkVisit{}, mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLinkVisit(record), nil
 }
 
-func (s *Service) ListLinkVisitsWithCount(options *linkvisit.FilterOpts) ([]LinkVisit, int, error) {
-	if options == nil {
-		options = linkvisit.NewFilterOpts()
+// ListLinkVisitsWithCount returns filtered visits and the total visit count.
+func (s *Service) ListLinkVisitsWithCount(builder *LinkVisitListOptionsBuilder) ([]LinkVisit, int, error) {
+	if builder == nil {
+		builder = NewLinkVisitListOptionsBuilder()
 	}
 
-	records, err := s.linkVisitRepo.GetMany(*options)
+	if builder.Error() != nil {
+		return nil, 0, builder.Error()
+	}
+
+	records, err := s.linkVisitRepo.GetMany(builder.build())
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, mapStorageErrorToServiceError(err)
 	}
 
 	visits := make([]LinkVisit, len(records))

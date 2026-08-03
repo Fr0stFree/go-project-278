@@ -1,4 +1,4 @@
-// Package linkvisit provides services for managing link visits and interacting with the link visit repository.
+// Package linkvisit stores redirect visit records.
 package linkvisit
 
 import (
@@ -6,17 +6,17 @@ import (
 	"shortener/internal/database/postgres"
 )
 
-// Repository is a PostgreSQL implementation of AbstractRepository.
+// Repository stores redirect visits in PostgreSQL.
 type Repository struct {
 	*postgres.DataBase
 }
 
-// NewRepository creates a new instance of the Repository with the provided database connection.
+// NewRepository creates a visit repository backed by the provided database.
 func NewRepository(db *postgres.DataBase) *Repository {
 	return &Repository{db}
 }
 
-// CreateOne creates a new link visit record in the database.
+// CreateOne inserts a redirect visit row.
 func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	record := Record{
 		LinkID:    insert.LinkID,
@@ -34,14 +34,14 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	return record, nil
 }
 
-// GetMany retrieves multiple link visit records from the database based on the provided FilterOpts.
-func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
+// GetMany returns visit rows matching the provided list options.
+func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
 	records := make([]Record, 0)
 
 	result := r.DB.
-		Limit(options.limit).
-		Offset(options.offset).
-		Order(fmt.Sprintf("%s %s", options.sortBy, options.sortOrder)).
+		Limit(options.Limit).
+		Offset(options.Offset).
+		Order(fmt.Sprintf("%s %s", options.SortBy, options.SortOrder)).
 		Find(&records)
 
 	if result.Error != nil {
@@ -51,7 +51,7 @@ func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
 	return records, nil
 }
 
-// Count returns the total number of link visit records in the database.
+// Count returns the total number of visit rows.
 func (r *Repository) Count() (int, error) {
 	var count int64
 

@@ -1,4 +1,4 @@
-// Package app provides the main application structure and methods to run it
+// Package app wires application dependencies and runs the HTTP server.
 package app
 
 import (
@@ -8,13 +8,13 @@ import (
 	"shortener/internal/config"
 )
 
-// App represents the main application structure
+// App owns the configured HTTP server.
 type App struct {
 	server *http.Server
 	cfg    *config.Root
 }
 
-// New creates a new App instance with the provided configuration
+// New builds repositories, services, and the HTTP server from the provided configuration.
 func New(cfg *config.Root) (*App, error) {
 	repos, err := buildRepos(&cfg.DataBase)
 	if err != nil {
@@ -30,7 +30,7 @@ func New(cfg *config.Root) (*App, error) {
 	}, nil
 }
 
-// Run starts the HTTP server and listens for incoming requests
+// Run starts the HTTP server and returns unexpected server errors.
 func (a *App) Run() error {
 	err := a.server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {

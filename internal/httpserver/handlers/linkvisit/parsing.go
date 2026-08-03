@@ -2,13 +2,13 @@ package linkvisit
 
 import (
 	"fmt"
-	"shortener/internal/database/repositories/linkvisit"
+	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
 )
 
-func parseFilterOpts(ctx *gin.Context) (*linkvisit.FilterOpts, error) {
-	opts := linkvisit.NewFilterOpts()
+func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, error) {
+	builder := shortener.NewLinkVisitListOptionsBuilder()
 
 	rangeRaw := ctx.Query("range")
 	if rangeRaw != "" {
@@ -17,12 +17,12 @@ func parseFilterOpts(ctx *gin.Context) (*linkvisit.FilterOpts, error) {
 			return nil, err
 		}
 
-		if _, err := opts.WithRange(from, to); err != nil {
-			return nil, err
-		}
+		builder.WithRange(from, to)
 	}
 
-	// TODO: Implement sorting parsing if needed in the future
+	if builder.Error() != nil {
+		return nil, builder.Error()
+	}
 
-	return opts, nil
+	return builder, nil
 }

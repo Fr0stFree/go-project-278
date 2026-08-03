@@ -4,21 +4,22 @@ import (
 	"errors"
 	"fmt"
 	"shortener/internal/database/postgres"
+	"shortener/internal/database/storage"
 
 	"gorm.io/gorm"
 )
 
-// Repository is a PostgreSQL implementation of AbstractRepository.
+// Repository stores shortened links in PostgreSQL.
 type Repository struct {
 	*postgres.DataBase
 }
 
-// NewRepository creates a new instance of the Repository with the provided database connection.
+// NewRepository creates a link repository backed by the provided database.
 func NewRepository(db *postgres.DataBase) *Repository {
 	return &Repository{db}
 }
 
-// CreateOne creates the original link and its corresponding short name in the database.
+// CreateOne inserts a shortened link row.
 func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	record := Record{
 		OriginalURL: insert.OriginalURL,
@@ -28,7 +29,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	result := r.DB.Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, ErrShortNameAlreadyTaken
+			return Record{}, storage.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -37,14 +38,14 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	return record, nil
 }
 
-// GetByID retrieves the original URL corresponding to the given link ID from the database.
+// GetByID returns a link row by ID.
 func (r *Repository) GetByID(ID uint) (Record, error) {
 	var record Record
 
 	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, ErrNotFound
+			return Record{}, storage.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -53,20 +54,19 @@ func (r *Repository) GetByID(ID uint) (Record, error) {
 	return record, nil
 }
 
-// GetMany lists all links in the database with optional
-// filtering, sorting, and pagination based on the provided FilterOpts.
-func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
+// GetMany returns link rows matching the provided list options.
+func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
 	records := make([]Record, 0)
 
 	statement := r.DB.Model(&Record{})
-	if len(options.shortNames) > 0 {
-		statement = statement.Where("short_name IN ?", options.shortNames)
+	if len(options.ShortNames) > 0 {
+		statement = statement.Where("short_name IN ?", options.ShortNames)
 	}
 
 	result := statement.
-		Limit(options.limit).
-		Offset(options.offset).
-		Order(fmt.Sprintf("%s %s", options.sortBy, options.sortOrder)).
+		Limit(options.Limit).
+		Offset(options.Offset).
+		Order(fmt.Sprintf("%s %s", options.SortBy, options.SortOrder)).
 		Find(&records)
 
 	if result.Error != nil {
@@ -76,7 +76,7 @@ func (r *Repository) GetMany(options FilterOpts) ([]Record, error) {
 	return records, nil
 }
 
-// Count returns the total number of links in the database.
+// Count returns the total number of link rows.
 func (r *Repository) Count() (int, error) {
 	var count int64
 
@@ -88,14 +88,14 @@ func (r *Repository) Count() (int, error) {
 	return int(count), nil
 }
 
-// UpdateByID updates the original URL and short name for the given link ID in the database.
+// UpdateByID replaces URL fields for a link row by ID.
 func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	var record Record
 
 	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, ErrNotFound
+			return Record{}, storage.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -106,13 +106,17 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 
 	result = r.DB.Save(&record)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			return Record{}, storage.ErrObjectAlreadyExists
+		}
+
 		return Record{}, result.Error
 	}
 
 	return record, nil
 }
 
-// DeleteByID deletes the link with the given ID from the database.
+// DeleteByID deletes a link row by ID.
 func (r *Repository) DeleteByID(ID uint) error {
 	result := r.DB.Where("id = ?", ID).Delete(&Record{})
 	if result.Error != nil {
@@ -120,7 +124,7 @@ func (r *Repository) DeleteByID(ID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return ErrNotFound
+		return storage.ErrObjectDoesNotExist
 	}
 
 	return nil
