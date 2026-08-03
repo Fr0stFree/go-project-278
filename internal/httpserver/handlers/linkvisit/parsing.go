@@ -14,7 +14,7 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, 
 	if rangeRaw != "" {
 		var from, to int
 		if _, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &from, &to); err != nil {
-			return nil, err
+			return nil, shortener.NewValidationError(fmt.Sprintf("invalid range format: %s", rangeRaw), "range")
 		}
 
 		builder.WithRange(from, to)

@@ -9,36 +9,32 @@ import (
 	"shortener/internal/database/storage/linkvisit"
 )
 
-// ListOptionsBuilder validates pagination and sorting options.
+// ListOptionsBuilder validates and builds common list options.
 type ListOptionsBuilder struct {
 	sortFields map[string]string
 	options    storage.ListOptions
 	err        error
 }
 
-// Error returns the first validation error.
+// Error returns the first validation error encountered by the builder.
 func (b *ListOptionsBuilder) Error() error {
 	return b.err
 }
 
-// WithRange sets an inclusive zero-based result range.
+// WithRange sets the inclusive range of records to retrieve.
 func (b *ListOptionsBuilder) WithRange(from, to int) *ListOptionsBuilder {
 	if b.err != nil {
 		return b
 	}
 
 	if from < 0 {
-		b.err = fmt.Errorf("range start must be non-negative: %d", from)
+		b.err = NewValidationError(fmt.Sprintf("range start must be non-negative: %d", from), "range")
 
 		return b
 	}
 
 	if to < from {
-		b.err = fmt.Errorf(
-			"range end must be greater than or equal to range start: %d < %d",
-			to,
-			from,
-		)
+		b.err = NewValidationError(fmt.Sprintf("range end must be greater than or equal to range start: %d < %d", to, from), "range")
 
 		return b
 	}
@@ -49,7 +45,7 @@ func (b *ListOptionsBuilder) WithRange(from, to int) *ListOptionsBuilder {
 	return b
 }
 
-// WithSort sets a whitelisted sort field and direction.
+// WithSort validates and sets the sort field and order.
 func (b *ListOptionsBuilder) WithSort(field, order string) *ListOptionsBuilder {
 	if b.err != nil {
 		return b
@@ -57,7 +53,7 @@ func (b *ListOptionsBuilder) WithSort(field, order string) *ListOptionsBuilder {
 
 	sortBy, ok := b.sortFields[field]
 	if !ok {
-		b.err = fmt.Errorf("unsupported sort field: %q", field)
+		b.err = NewValidationError(fmt.Sprintf("unsupported sort field: %q", field), "sort")
 
 		return b
 	}
@@ -66,7 +62,7 @@ func (b *ListOptionsBuilder) WithSort(field, order string) *ListOptionsBuilder {
 	switch order {
 	case "ASC", "DESC":
 	default:
-		b.err = fmt.Errorf("unsupported sort order: %q", order)
+		b.err = NewValidationError(fmt.Sprintf("unsupported sort order: %q", order), "sort")
 
 		return b
 	}
@@ -77,18 +73,18 @@ func (b *ListOptionsBuilder) WithSort(field, order string) *ListOptionsBuilder {
 	return b
 }
 
-// Range returns the current inclusive result range.
+// Range returns the inclusive range of records.
 func (b *ListOptionsBuilder) Range() (int, int) {
 	return b.options.Offset, b.options.Offset + b.options.Limit - 1
 }
 
-// LinkListOptionsBuilder builds options for link list queries.
+// LinkListOptionsBuilder builds options for listing links.
 type LinkListOptionsBuilder struct {
 	*ListOptionsBuilder
 	filters link.Filters
 }
 
-// NewLinkListOptionsBuilder creates link list options with defaults.
+// NewLinkListOptionsBuilder creates a new builder for link list options.
 func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 	var sortFields = map[string]string{
 		"id":           "id",
@@ -116,7 +112,7 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 	}
 }
 
-// WithShortNames filters links by short name.
+// WithShortNames sets the short names to filter by.
 func (b *LinkListOptionsBuilder) WithShortNames(shortNames ...string) *LinkListOptionsBuilder {
 	if b.Error() != nil {
 		return b
@@ -134,13 +130,13 @@ func (b *LinkListOptionsBuilder) build() link.ListOptions {
 	}
 }
 
-// LinkVisitListOptionsBuilder builds options for visit list queries.
+// LinkVisitListOptionsBuilder builds options for listing link visits.
 type LinkVisitListOptionsBuilder struct {
 	*ListOptionsBuilder
 	filters linkvisit.Filters
 }
 
-// NewLinkVisitListOptionsBuilder creates visit list options with defaults.
+// NewLinkVisitListOptionsBuilder creates a new builder for link visit list options.
 func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 	var sortFields = map[string]string{
 		"id":         "id",
@@ -168,7 +164,7 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 	}
 }
 
-// WithLinkIDs filters visits by link ID.
+// WithLinkIDs sets the link IDs to filter by.
 func (b *LinkVisitListOptionsBuilder) WithLinkIDs(linkIDs ...uint) *LinkVisitListOptionsBuilder {
 	if b.Error() != nil {
 		return b

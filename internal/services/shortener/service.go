@@ -2,7 +2,9 @@
 package shortener
 
 import (
+	"errors"
 	"shortener/internal/config"
+	"shortener/internal/database/storage"
 	"shortener/internal/database/storage/link"
 	"shortener/internal/database/storage/linkvisit"
 	"time"
@@ -37,7 +39,7 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 
 	record, err := s.linkRepo.CreateOne(insert)
 	if err != nil {
-		return Link{}, mapStorageErrorToServiceError(err)
+		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLink(record), nil
@@ -47,7 +49,7 @@ func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 func (s *Service) GetLink(id uint) (Link, error) {
 	record, err := s.linkRepo.GetByID(id)
 	if err != nil {
-		return Link{}, mapStorageErrorToServiceError(err)
+		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLink(record), nil
@@ -65,11 +67,11 @@ func (s *Service) GetRedirectLink(shortName string) (Link, error) {
 
 	records, err := s.linkRepo.GetMany(builder.build())
 	if err != nil {
-		return Link{}, mapStorageErrorToServiceError(err)
+		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
 
 	if len(records) == 0 {
-		return Link{}, ErrLinkNotFound
+		return Link{}, NewNotFoundError("link not found")
 	}
 
 	return s.buildLink(records[0]), nil
@@ -87,7 +89,7 @@ func (s *Service) ListLinksWithCount(builder *LinkListOptionsBuilder) ([]Link, i
 
 	records, err := s.linkRepo.GetMany(builder.build())
 	if err != nil {
-		return nil, 0, mapStorageErrorToServiceError(err)
+		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
 
 	links := make([]Link, len(records))
@@ -97,7 +99,7 @@ func (s *Service) ListLinksWithCount(builder *LinkListOptionsBuilder) ([]Link, i
 
 	count, err := s.linkRepo.Count()
 	if err != nil {
-		return nil, 0, mapStorageErrorToServiceError(err)
+		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
 
 	return links, count, nil
@@ -112,7 +114,7 @@ func (s *Service) UpdateLink(id uint, originalURL, shortName string) (Link, erro
 
 	record, err := s.linkRepo.UpdateByID(id, update)
 	if err != nil {
-		return Link{}, mapStorageErrorToServiceError(err)
+		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLink(record), nil
@@ -122,7 +124,7 @@ func (s *Service) UpdateLink(id uint, originalURL, shortName string) (Link, erro
 func (s *Service) DeleteLink(id uint) error {
 	err := s.linkRepo.DeleteByID(id)
 	if err != nil {
-		return mapStorageErrorToServiceError(err)
+		return s.mapStorageErrorToServiceError(err)
 	}
 
 	return nil
@@ -149,7 +151,7 @@ func (s *Service) SaveLinkVisit(linkID uint, ip, userAgent, referrer string, sta
 
 	record, err := s.linkVisitRepo.CreateOne(insert)
 	if err != nil {
-		return LinkVisit{}, mapStorageErrorToServiceError(err)
+		return LinkVisit{}, s.mapStorageErrorToServiceError(err)
 	}
 
 	return s.buildLinkVisit(record), nil
@@ -167,7 +169,7 @@ func (s *Service) ListLinkVisitsWithCount(builder *LinkVisitListOptionsBuilder) 
 
 	records, err := s.linkVisitRepo.GetMany(builder.build())
 	if err != nil {
-		return nil, 0, mapStorageErrorToServiceError(err)
+		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
 
 	visits := make([]LinkVisit, len(records))
@@ -177,7 +179,7 @@ func (s *Service) ListLinkVisitsWithCount(builder *LinkVisitListOptionsBuilder) 
 
 	count, err := s.linkVisitRepo.Count()
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
 
 	return visits, count, nil
@@ -193,5 +195,16 @@ func (s *Service) buildLinkVisit(record linkvisit.Record) LinkVisit {
 		UserAgent: record.UserAgent,
 		Status:    record.Status,
 		Referrer:  record.Referrer,
+	}
+}
+
+func (s *Service) mapStorageErrorToServiceError(err error) error {
+	switch {
+	case errors.Is(err, storage.ErrObjectDoesNotExist):
+		return NewNotFoundError("link not found")
+	case errors.Is(err, storage.ErrObjectAlreadyExists):
+		return NewConflictError("shortname already in use", "short_name")
+	default:
+		return err
 	}
 }
