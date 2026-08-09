@@ -17,40 +17,38 @@ type ListOptionsBuilder struct {
 }
 
 // WithRange sets the inclusive range of records to retrieve.
-func (b *ListOptionsBuilder) WithRange(from, to int) *ListOptionsBuilder {
+func (b *ListOptionsBuilder) WithRange(from, to int) {
 	if b.err != nil {
-		return b
+		return
 	}
 
 	if from < 0 {
 		b.err = NewValidationError(fmt.Sprintf("range start must be non-negative: %d", from), "range")
 
-		return b
+		return
 	}
 
 	if to < from {
 		b.err = NewValidationError(fmt.Sprintf("range end must be greater than or equal to range start: %d < %d", to, from), "range")
 
-		return b
+		return
 	}
 
 	b.options.Offset = from
 	b.options.Limit = to - from + 1
-
-	return b
 }
 
 // WithSort validates and sets the sort field and order.
-func (b *ListOptionsBuilder) WithSort(field, order string) *ListOptionsBuilder {
+func (b *ListOptionsBuilder) WithSort(field, order string) {
 	if b.err != nil {
-		return b
+		return
 	}
 
 	sortBy, ok := b.sortFields[field]
 	if !ok {
 		b.err = NewValidationError(fmt.Sprintf("unsupported sort field: %q", field), "sort")
 
-		return b
+		return
 	}
 
 	order = strings.ToUpper(order)
@@ -59,13 +57,11 @@ func (b *ListOptionsBuilder) WithSort(field, order string) *ListOptionsBuilder {
 	default:
 		b.err = NewValidationError(fmt.Sprintf("unsupported sort order: %q", order), "sort")
 
-		return b
+		return
 	}
 
 	b.options.SortBy = sortBy
 	b.options.SortOrder = order
-
-	return b
 }
 
 // Range returns the inclusive range of records.
@@ -89,10 +85,12 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 		"created_at":   "created_at",
 	}
 
-	defaultSortBy := "id"
-	defaultSortOrder := "DESC"
-	defaultLimit := 10
-	defaultOffset := 0
+	const (
+		defaultSortBy    = "id"
+		defaultSortOrder = "DESC"
+		defaultLimit     = 10
+		defaultOffset    = 0
+	)
 
 	return &LinkListOptionsBuilder{
 		ListOptionsBuilder: &ListOptionsBuilder{
@@ -108,14 +106,12 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 }
 
 // WithShortNames sets the short names to filter by.
-func (b *LinkListOptionsBuilder) WithShortNames(shortNames ...string) *LinkListOptionsBuilder {
+func (b *LinkListOptionsBuilder) WithShortNames(shortNames ...string) {
 	if b.err != nil {
-		return b
+		return
 	}
 
 	b.filters.ShortNames = append(b.filters.ShortNames, shortNames...)
-
-	return b
 }
 
 func (b *LinkListOptionsBuilder) build() link.ListOptions {
@@ -160,14 +156,12 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 }
 
 // WithLinkIDs sets the link IDs to filter by.
-func (b *LinkVisitListOptionsBuilder) WithLinkIDs(linkIDs ...uint) *LinkVisitListOptionsBuilder {
+func (b *LinkVisitListOptionsBuilder) WithLinkIDs(linkIDs ...uint) {
 	if b.err != nil {
-		return b
+		return
 	}
 
 	b.filters.LinkIDs = append(b.filters.LinkIDs, linkIDs...)
-
-	return b
 }
 
 func (b *LinkVisitListOptionsBuilder) build() linkvisit.ListOptions {
