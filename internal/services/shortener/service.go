@@ -61,8 +61,8 @@ func (s *Service) GetRedirectLink(shortName string) (Link, error) {
 	builder.WithShortNames(shortName)
 	builder.WithRange(0, 0)
 
-	if builder.Error() != nil {
-		return Link{}, builder.Error()
+	if builder.err != nil {
+		return Link{}, builder.err
 	}
 
 	records, err := s.linkRepo.GetMany(builder.build())
@@ -83,8 +83,8 @@ func (s *Service) ListLinksWithCount(builder *LinkListOptionsBuilder) ([]Link, i
 		builder = NewLinkListOptionsBuilder()
 	}
 
-	if builder.Error() != nil {
-		return nil, 0, builder.Error()
+	if builder.err != nil {
+		return nil, 0, builder.err
 	}
 
 	records, err := s.linkRepo.GetMany(builder.build())
@@ -163,8 +163,8 @@ func (s *Service) ListLinkVisitsWithCount(builder *LinkVisitListOptionsBuilder) 
 		builder = NewLinkVisitListOptionsBuilder()
 	}
 
-	if builder.Error() != nil {
-		return nil, 0, builder.Error()
+	if builder.err != nil {
+		return nil, 0, builder.err
 	}
 
 	records, err := s.linkVisitRepo.GetMany(builder.build())

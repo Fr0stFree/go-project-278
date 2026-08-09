@@ -45,9 +45,5 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error
 		builder.WithSort(sortBy, sortOrder)
 	}
 
-	if builder.Error() != nil {
-		return nil, builder.Error()
-	}
-
 	return builder, nil
 }

@@ -20,9 +20,5 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, 
 		builder.WithRange(from, to)
 	}
 
-	if builder.Error() != nil {
-		return nil, builder.Error()
-	}
-
 	return builder, nil
 }

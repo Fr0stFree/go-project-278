@@ -16,11 +16,6 @@ type ListOptionsBuilder struct {
 	err        error
 }
 
-// Error returns the first validation error encountered by the builder.
-func (b *ListOptionsBuilder) Error() error {
-	return b.err
-}
-
 // WithRange sets the inclusive range of records to retrieve.
 func (b *ListOptionsBuilder) WithRange(from, to int) *ListOptionsBuilder {
 	if b.err != nil {
@@ -114,7 +109,7 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 
 // WithShortNames sets the short names to filter by.
 func (b *LinkListOptionsBuilder) WithShortNames(shortNames ...string) *LinkListOptionsBuilder {
-	if b.Error() != nil {
+	if b.err != nil {
 		return b
 	}
 
@@ -166,7 +161,7 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 
 // WithLinkIDs sets the link IDs to filter by.
 func (b *LinkVisitListOptionsBuilder) WithLinkIDs(linkIDs ...uint) *LinkVisitListOptionsBuilder {
-	if b.Error() != nil {
+	if b.err != nil {
 		return b
 	}
 
