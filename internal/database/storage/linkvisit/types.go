@@ -42,10 +42,3 @@ type ListOptions struct {
 	storage.ListOptions
 	Filters
 }
-
-// AbstractRepository describes storage operations required for visits.
-type AbstractRepository interface {
-	CreateOne(insert Insert) (Record, error)
-	GetMany(options ListOptions) ([]Record, error)
-	Count() (int, error)
-}

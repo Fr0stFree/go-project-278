@@ -32,7 +32,7 @@ func NewNotFoundError(message string) *NotFoundError {
 // ConflictError represents a conflict error, typically used when a resource already exists.
 type ConflictError struct {
 	Message string
-	Field string
+	Field   string
 }
 
 func (e *ConflictError) Error() string {

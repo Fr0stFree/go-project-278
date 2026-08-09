@@ -12,13 +12,13 @@ import (
 
 // Service coordinates link and visit repositories.
 type Service struct {
-	linkRepo      link.AbstractRepository
-	linkVisitRepo linkvisit.AbstractRepository
+	linkRepo      LinkRepository
+	linkVisitRepo LinkVisitRepository
 	cfg           *config.App
 }
 
 // NewService creates a shortener service with link and visit repositories.
-func NewService(linkRepository link.AbstractRepository, linkVisitRepository linkvisit.AbstractRepository, config *config.App) *Service {
+func NewService(linkRepository LinkRepository, linkVisitRepository LinkVisitRepository, config *config.App) *Service {
 	return &Service{
 		linkRepo:      linkRepository,
 		linkVisitRepo: linkVisitRepository,

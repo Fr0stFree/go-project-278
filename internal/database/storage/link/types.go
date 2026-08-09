@@ -41,13 +41,3 @@ type ListOptions struct {
 	storage.ListOptions
 	Filters
 }
-
-// AbstractRepository describes storage operations required for links.
-type AbstractRepository interface {
-	CreateOne(insert Insert) (Record, error)
-	GetByID(ID uint) (Record, error)
-	GetMany(options ListOptions) ([]Record, error)
-	Count() (int, error)
-	UpdateByID(ID uint, update Update) (Record, error)
-	DeleteByID(ID uint) error
-}
