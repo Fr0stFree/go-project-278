@@ -1,7 +1,12 @@
 // Package config defines application, HTTP, and database settings.
 package config
 
-import "time"
+import (
+	"time"
+
+	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
+)
 
 // Root groups all application configuration sections.
 type Root struct {
@@ -12,51 +17,38 @@ type Root struct {
 
 // App contains settings used by business logic.
 type App struct {
-	BaseURL string
+	BaseURL string `env:"APP_BASE_URL"`
 }
 
 // HTTP contains server address and timeout settings.
 type HTTP struct {
-	Port         int
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
+	Port         int           `env:"HTTP_PORT" envDefault:"8080"`
+	ReadTimeout  time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"10s"`
+	WriteTimeout time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"10s"`
 }
 
 // DataBase contains PostgreSQL connection pool settings.
 type DataBase struct {
-	Host                  string
-	Port                  int
-	User                  string
-	Password              string
-	DBName                string
-	IsSSLEnabled          bool
-	MaxOpenConnections    int
-	MaxIdleConnections    int
-	ConnectionMaxLifetime time.Duration
+	Host                  string        `env:"DB_HOST"`
+	Port                  int           `env:"DB_PORT" envDefault:"5432"`
+	User                  string        `env:"DB_USER"`
+	Password              string        `env:"DB_PASSWORD"`
+	DBName                string        `env:"DB_NAME"`
+	IsSSLEnabled          bool          `env:"DB_SSL_ENABLED" envDefault:"true"`
+	MaxOpenConnections    int           `env:"DB_MAX_OPEN_CONNECTIONS" envDefault:"10"`
+	MaxIdleConnections    int           `env:"DB_MAX_IDLE_CONNECTIONS" envDefault:"5"`
+	ConnectionMaxLifetime time.Duration `env:"DB_CONNECTION_MAX_LIFETIME" envDefault:"5m"`
 }
 
 // New returns the default local development configuration.
-func New() *Root {
-	// TODO: make it configurable via environment variable or config file
-	return &Root{
-		HTTP: HTTP{
-			Port:         8080,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
-		},
-		DataBase: DataBase{
-			Host:                  "localhost",
-			Port:                  5432,
-			User:                  "postgres",
-			Password:              "postgres",
-			DBName:                "postgres",
-			IsSSLEnabled:          false,
-			MaxOpenConnections:    10,
-			MaxIdleConnections:    5,
-			ConnectionMaxLifetime: 5 * time.Minute,
-		},
-		App: App{
-			BaseURL: "http://localhost:8080",
-		},
+func New() (*Root, error) {
+	// .env is optional. In production variables normally come directly from the environment.
+	_ = godotenv.Load()
+
+	config, err := env.ParseAs[Root]()
+	if err != nil {
+		return nil, err
 	}
+
+	return &config, nil
 }
