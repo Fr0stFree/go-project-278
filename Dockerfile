@@ -1,6 +1,15 @@
-FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS builder
+# 1. Build frontend
+FROM node:24-alpine AS frontend-builder
 
-WORKDIR /app
+WORKDIR /build/frontend
+
+RUN npm install @hexlet/project-url-shortener-frontend
+
+
+# 2. Build backend
+FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS backend-builder
+
+WORKDIR /build/backend
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -13,15 +22,30 @@ ARG TARGETARCH
 RUN CGO_ENABLED=0 \
     GOOS=$TARGETOS \
     GOARCH=$TARGETARCH \
-    go build -o ./bin/shortener ./cmd/shortener
+    go build -o /build/shortener ./cmd/shortener
 
 
-FROM alpine:3.22
+# 3. Runtime
+FROM node:24-alpine
+
+RUN apk add --no-cache \
+    ca-certificates \
+    caddy
 
 WORKDIR /app
 
-COPY --from=builder /app/bin/shortener ./shortener
+RUN npm install concurrently
 
-EXPOSE 8080
+COPY --from=backend-builder \
+    /build/shortener \
+    ./shortener
 
-ENTRYPOINT ["./shortener"]
+COPY --from=frontend-builder \
+    /build/frontend/node_modules/@hexlet/project-url-shortener-frontend/dist \
+    ./public
+
+COPY Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 80
+
+CMD ["npx", "concurrently", "--kill-others", "./shortener", "caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"]
