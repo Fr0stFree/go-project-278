@@ -9,7 +9,11 @@ BINARY_PATH := ./bin/shortener
 ENTRYPOINT_PATH := ./cmd/shortener
 COVERAGE_PROFILE := coverage.out
 
-.PHONY: build run dev test test-coverage lint lint-fix fmt install-lint require-lint
+DOCKER_IMAGE := frostfree/shortener
+DOCKER_TAG ?= latest
+DOCKER_PLATFORM := linux/amd64
+
+.PHONY: build run dev test test-coverage lint lint-fix fmt install-lint require-lint docker-build docker-push
 
 build:
 	@go build -o $(BINARY_PATH) $(ENTRYPOINT_PATH)
@@ -42,3 +46,9 @@ fmt: require-lint
 lint-fix: require-lint
 	@$(MAKE) fmt
 	@$(MAKE) lint ARGS="--fix"
+
+docker-build:
+	@docker buildx build --platform $(DOCKER_PLATFORM) -t $(DOCKER_IMAGE):$(DOCKER_TAG) --load .
+
+docker-push:
+	@docker buildx build --platform $(DOCKER_PLATFORM) -t $(DOCKER_IMAGE):$(DOCKER_TAG) --push .
