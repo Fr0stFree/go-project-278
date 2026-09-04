@@ -10,8 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type shortenerService interface {
+	GetRedirectLink(shortName string) (shortener.Link, error)
+	SaveLinkVisit(linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error)
+	CreateLink(originalURL, shortName string) (shortener.Link, error)
+	GetLink(id uint) (shortener.Link, error)
+	ListLinksWithCount(optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error)
+	UpdateLink(id uint, originalURL, shortName string) (shortener.Link, error)
+	DeleteLink(id uint) error
+}
+
 type handler struct {
-	shortener *shortener.Service
+	shortener shortenerService
 }
 
 func (h *handler) redirect(ctx *gin.Context) {

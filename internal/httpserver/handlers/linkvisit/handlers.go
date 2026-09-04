@@ -10,11 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type shortenerService interface {
+	ListLinkVisitsWithCount(optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error)
+}
 type handler struct {
-	shortener *shortener.Service
+	shortener shortenerService
 }
 
-func (h *handler) listLinkVisits(ctx *gin.Context) {
+func (h *handler) list(ctx *gin.Context) {
 	optsBuilder, err := parseFilterOpts(ctx)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
