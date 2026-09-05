@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"shortener/internal/db"
-	"shortener/internal/db/models"
 )
 
 func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {
@@ -69,7 +68,7 @@ func TestRepository_GetMany(t *testing.T) {
 	t.Run("should get visits successfully", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 		opts := ListOptions{
-			models.ListOptions{Limit: 10, Offset: 0},
+			db.ListOptions{Limit: 10, Offset: 0},
 			Filters{LinkIDs: []uint{1}},
 		}
 

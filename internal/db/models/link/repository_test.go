@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"shortener/internal/db"
-	"shortener/internal/db/models"
 )
 
 func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {
@@ -87,7 +86,7 @@ func TestRepository_GetMany(t *testing.T) {
 			)
 
 		options := ListOptions{
-			ListOptions: models.ListOptions{
+			ListOptions: db.ListOptions{
 				Limit:     10,
 				SortBy:    "id",
 				SortOrder: "asc",

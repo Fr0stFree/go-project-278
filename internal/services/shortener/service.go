@@ -4,7 +4,7 @@ package shortener
 import (
 	"errors"
 	"shortener/internal/config"
-	"shortener/internal/db/models"
+	"shortener/internal/db"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
 	"time"
@@ -200,9 +200,9 @@ func (s *Service) buildLinkVisit(record linkvisit.Record) LinkVisit {
 
 func (s *Service) mapStorageErrorToServiceError(err error) error {
 	switch {
-	case errors.Is(err, models.ErrObjectDoesNotExist):
+	case errors.Is(err, db.ErrObjectDoesNotExist):
 		return NewNotFoundError("link not found")
-	case errors.Is(err, models.ErrObjectAlreadyExists):
+	case errors.Is(err, db.ErrObjectAlreadyExists):
 		return NewConflictError("shortname already in use", "short_name")
 	default:
 		return err

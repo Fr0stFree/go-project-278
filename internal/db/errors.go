@@ -1,5 +1,4 @@
-// Package models defines common repository options and errors.
-package models
+package db
 
 import "errors"
 

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"shortener/internal/db"
-	"shortener/internal/db/models"
 
 	"gorm.io/gorm"
 )
@@ -29,7 +28,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	result := r.DB.Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, models.ErrObjectAlreadyExists
+			return Record{}, db.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -45,7 +44,7 @@ func (r *Repository) GetByID(ID uint) (Record, error) {
 	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, models.ErrObjectDoesNotExist
+			return Record{}, db.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -95,7 +94,7 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, models.ErrObjectDoesNotExist
+			return Record{}, db.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -107,7 +106,7 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	result = r.DB.Save(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, models.ErrObjectAlreadyExists
+			return Record{}, db.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -124,7 +123,7 @@ func (r *Repository) DeleteByID(ID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return models.ErrObjectDoesNotExist
+		return db.ErrObjectDoesNotExist
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package shortener
 
 import (
 	"shortener/internal/config"
-	"shortener/internal/db/models"
+	"shortener/internal/db"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
 	"testing"
@@ -179,7 +179,7 @@ func TestService_CreateLink(t *testing.T) {
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
-			Return(link.Record{}, models.ErrObjectAlreadyExists).
+			Return(link.Record{}, db.ErrObjectAlreadyExists).
 			Once()
 
 		result, err := mocks.service.CreateLink(originalURL, shortName)
@@ -225,7 +225,7 @@ func TestService_GetLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("GetByID", id).
-			Return(link.Record{}, models.ErrObjectDoesNotExist).
+			Return(link.Record{}, db.ErrObjectDoesNotExist).
 			Once()
 
 		result, err := mocks.service.GetLink(id)
@@ -246,7 +246,7 @@ func TestService_GetRedirectLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("GetMany", link.ListOptions{
-				ListOptions: models.ListOptions{
+				ListOptions: db.ListOptions{
 					Limit:     1,
 					Offset:    0,
 					SortBy:    "id",
@@ -280,7 +280,7 @@ func TestService_GetRedirectLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("GetMany", link.ListOptions{
-				ListOptions: models.ListOptions{
+				ListOptions: db.ListOptions{
 					Limit:     1,
 					Offset:    0,
 					SortBy:    "id",
@@ -307,7 +307,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 			Once()
 		mocks.linkRepo.
 			On("GetMany", link.ListOptions{
-				ListOptions: models.ListOptions{
+				ListOptions: db.ListOptions{
 					Limit:     10,
 					Offset:    0,
 					SortBy:    "id",
@@ -360,7 +360,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 			Once()
 		mocks.linkRepo.
 			On("GetMany", link.ListOptions{
-				ListOptions: models.ListOptions{
+				ListOptions: db.ListOptions{
 					Limit:     10,
 					Offset:    10,
 					SortBy:    "short_name",
@@ -440,7 +440,7 @@ func TestService_UpdateLink(t *testing.T) {
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
-			Return(link.Record{}, models.ErrObjectDoesNotExist).
+			Return(link.Record{}, db.ErrObjectDoesNotExist).
 			Once()
 
 		result, err := mocks.service.UpdateLink(id, originalURL, shortName)
@@ -471,7 +471,7 @@ func TestService_DeleteLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("DeleteByID", id).
-			Return(models.ErrObjectDoesNotExist).
+			Return(db.ErrObjectDoesNotExist).
 			Once()
 
 		err := mocks.service.DeleteLink(id)
@@ -548,7 +548,7 @@ func TestService_SaveLinkVisit(t *testing.T) {
 				Referrer:  referrer,
 				Status:    status,
 			}).
-			Return(linkvisit.Record{}, models.ErrObjectAlreadyExists).
+			Return(linkvisit.Record{}, db.ErrObjectAlreadyExists).
 			Once()
 
 		result, err := mocks.service.SaveLinkVisit(linkID, ip, userAgent, referrer, status)
@@ -634,7 +634,7 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 
 		mocks.linkVisitRepo.
 			On("GetMany", builder.build()).
-			Return([]linkvisit.Record{}, models.ErrObjectDoesNotExist).
+			Return([]linkvisit.Record{}, db.ErrObjectDoesNotExist).
 			Once()
 
 		result, count, err := mocks.service.ListLinkVisitsWithCount(builder)
@@ -653,7 +653,7 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 			Once()
 		mocks.linkVisitRepo.
 			On("Count").
-			Return(0, models.ErrObjectDoesNotExist).
+			Return(0, db.ErrObjectDoesNotExist).
 			Once()
 
 		result, count, err := mocks.service.ListLinkVisitsWithCount(builder)
