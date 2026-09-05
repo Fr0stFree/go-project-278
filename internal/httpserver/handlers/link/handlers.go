@@ -66,7 +66,7 @@ func (h *handler) create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, createLinkResponseBody(link))
+	ctx.JSON(http.StatusCreated, createLinkResponseBody(link))
 }
 
 func (h *handler) get(ctx *gin.Context) {

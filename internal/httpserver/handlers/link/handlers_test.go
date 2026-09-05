@@ -178,7 +178,7 @@ func TestHandler_create(t *testing.T) {
 
 		router.ServeHTTP(recorder, request)
 
-		require.Equal(t, http.StatusOK, recorder.Code)
+		require.Equal(t, http.StatusCreated, recorder.Code)
 		assert.JSONEq(t, `{
 			"id": 1,
 			"original_url": "https://example.com",

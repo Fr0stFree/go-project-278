@@ -32,7 +32,11 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 	case errors.As(err, &jsonSyntaxErr) || errors.As(err, &jsonTypeErr):
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
 	case errors.As(err, &validatorErr):
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": validatorErr.Error()})
+		fieldErrors := make(map[string]string)
+		for _, fieldErr := range validatorErr {
+			fieldErrors[fieldErr.Field()] = fieldErr.Tag()
+		}
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": fieldErrors})
 	default:
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 	}
