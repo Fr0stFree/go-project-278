@@ -3,20 +3,20 @@ package link
 import (
 	"errors"
 	"fmt"
-	"shortener/internal/database/postgres"
-	"shortener/internal/database/storage"
+	"shortener/internal/db"
+	"shortener/internal/db/models"
 
 	"gorm.io/gorm"
 )
 
 // Repository stores shortened links in PostgreSQL.
 type Repository struct {
-	*postgres.DataBase
+	*db.DataBase
 }
 
 // NewRepository creates a link repository backed by the provided database.
-func NewRepository(db *postgres.DataBase) *Repository {
-	return &Repository{db}
+func NewRepository(database *db.DataBase) *Repository {
+	return &Repository{database}
 }
 
 // CreateOne inserts a shortened link row.
@@ -29,7 +29,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 	result := r.DB.Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, storage.ErrObjectAlreadyExists
+			return Record{}, models.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -45,7 +45,7 @@ func (r *Repository) GetByID(ID uint) (Record, error) {
 	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, storage.ErrObjectDoesNotExist
+			return Record{}, models.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -95,7 +95,7 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	result := r.DB.First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, storage.ErrObjectDoesNotExist
+			return Record{}, models.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -107,7 +107,7 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	result = r.DB.Save(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, storage.ErrObjectAlreadyExists
+			return Record{}, models.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -124,7 +124,7 @@ func (r *Repository) DeleteByID(ID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return storage.ErrObjectDoesNotExist
+		return models.ErrObjectDoesNotExist
 	}
 
 	return nil

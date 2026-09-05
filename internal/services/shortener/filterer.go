@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"shortener/internal/database/storage"
-	"shortener/internal/database/storage/link"
-	"shortener/internal/database/storage/linkvisit"
+	"shortener/internal/db/models"
+	"shortener/internal/db/models/link"
+	"shortener/internal/db/models/linkvisit"
 )
 
 // ListOptionsBuilder validates and builds common list options.
 type ListOptionsBuilder struct {
 	sortFields map[string]string
-	options    storage.ListOptions
+	options    models.ListOptions
 	err        error
 }
 
@@ -95,7 +95,7 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 	return &LinkListOptionsBuilder{
 		ListOptionsBuilder: &ListOptionsBuilder{
 			sortFields: sortFields,
-			options: storage.ListOptions{
+			options: models.ListOptions{
 				Limit:     defaultLimit,
 				Offset:    defaultOffset,
 				SortBy:    defaultSortBy,
@@ -145,7 +145,7 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 	return &LinkVisitListOptionsBuilder{
 		ListOptionsBuilder: &ListOptionsBuilder{
 			sortFields: sortFields,
-			options: storage.ListOptions{
+			options: models.ListOptions{
 				Limit:     defaultLimit,
 				Offset:    defaultOffset,
 				SortBy:    defaultSortBy,

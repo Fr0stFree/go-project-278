@@ -1,5 +1,5 @@
-// Package storage defines common repository options and errors.
-package storage
+// Package models defines common repository options and errors.
+package models
 
 import "errors"
 

@@ -1,8 +1,8 @@
 package shortener
 
 import (
-	"shortener/internal/database/storage/link"
-	"shortener/internal/database/storage/linkvisit"
+	"shortener/internal/db/models/link"
+	"shortener/internal/db/models/linkvisit"
 )
 
 // Link is the service response model for a shortened link.

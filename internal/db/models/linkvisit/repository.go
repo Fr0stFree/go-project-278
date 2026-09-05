@@ -3,16 +3,16 @@ package linkvisit
 
 import (
 	"fmt"
-	"shortener/internal/database/postgres"
+	"shortener/internal/db"
 )
 
 // Repository stores redirect visits in PostgreSQL.
 type Repository struct {
-	*postgres.DataBase
+	*db.DataBase
 }
 
 // NewRepository creates a visit repository backed by the provided database.
-func NewRepository(db *postgres.DataBase) *Repository {
+func NewRepository(db *db.DataBase) *Repository {
 	return &Repository{db}
 }
 

@@ -1,8 +1,8 @@
 package linkvisit
 
 import (
-	"shortener/internal/database/storage"
-	"shortener/internal/database/storage/link"
+	"shortener/internal/db/models"
+	"shortener/internal/db/models/link"
 
 	"gorm.io/gorm"
 )
@@ -39,6 +39,6 @@ type Filters struct {
 
 // ListOptions combines pagination, sorting, and visit filters.
 type ListOptions struct {
-	storage.ListOptions
+	models.ListOptions
 	Filters
 }

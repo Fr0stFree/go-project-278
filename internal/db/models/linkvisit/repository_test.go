@@ -9,8 +9,8 @@ import (
 	gormpostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"shortener/internal/database/postgres"
-	"shortener/internal/database/storage"
+	"shortener/internal/db"
+	"shortener/internal/db/models"
 )
 
 func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {
@@ -31,9 +31,9 @@ func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {
 	)
 	require.NoError(t, err)
 
-	db := &postgres.DataBase{DB: gormDB}
+	database := &db.DataBase{DB: gormDB}
 
-	return NewRepository(db), sqlMock
+	return NewRepository(database), sqlMock
 }
 
 func TestRepository_CreateOne(t *testing.T) {
@@ -69,7 +69,7 @@ func TestRepository_GetMany(t *testing.T) {
 	t.Run("should get visits successfully", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 		opts := ListOptions{
-			storage.ListOptions{Limit: 10, Offset: 0},
+			models.ListOptions{Limit: 10, Offset: 0},
 			Filters{LinkIDs: []uint{1}},
 		}
 

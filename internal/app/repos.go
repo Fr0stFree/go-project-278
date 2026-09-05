@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"shortener/internal/config"
-	"shortener/internal/database/postgres"
-	"shortener/internal/database/storage/link"
-	"shortener/internal/database/storage/linkvisit"
+	"shortener/internal/db"
+	"shortener/internal/db/models/link"
+	"shortener/internal/db/models/linkvisit"
 )
 
 type combinedRepos struct {
@@ -15,10 +15,10 @@ type combinedRepos struct {
 }
 
 func buildRepos(cfg *config.DataBase) (*combinedRepos, error) {
-	db, err := postgres.NewDataBase(cfg, &link.Record{}, &linkvisit.Record{})
+	database, err := db.New(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize PostgreSQL repository: %w", err)
 	}
 
-	return &combinedRepos{link: link.NewRepository(db), linkVisit: linkvisit.NewRepository(db)}, nil
+	return &combinedRepos{link: link.NewRepository(database), linkVisit: linkvisit.NewRepository(database)}, nil
 }

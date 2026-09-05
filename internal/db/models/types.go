@@ -1,4 +1,4 @@
-package storage
+package models
 
 // ListOptions stores pagination and sorting values shared by storage queries.
 type ListOptions struct {
