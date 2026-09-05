@@ -5,6 +5,7 @@ import (
 	"shortener/internal/db"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
+	"shortener/internal/services/utils"
 	"testing"
 	"time"
 
@@ -143,7 +144,7 @@ func TestService_CreateLink(t *testing.T) {
 		)
 
 		mocks := newServiceMocks(t)
-		expectedShortName := toHashString(originalURL, 6)
+		expectedShortName := utils.ToHashString(originalURL, 6)
 		mocks.linkRepo.
 			On("CreateOne", link.Insert{
 				OriginalURL: originalURL,

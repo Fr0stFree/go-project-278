@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"shortener/internal/services/shortener"
+	"shortener/internal/services/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -30,11 +31,11 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 	case errors.As(err, &conflictErr):
 		ctx.JSON(http.StatusConflict, gin.H{"error": map[string]string{conflictErr.Field: conflictErr.Message}})
 	case errors.As(err, &jsonSyntaxErr) || errors.As(err, &jsonTypeErr):
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 	case errors.As(err, &validatorErr):
 		fieldErrors := make(map[string]string)
 		for _, fieldErr := range validatorErr {
-			fieldErrors[fieldErr.Field()] = fieldErr.Tag()
+			fieldErrors[utils.ToSnakeCase(fieldErr.Field())] = fieldErr.Error()
 		}
 
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": fieldErrors})

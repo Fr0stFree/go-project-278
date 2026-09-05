@@ -7,6 +7,7 @@ import (
 	"shortener/internal/db"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
+	"shortener/internal/services/utils"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func NewService(linkRepository LinkRepository, linkVisitRepository LinkVisitRepo
 // CreateLink creates a shortened link, generating a short name when one is not provided.
 func (s *Service) CreateLink(originalURL, shortName string) (Link, error) {
 	if shortName == "" {
-		shortName = toHashString(originalURL, 6)
+		shortName = utils.ToHashString(originalURL, 6)
 	}
 
 	insert := link.Insert{

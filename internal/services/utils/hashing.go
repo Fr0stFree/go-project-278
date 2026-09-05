@@ -1,4 +1,4 @@
-package shortener
+package utils
 
 import (
 	"crypto/sha256"
@@ -6,7 +6,8 @@ import (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func toHashString(value string, size int) string {
+// ToHashString generates a hash string of the given value with the specified size.
+func ToHashString(value string, size int) string {
 	hash := sha256.Sum256([]byte(value))
 
 	shortCode := make([]byte, size)
