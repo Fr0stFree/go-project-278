@@ -72,6 +72,7 @@ func TestRepository_GetMany(t *testing.T) {
 			storage.ListOptions{Limit: 10, Offset: 0},
 			Filters{LinkIDs: []uint{1}},
 		}
+
 		sqlMock.
 			ExpectQuery(`SELECT \* FROM "shortened_link_visits"`).
 			WillReturnRows(
