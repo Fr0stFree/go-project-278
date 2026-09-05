@@ -67,12 +67,7 @@ HTTP_READ_TIMEOUT=10s
 HTTP_WRITE_TIMEOUT=10s
 
 # DB
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=shortener
-DB_PASSWORD=password
-DB_NAME=shortener
-DB_SSL_ENABLED=false
+DATABASE_URL=postgres://shortener:password@localhost:5432/shortener?sslmode=disable
 DB_MAX_OPEN_CONNECTIONS=10
 DB_MAX_IDLE_CONNECTIONS=5
 DB_CONNECTION_MAX_LIFETIME=5m
@@ -86,17 +81,12 @@ Environment variables:
 | `HTTP_PORT` | HTTP server port | `8080` |
 | `HTTP_READ_TIMEOUT` | HTTP read timeout | `10s` |
 | `HTTP_WRITE_TIMEOUT` | HTTP write timeout | `10s` |
-| `DB_HOST` | PostgreSQL host |  |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_USER` | PostgreSQL user |  |
-| `DB_PASSWORD` | PostgreSQL password |  |
-| `DB_NAME` | PostgreSQL database name |  |
-| `DB_SSL_ENABLED` | Enables PostgreSQL SSL mode `require`; when false, uses `disable` | `true` |
+| `DATABASE_URL` | PostgreSQL connection URL | required |
 | `DB_MAX_OPEN_CONNECTIONS` | Maximum open database connections | `10` |
 | `DB_MAX_IDLE_CONNECTIONS` | Maximum idle database connections | `5` |
 | `DB_CONNECTION_MAX_LIFETIME` | Maximum lifetime of reused database connections | `5m` |
 
-Database schema migrations are stored in `migrations` and use `goose` annotations.
+Database schema migrations are stored in `db/migrations` and use `goose` annotations.
 
 ## Running Locally
 
@@ -386,7 +376,7 @@ Common statuses:
 Run database migrations with `goose` when preparing a new PostgreSQL database:
 
 ```bash
-go tool goose -dir migrations postgres "$DATABASE_URL" up
+go tool goose -dir db/migrations postgres "$DATABASE_URL" up
 ```
 
 To update the coverage badge manually:
@@ -414,7 +404,7 @@ make lint
 |-- internal/config               # Environment-based configuration
 |-- internal/db                   # PostgreSQL and GORM setup
 |-- internal/db/models            # Repository layer and storage models
-|-- migrations                    # SQL database migrations
+|-- db/migrations                 # SQL database migrations
 |-- internal/httpserver           # Gin router, HTTP server, and error responses
 |-- internal/services/shortener   # Business logic for links and visits
 |-- .github/badges                # Generated badge data

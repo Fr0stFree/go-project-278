@@ -29,12 +29,7 @@ type HTTP struct {
 
 // DataBase contains PostgreSQL connection pool settings.
 type DataBase struct {
-	Host                  string        `env:"DB_HOST"`
-	Port                  int           `env:"DB_PORT" envDefault:"5432"`
-	User                  string        `env:"DB_USER"`
-	Password              string        `env:"DB_PASSWORD"`
-	DBName                string        `env:"DB_NAME"`
-	IsSSLEnabled          bool          `env:"DB_SSL_ENABLED" envDefault:"true"`
+	URL                   string        `env:"DATABASE_URL,required"`
 	MaxOpenConnections    int           `env:"DB_MAX_OPEN_CONNECTIONS" envDefault:"10"`
 	MaxIdleConnections    int           `env:"DB_MAX_IDLE_CONNECTIONS" envDefault:"5"`
 	ConnectionMaxLifetime time.Duration `env:"DB_CONNECTION_MAX_LIFETIME" envDefault:"5m"`
