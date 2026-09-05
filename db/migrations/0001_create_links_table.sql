@@ -1,6 +1,6 @@
 -- +goose Up
 
-CREATE TABLE shortened_links (
+CREATE TABLE IF NOT EXISTS shortened_links (
     id BIGSERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
@@ -9,10 +9,10 @@ CREATE TABLE shortened_links (
     short_name TEXT NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_shortened_links_short_name
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shortened_links_short_name
     ON shortened_links (short_name);
 
-CREATE INDEX idx_shortened_links_deleted_at
+CREATE INDEX IF NOT EXISTS idx_shortened_links_deleted_at
     ON shortened_links (deleted_at);
 
 
