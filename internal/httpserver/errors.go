@@ -36,6 +36,7 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 		for _, fieldErr := range validatorErr {
 			fieldErrors[fieldErr.Field()] = fieldErr.Tag()
 		}
+
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": fieldErrors})
 	default:
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
