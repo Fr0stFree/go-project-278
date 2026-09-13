@@ -2,12 +2,15 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os/signal"
 	"shortener/internal/app"
 	"shortener/internal/config"
 	"shortener/internal/db"
 	"shortener/internal/httpserver"
 	"shortener/internal/services/shortener"
+	"syscall"
 )
 
 func main() {
@@ -21,11 +24,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer cancel()
+
 	service := shortener.NewService(database.Link, database.LinkVisit, &cfg.App)
 	server := httpserver.New(service, &cfg.HTTP)
-	runner := app.New(server)
+	app := app.New(server, database, service, cfg)
 
-	if err := runner.Run(); err != nil {
+	if err := app.Run(ctx); err != nil {
 		log.Fatal(err)
 	}
 }
