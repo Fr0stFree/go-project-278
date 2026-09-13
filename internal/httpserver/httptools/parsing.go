@@ -2,46 +2,29 @@
 package httptools
 
 import (
+	"encoding/json"
 	"fmt"
-	"regexp"
 	"strconv"
 )
 
-var rangeRegexp = regexp.MustCompile(`^\[(\d+),(\d+)\]$`)
-
 // ParseQueryRange parses a range query parameter in the format "[from,to]".
 func ParseQueryRange(rangeRaw string) (int, int, error) {
-	var (
-		from, to int
-		err      error
-	)
-
-	matches := rangeRegexp.FindStringSubmatch(rangeRaw)
-	if len(matches) != 3 {
+	var values []int
+	if err := json.Unmarshal([]byte(rangeRaw), &values); err != nil || len(values) != 2 {
 		return 0, 0, fmt.Errorf("invalid range format: %s", rangeRaw)
 	}
 
-	from, err = strconv.Atoi(matches[1])
-	if err != nil {
-		return 0, 0, fmt.Errorf("invalid range start: %s", matches[1])
-	}
-
-	to, err = strconv.Atoi(matches[2])
-	if err != nil {
-		return 0, 0, fmt.Errorf("invalid range end: %s", matches[2])
-	}
-
-	return from, to, err
+	return values[0], values[1], nil
 }
 
 // ParseQuerySort parses a sort query parameter in the format "[field,order]".
 func ParseQuerySort(sortRaw string) (string, string, error) {
-	var sortBy, sortOrder string
-	if _, err := fmt.Sscanf(sortRaw, "[%q,%q]", &sortBy, &sortOrder); err != nil {
+	var values []string
+	if err := json.Unmarshal([]byte(sortRaw), &values); err != nil || len(values) != 2 {
 		return "", "", fmt.Errorf("invalid sort format: %s", sortRaw)
 	}
 
-	return sortBy, sortOrder, nil
+	return values[0], values[1], nil
 }
 
 // ParsePositiveIntParam parses a string parameter as a positive integer.

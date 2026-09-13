@@ -150,8 +150,8 @@ func TestHandler_create(t *testing.T) {
 	t.Run("should create link successfully", func(t *testing.T) {
 		const (
 			originalURL = "https://example.com"
-			shortName   = "abc123"
-			shortURL    = "https://short.example.com/abc123"
+			shortName   = "abc-123"
+			shortURL    = "https://short.example.com/abc-123"
 		)
 
 		mocks := newHandlerMocks(t)
@@ -172,7 +172,7 @@ func TestHandler_create(t *testing.T) {
 			"/api/links",
 			strings.NewReader(`{
 				"original_url": "https://example.com",
-				"short_name": "abc123"
+				"short_name": "abc-123"
 			}`),
 		)
 		request.Header.Set("Content-Type", "application/json")
@@ -183,8 +183,8 @@ func TestHandler_create(t *testing.T) {
 		assert.JSONEq(t, `{
 			"id": 1,
 			"original_url": "https://example.com",
-			"short_name": "abc123",
-			"short_url": "https://short.example.com/abc123"
+			"short_name": "abc-123",
+			"short_url": "https://short.example.com/abc-123"
 		}`, recorder.Body.String())
 	})
 
@@ -243,21 +243,9 @@ func TestHandler_create(t *testing.T) {
 				expectedStatus:   http.StatusUnprocessableEntity,
 			},
 			{
-				name:             "short_name too short",
-				body:             `{"original_url": "https://example.com", "short_name": "abc"}`,
-				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'min' tag"}}`,
-				expectedStatus:   http.StatusUnprocessableEntity,
-			},
-			{
-				name:             "short_name too long",
-				body:             `{"original_url": "https://example.com", "short_name": "abcdefghijklmnopqrstuvwxyz"}`,
-				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'max' tag"}}`,
-				expectedStatus:   http.StatusUnprocessableEntity,
-			},
-			{
-				name:             "short_name with invalid characters",
-				body:             `{"original_url": "https://example.com", "short_name": "abr/123$"}`,
-				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'alphanum' tag"}}`,
+				name:             "short_name containing a path separator",
+				body:             `{"original_url": "https://example.com", "short_name": "abr/123"}`,
+				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'excludes' tag"}}`,
 				expectedStatus:   http.StatusUnprocessableEntity,
 			},
 			{
