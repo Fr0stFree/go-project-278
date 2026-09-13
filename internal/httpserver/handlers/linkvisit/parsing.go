@@ -1,7 +1,7 @@
 package linkvisit
 
 import (
-	"fmt"
+	"shortener/internal/httpserver"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
@@ -12,9 +12,9 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, 
 
 	rangeRaw := ctx.Query("range")
 	if rangeRaw != "" {
-		var from, to int
-		if _, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &from, &to); err != nil {
-			return nil, shortener.NewValidationError(fmt.Sprintf("invalid range format: %s", rangeRaw), "range")
+		from, to, err := httpserver.ParseQueryRange(rangeRaw)
+		if err != nil {
+			return nil, shortener.NewValidationError(err.Error(), "range")
 		}
 
 		builder.WithRange(from, to)

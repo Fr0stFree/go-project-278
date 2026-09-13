@@ -346,6 +346,19 @@ func TestHandler_get(t *testing.T) {
 		require.Equal(t, http.StatusNotFound, recorder.Code)
 		assert.JSONEq(t, `{"error": "link not found"}`, recorder.Body.String())
 	})
+
+	t.Run("should handle invalid link ID parameter", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/links/invalid-id", nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+		assert.JSONEq(t, `{"error": {"link_id": "invalid positive integer: invalid-id"}}`, recorder.Body.String())
+	})
 }
 
 func TestHandler_list(t *testing.T) {
@@ -400,7 +413,46 @@ func TestHandler_list(t *testing.T) {
 		assert.JSONEq(t, `[]`, recorder.Body.String())
 	})
 
-	// TODO: add more test cases
+	t.Run("should handle invalid range parameter", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/links?range=invalid-range", nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+		assert.JSONEq(t, `{"error": {"range": "invalid range format: invalid-range"}}`, recorder.Body.String())
+	})
+
+	t.Run("should handle sort parameter", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		mocks.shortener.
+			On("ListLinksWithCount", mock.Anything, mock.Anything).
+			Return([]shortener.Link{}, 0, nil).
+			Once()
+
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, `/api/links?sort=["original_url","asc"]`, nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		assert.JSONEq(t, `[]`, recorder.Body.String())
+	})
+
+	t.Run("should handle invalid sort parameter", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, `/api/links?sort=invalid-sort`, nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+		assert.JSONEq(t, `{"error": {"sort": "invalid sort format: invalid-sort"}}`, recorder.Body.String())
+	})
 }
 
 func TestHandler_update(t *testing.T) {

@@ -1,22 +1,16 @@
 package link
 
 import (
-	"fmt"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
+	"shortener/internal/httpserver"
 	"shortener/internal/services/shortener"
 )
 
 func parseLinkID(ctx *gin.Context) (uint, error) {
-	linkID, err := strconv.Atoi(ctx.Param("id"))
+	linkID, err := httpserver.ParsePositiveIntParam(ctx.Param("id"))
 	if err != nil {
-		return 0, shortener.NewValidationError(fmt.Sprintf("invalid link ID: %s", ctx.Param("id")), "link_id")
-	}
-
-	if linkID < 0 {
-		return 0, shortener.NewValidationError(fmt.Sprintf("invalid link ID: %d", linkID), "link_id")
+		return 0, shortener.NewValidationError(err.Error(), "link_id")
 	}
 
 	return uint(linkID), nil
@@ -27,9 +21,9 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error
 
 	rangeRaw := ctx.Query("range")
 	if rangeRaw != "" {
-		var from, to int
-		if _, err := fmt.Sscanf(rangeRaw, "[%d,%d]", &from, &to); err != nil {
-			return nil, shortener.NewValidationError(fmt.Sprintf("invalid range format: %s", rangeRaw), "range")
+		from, to, err := httpserver.ParseQueryRange(rangeRaw)
+		if err != nil {
+			return nil, shortener.NewValidationError(err.Error(), "range")
 		}
 
 		builder.WithRange(from, to)
@@ -37,9 +31,9 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error
 
 	sortRaw := ctx.Query("sort")
 	if sortRaw != "" {
-		var sortBy, sortOrder string
-		if _, err := fmt.Sscanf(sortRaw, "[%q,%q]", &sortBy, &sortOrder); err != nil {
-			return nil, shortener.NewValidationError(fmt.Sprintf("invalid sort format: %s", sortRaw), "sort")
+		sortBy, sortOrder, err := httpserver.ParseQuerySort(sortRaw)
+		if err != nil {
+			return nil, shortener.NewValidationError(err.Error(), "sort")
 		}
 
 		builder.WithSort(sortBy, sortOrder)
