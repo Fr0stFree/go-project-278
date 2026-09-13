@@ -6,34 +6,42 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
 	"shortener/internal/config"
-	"shortener/internal/db"
-	"shortener/internal/services/shortener"
 )
+
+type server interface {
+	ListenAndServe() error
+	Shutdown(context.Context) error
+}
+
+type database interface {
+	Close() error
+}
 
 // App owns the configured HTTP server.
 type App struct {
-	server    *http.Server
-	shortener *shortener.Service
-	db        *db.Database
-	config    *config.Root
+	server server
+	db     database
+	cfg    *config.Root
 }
 
-// New builds repositories, services, and the HTTP server from the provided configuration.
-func New(server *http.Server, db *db.Database, shortener *shortener.Service, cfg *config.Root) *App {
-	return &App{server: server, db: db, shortener: shortener, config: cfg}
+// New builds App with the given server and database, applying options.
+func New(server server, db database, cfg *config.Root) *App {
+	return &App{server: server, db: db, cfg: cfg}
 }
 
 // Run starts the HTTP server and returns unexpected server errors.
 func (a *App) Run(ctx context.Context) error {
 	var errs []error
 
-	errCh := a.startHTTPServer()
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- a.server.ListenAndServe()
+	}()
 
 	select {
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), a.config.HTTP.ShutdownTimeout)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), a.cfg.HTTP.ShutdownTimeout)
 		defer cancel()
 
 		err := a.server.Shutdown(shutdownCtx)
@@ -59,13 +67,4 @@ func (a *App) Run(ctx context.Context) error {
 
 		return errors.Join(errs...)
 	}
-}
-
-func (a *App) startHTTPServer() <-chan error {
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- a.server.ListenAndServe()
-	}()
-
-	return errCh
 }

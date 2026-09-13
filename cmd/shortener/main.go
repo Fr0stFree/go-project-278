@@ -35,7 +35,7 @@ func main() {
 
 	service := shortener.NewService(database.Link, database.LinkVisit, &cfg.App)
 	server := httpserver.New(service, &cfg.HTTP)
-	app := app.New(server, database, service, cfg)
+	app := app.New(server, database, cfg)
 
 	if err := app.Run(ctx); err != nil {
 		log.Fatal(err)
