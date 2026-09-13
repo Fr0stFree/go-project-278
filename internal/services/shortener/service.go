@@ -12,15 +12,30 @@ import (
 	"time"
 )
 
+type linkVisitRepository interface {
+	CreateOne(ctx context.Context, insert linkvisit.Insert) (linkvisit.Record, error)
+	GetMany(ctx context.Context, options linkvisit.ListOptions) ([]linkvisit.Record, error)
+	Count(ctx context.Context) (int, error)
+}
+
+type linkRepository interface {
+	CreateOne(ctx context.Context, insert link.Insert) (link.Record, error)
+	GetByID(ctx context.Context, ID uint) (link.Record, error)
+	GetMany(ctx context.Context, options link.ListOptions) ([]link.Record, error)
+	Count(ctx context.Context) (int, error)
+	UpdateByID(ctx context.Context, ID uint, update link.Update) (link.Record, error)
+	DeleteByID(ctx context.Context, ID uint) error
+}
+
 // Service coordinates link and visit repositories.
 type Service struct {
-	linkRepo      LinkRepository
-	linkVisitRepo LinkVisitRepository
+	linkRepo      linkRepository
+	linkVisitRepo linkVisitRepository
 	cfg           *config.App
 }
 
 // NewService creates a shortener service with link and visit repositories.
-func NewService(linkRepository LinkRepository, linkVisitRepository LinkVisitRepository, config *config.App) *Service {
+func NewService(linkRepository linkRepository, linkVisitRepository linkVisitRepository, config *config.App) *Service {
 	return &Service{
 		linkRepo:      linkRepository,
 		linkVisitRepo: linkVisitRepository,
