@@ -26,6 +26,7 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 	)
 
 	switch {
+	// Hexlet integration requires that the API returns a 400 status code for invalid JSON requests, and a 422 status code for validation errors.
 	case errors.As(err, &jsonSyntaxErr) ||
 		errors.As(err, &jsonTypeErr) ||
 		errors.Is(err, io.EOF) ||

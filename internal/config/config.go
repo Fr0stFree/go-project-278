@@ -17,7 +17,8 @@ type Root struct {
 
 // App contains settings used by business logic.
 type App struct {
-	BaseURL string `env:"APP_BASE_URL,required"`
+	// Hexlet integration tests will fail if the environment variable is not set
+	BaseURL string `env:"APP_BASE_URL" envDefault:"http://localhost:8080"` 
 }
 
 // HTTP contains server address and timeout settings.
