@@ -29,17 +29,17 @@ type linkRepository interface {
 
 // Service coordinates link and visit repositories.
 type Service struct {
-	linkRepo      linkRepository
-	linkVisitRepo linkVisitRepository
-	cfg           *config.App
+	links      linkRepository
+	linkVisits linkVisitRepository
+	cfg        *config.App
 }
 
 // NewService creates a shortener service with link and visit repositories.
 func NewService(linkRepository linkRepository, linkVisitRepository linkVisitRepository, config *config.App) *Service {
 	return &Service{
-		linkRepo:      linkRepository,
-		linkVisitRepo: linkVisitRepository,
-		cfg:           config,
+		links:      linkRepository,
+		linkVisits: linkVisitRepository,
+		cfg:        config,
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string)
 		ShortName:   shortName,
 	}
 
-	record, err := s.linkRepo.CreateOne(ctx, insert)
+	record, err := s.links.CreateOne(ctx, insert)
 	if err != nil {
 		if errors.Is(err, models.ErrObjectAlreadyExists) && !isShortNameProvided {
 			// If the short name was generated and already exists, try again with a new random short name.
@@ -70,7 +70,7 @@ func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string)
 
 // GetLink returns a shortened link by ID.
 func (s *Service) GetLink(ctx context.Context, id uint) (Link, error) {
-	record, err := s.linkRepo.GetByID(ctx, id)
+	record, err := s.links.GetByID(ctx, id)
 	if err != nil {
 		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
@@ -88,7 +88,7 @@ func (s *Service) GetRedirectLink(ctx context.Context, shortName string) (Link, 
 		return Link{}, builder.err
 	}
 
-	records, err := s.linkRepo.GetMany(ctx, builder.build())
+	records, err := s.links.GetMany(ctx, builder.build())
 	if err != nil {
 		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
@@ -110,7 +110,7 @@ func (s *Service) ListLinksWithCount(ctx context.Context, builder *LinkListOptio
 		return nil, 0, builder.err
 	}
 
-	records, err := s.linkRepo.GetMany(ctx, builder.build())
+	records, err := s.links.GetMany(ctx, builder.build())
 	if err != nil {
 		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
@@ -120,7 +120,7 @@ func (s *Service) ListLinksWithCount(ctx context.Context, builder *LinkListOptio
 		links[idx] = s.buildLink(record)
 	}
 
-	count, err := s.linkRepo.Count(ctx)
+	count, err := s.links.Count(ctx)
 	if err != nil {
 		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
@@ -135,7 +135,7 @@ func (s *Service) UpdateLink(ctx context.Context, id uint, originalURL, shortNam
 		ShortName:   shortName,
 	}
 
-	record, err := s.linkRepo.UpdateByID(ctx, id, update)
+	record, err := s.links.UpdateByID(ctx, id, update)
 	if err != nil {
 		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
@@ -145,7 +145,7 @@ func (s *Service) UpdateLink(ctx context.Context, id uint, originalURL, shortNam
 
 // DeleteLink removes a shortened link by ID.
 func (s *Service) DeleteLink(ctx context.Context, id uint) error {
-	err := s.linkRepo.DeleteByID(ctx, id)
+	err := s.links.DeleteByID(ctx, id)
 	if err != nil {
 		return s.mapStorageErrorToServiceError(err)
 	}
@@ -172,7 +172,7 @@ func (s *Service) SaveLinkVisit(ctx context.Context, linkID uint, ip, userAgent,
 		Status:    status,
 	}
 
-	record, err := s.linkVisitRepo.CreateOne(ctx, insert)
+	record, err := s.linkVisits.CreateOne(ctx, insert)
 	if err != nil {
 		return LinkVisit{}, s.mapStorageErrorToServiceError(err)
 	}
@@ -190,7 +190,7 @@ func (s *Service) ListLinkVisitsWithCount(ctx context.Context, builder *LinkVisi
 		return nil, 0, builder.err
 	}
 
-	records, err := s.linkVisitRepo.GetMany(ctx, builder.build())
+	records, err := s.linkVisits.GetMany(ctx, builder.build())
 	if err != nil {
 		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
@@ -200,7 +200,7 @@ func (s *Service) ListLinkVisitsWithCount(ctx context.Context, builder *LinkVisi
 		visits[i] = s.buildLinkVisit(record)
 	}
 
-	count, err := s.linkVisitRepo.Count(ctx)
+	count, err := s.linkVisits.Count(ctx)
 	if err != nil {
 		return nil, 0, s.mapStorageErrorToServiceError(err)
 	}
