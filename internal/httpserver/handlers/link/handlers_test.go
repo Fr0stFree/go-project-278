@@ -1,6 +1,7 @@
 package link
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"shortener/internal/services/shortener"
@@ -17,44 +18,44 @@ type mockShortenerService struct {
 	mock.Mock
 }
 
-func (m *mockShortenerService) GetRedirectLink(shortName string) (shortener.Link, error) {
-	args := m.Called(shortName)
+func (m *mockShortenerService) GetRedirectLink(ctx context.Context, shortName string) (shortener.Link, error) {
+	args := m.Called(ctx, shortName)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) SaveLinkVisit(linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error) {
-	args := m.Called(linkID, ip, userAgent, referrer, status)
+func (m *mockShortenerService) SaveLinkVisit(ctx context.Context, linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error) {
+	args := m.Called(ctx, linkID, ip, userAgent, referrer, status)
 
 	return args.Get(0).(shortener.LinkVisit), args.Error(1)
 }
 
-func (m *mockShortenerService) CreateLink(originalURL, shortName string) (shortener.Link, error) {
-	args := m.Called(originalURL, shortName)
+func (m *mockShortenerService) CreateLink(ctx context.Context, originalURL, shortName string) (shortener.Link, error) {
+	args := m.Called(ctx, originalURL, shortName)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) GetLink(id uint) (shortener.Link, error) {
-	args := m.Called(id)
+func (m *mockShortenerService) GetLink(ctx context.Context, id uint) (shortener.Link, error) {
+	args := m.Called(ctx, id)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) ListLinksWithCount(optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error) {
-	args := m.Called(optsBuilder)
+func (m *mockShortenerService) ListLinksWithCount(ctx context.Context, optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error) {
+	args := m.Called(ctx, optsBuilder)
 
 	return args.Get(0).([]shortener.Link), args.Int(1), args.Error(2)
 }
 
-func (m *mockShortenerService) UpdateLink(id uint, originalURL, shortName string) (shortener.Link, error) {
-	args := m.Called(id, originalURL, shortName)
+func (m *mockShortenerService) UpdateLink(ctx context.Context, id uint, originalURL, shortName string) (shortener.Link, error) {
+	args := m.Called(ctx, id, originalURL, shortName)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) DeleteLink(id uint) error {
-	args := m.Called(id)
+func (m *mockShortenerService) DeleteLink(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
 
 	return args.Error(0)
 }
@@ -107,7 +108,7 @@ func TestHandler_redirect(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("GetRedirectLink", shortName).
+			On("GetRedirectLink", mock.Anything, shortName).
 			Return(shortener.Link{
 				ID:          1,
 				OriginalURL: originalURL,
@@ -116,7 +117,7 @@ func TestHandler_redirect(t *testing.T) {
 			}, nil).
 			Once()
 		mocks.shortener.
-			On("SaveLinkVisit", uint(1), ip, userAgent, referrer, status).
+			On("SaveLinkVisit", mock.Anything, uint(1), ip, userAgent, referrer, status).
 			Return(shortener.LinkVisit{
 				ID:        1,
 				LinkID:    1,
@@ -155,7 +156,7 @@ func TestHandler_create(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("CreateLink", originalURL, shortName).
+			On("CreateLink", mock.Anything, originalURL, shortName).
 			Return(shortener.Link{
 				ID:          1,
 				OriginalURL: originalURL,
@@ -195,7 +196,7 @@ func TestHandler_create(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("CreateLink", originalURL, shortName).
+			On("CreateLink", mock.Anything, originalURL, shortName).
 			Return(shortener.Link{}, &shortener.ConflictError{
 				Field:   "short_name",
 				Message: "short name already exists",
@@ -301,7 +302,7 @@ func TestHandler_get(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("GetLink", uint(linkID)).
+			On("GetLink", mock.Anything, uint(linkID)).
 			Return(shortener.Link{
 				ID:          linkID,
 				OriginalURL: originalURL,
@@ -330,7 +331,7 @@ func TestHandler_get(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("GetLink", uint(linkID)).
+			On("GetLink", mock.Anything, uint(linkID)).
 			Return(shortener.Link{}, &shortener.NotFoundError{
 				Message: "link not found",
 			}).
@@ -353,7 +354,7 @@ func TestHandler_list(t *testing.T) {
 	t.Run("should list links successfully", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("ListLinksWithCount", mock.Anything).
+			On("ListLinksWithCount", mock.Anything, mock.Anything).
 			Return([]shortener.Link{
 				{
 					ID:          1,
@@ -384,7 +385,7 @@ func TestHandler_list(t *testing.T) {
 	t.Run("should parse range and set content range header", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("ListLinksWithCount", mock.Anything).
+			On("ListLinksWithCount", mock.Anything, mock.Anything).
 			Return([]shortener.Link{}, 42, nil).
 			Once()
 
@@ -415,7 +416,7 @@ func TestHandler_update(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("UpdateLink", uint(linkID), originalURL, shortName).
+			On("UpdateLink", mock.Anything, uint(linkID), originalURL, shortName).
 			Return(shortener.Link{
 				ID:          linkID,
 				OriginalURL: originalURL,
@@ -458,7 +459,7 @@ func TestHandler_delete(t *testing.T) {
 
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("DeleteLink", uint(linkID)).
+			On("DeleteLink", mock.Anything, uint(linkID)).
 			Return(nil).
 			Once()
 

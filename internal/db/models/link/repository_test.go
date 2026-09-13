@@ -43,7 +43,7 @@ func TestRepository_CreateOne(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		sqlMock.ExpectCommit()
 
-		record, err := repository.CreateOne(Insert{
+		record, err := repository.CreateOne(t.Context(), Insert{
 			OriginalURL: "https://example.com",
 			ShortName:   "abc123",
 		})
@@ -62,7 +62,7 @@ func TestRepository_GetByID(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "original_url", "short_name"}).
 				AddRow(1, "https://example.com", "abc123"))
 
-		record, err := repository.GetByID(1)
+		record, err := repository.GetByID(t.Context(), 1)
 
 		require.NoError(t, err)
 		assert.Equal(t, record, Record{
@@ -94,7 +94,7 @@ func TestRepository_GetMany(t *testing.T) {
 			Filters: Filters{ShortNames: []string{"abc123", "def456"}},
 		}
 
-		records, err := repository.GetMany(options)
+		records, err := repository.GetMany(t.Context(), options)
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
@@ -118,7 +118,7 @@ func TestRepository_Count(t *testing.T) {
 			ExpectQuery(`SELECT count\(\*\) FROM "shortened_links"`).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
 
-		count, err := repository.Count()
+		count, err := repository.Count(t.Context())
 
 		require.NoError(t, err)
 		assert.Equal(t, count, 42)
@@ -140,7 +140,7 @@ func TestRepository_UpdateByID(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 1))
 		sqlMock.ExpectCommit()
 
-		result, err := repository.UpdateByID(1, Update{
+		result, err := repository.UpdateByID(t.Context(), 1, Update{
 			OriginalURL: "https://example.org",
 			ShortName:   "def456",
 		})
@@ -162,7 +162,7 @@ func TestRepository_DeleteByID(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 1))
 		sqlMock.ExpectCommit()
 
-		err := repository.DeleteByID(1)
+		err := repository.DeleteByID(t.Context(), 1)
 
 		require.NoError(t, err)
 	})

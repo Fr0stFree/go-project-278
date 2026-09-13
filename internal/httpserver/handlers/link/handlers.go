@@ -2,6 +2,7 @@
 package link
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"shortener/internal/httpserver"
@@ -11,13 +12,13 @@ import (
 )
 
 type shortenerService interface {
-	GetRedirectLink(shortName string) (shortener.Link, error)
-	SaveLinkVisit(linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error)
-	CreateLink(originalURL, shortName string) (shortener.Link, error)
-	GetLink(id uint) (shortener.Link, error)
-	ListLinksWithCount(optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error)
-	UpdateLink(id uint, originalURL, shortName string) (shortener.Link, error)
-	DeleteLink(id uint) error
+	GetRedirectLink(ctx context.Context, shortName string) (shortener.Link, error)
+	SaveLinkVisit(ctx context.Context, linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error)
+	CreateLink(ctx context.Context, originalURL, shortName string) (shortener.Link, error)
+	GetLink(ctx context.Context, id uint) (shortener.Link, error)
+	ListLinksWithCount(ctx context.Context, optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error)
+	UpdateLink(ctx context.Context, id uint, originalURL, shortName string) (shortener.Link, error)
+	DeleteLink(ctx context.Context, id uint) error
 }
 
 type handler struct {
@@ -27,7 +28,7 @@ type handler struct {
 func (h *handler) redirect(ctx *gin.Context) {
 	shortName := ctx.Param("short_name")
 
-	link, err := h.shortener.GetRedirectLink(shortName)
+	link, err := h.shortener.GetRedirectLink(ctx.Request.Context(), shortName)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 
@@ -39,7 +40,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 	referrer := ctx.GetHeader("Referer")
 	status := http.StatusFound
 
-	_, err = h.shortener.SaveLinkVisit(link.ID, ip, userAgent, referrer, uint(status))
+	_, err = h.shortener.SaveLinkVisit(ctx.Request.Context(), link.ID, ip, userAgent, referrer, uint(status))
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 
@@ -59,7 +60,7 @@ func (h *handler) create(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.shortener.CreateLink(body.OriginalURL, body.ShortName)
+	link, err := h.shortener.CreateLink(ctx.Request.Context(), body.OriginalURL, body.ShortName)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 
@@ -77,7 +78,7 @@ func (h *handler) get(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.shortener.GetLink(linkID)
+	link, err := h.shortener.GetLink(ctx.Request.Context(), linkID)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 
@@ -95,7 +96,7 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	links, count, err := h.shortener.ListLinksWithCount(optsBuilder)
+	links, count, err := h.shortener.ListLinksWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 
@@ -125,7 +126,7 @@ func (h *handler) update(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.shortener.UpdateLink(linkID, body.OriginalURL, body.ShortName)
+	link, err := h.shortener.UpdateLink(ctx.Request.Context(), linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 
@@ -143,7 +144,7 @@ func (h *handler) delete(ctx *gin.Context) {
 		return
 	}
 
-	err = h.shortener.DeleteLink(linkID)
+	err = h.shortener.DeleteLink(ctx.Request.Context(), linkID)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 

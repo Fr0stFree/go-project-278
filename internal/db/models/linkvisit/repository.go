@@ -2,6 +2,7 @@
 package linkvisit
 
 import (
+	"context"
 	"fmt"
 	"shortener/internal/db"
 )
@@ -17,7 +18,7 @@ func NewRepository(db *db.DataBase) *Repository {
 }
 
 // CreateOne inserts a redirect visit row.
-func (r *Repository) CreateOne(insert Insert) (Record, error) {
+func (r *Repository) CreateOne(ctx context.Context, insert Insert) (Record, error) {
 	record := Record{
 		LinkID:    insert.LinkID,
 		IP:        insert.IP,
@@ -26,7 +27,7 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 		Referrer:  insert.Referrer,
 	}
 
-	result := r.DB.Create(&record)
+	result := r.DB.WithContext(ctx).Create(&record)
 	if result.Error != nil {
 		return Record{}, result.Error
 	}
@@ -35,9 +36,9 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 }
 
 // GetMany returns visit rows matching the provided list options.
-func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
+func (r *Repository) GetMany(ctx context.Context, options ListOptions) ([]Record, error) {
 	records := make([]Record, 0)
-	statement := r.DB.Model(&Record{})
+	statement := r.DB.WithContext(ctx).Model(&Record{})
 
 	if len(options.LinkIDs) > 0 {
 		statement = statement.Where("link_id IN ?", options.LinkIDs)
@@ -57,10 +58,10 @@ func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
 }
 
 // Count returns the total number of visit rows.
-func (r *Repository) Count() (int, error) {
+func (r *Repository) Count(ctx context.Context) (int, error) {
 	var count int64
 
-	result := r.DB.Model(&Record{}).Count(&count)
+	result := r.DB.WithContext(ctx).Model(&Record{}).Count(&count)
 	if result.Error != nil {
 		return 0, result.Error
 	}

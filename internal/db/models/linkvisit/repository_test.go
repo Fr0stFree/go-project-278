@@ -46,7 +46,7 @@ func TestRepository_CreateOne(t *testing.T) {
 			)
 		sqlMock.ExpectCommit()
 
-		record, err := repository.CreateOne(Insert{
+		record, err := repository.CreateOne(t.Context(), Insert{
 			LinkID:    1,
 			IP:        "127.0.0.1",
 			UserAgent: "Mozilla/5.0",
@@ -81,7 +81,7 @@ func TestRepository_GetMany(t *testing.T) {
 					AddRow(2, 1, "192.168.1.1", "Chrome/89.0", 200, "https://google.com"),
 			)
 
-		records, err := repository.GetMany(opts)
+		records, err := repository.GetMany(t.Context(), opts)
 
 		require.NoError(t, err)
 		assert.Len(t, records, 2)
@@ -112,7 +112,7 @@ func TestRepository_GetMany(t *testing.T) {
 				sqlmock.NewRows([]string{"id", "link_id", "ip", "user_agent", "status", "referrer"}),
 			)
 
-		records, err := repository.GetMany(opts)
+		records, err := repository.GetMany(t.Context(), opts)
 
 		require.NoError(t, err)
 		assert.Empty(t, records)
@@ -125,7 +125,7 @@ func TestRepository_Count(t *testing.T) {
 		sqlMock.ExpectQuery(`SELECT count\(\*\) FROM "shortened_link_visits"`).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(42))
 
-		count, err := repository.Count()
+		count, err := repository.Count(t.Context())
 
 		require.NoError(t, err)
 		assert.Equal(t, 42, count)

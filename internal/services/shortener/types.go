@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
 )
@@ -27,17 +28,17 @@ type LinkVisit struct {
 
 // LinkRepository describes storage operations required for links.
 type LinkRepository interface {
-	CreateOne(insert link.Insert) (link.Record, error)
-	GetByID(ID uint) (link.Record, error)
-	GetMany(options link.ListOptions) ([]link.Record, error)
-	Count() (int, error)
-	UpdateByID(ID uint, update link.Update) (link.Record, error)
-	DeleteByID(ID uint) error
+	CreateOne(ctx context.Context, insert link.Insert) (link.Record, error)
+	GetByID(ctx context.Context, ID uint) (link.Record, error)
+	GetMany(ctx context.Context, options link.ListOptions) ([]link.Record, error)
+	Count(ctx context.Context) (int, error)
+	UpdateByID(ctx context.Context, ID uint, update link.Update) (link.Record, error)
+	DeleteByID(ctx context.Context, ID uint) error
 }
 
 // LinkVisitRepository describes storage operations required for visits.
 type LinkVisitRepository interface {
-	CreateOne(insert linkvisit.Insert) (linkvisit.Record, error)
-	GetMany(options linkvisit.ListOptions) ([]linkvisit.Record, error)
-	Count() (int, error)
+	CreateOne(ctx context.Context, insert linkvisit.Insert) (linkvisit.Record, error)
+	GetMany(ctx context.Context, options linkvisit.ListOptions) ([]linkvisit.Record, error)
+	Count(ctx context.Context) (int, error)
 }

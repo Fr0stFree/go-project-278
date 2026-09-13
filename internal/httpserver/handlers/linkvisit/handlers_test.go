@@ -1,6 +1,7 @@
 package linkvisit
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"shortener/internal/services/shortener"
@@ -16,8 +17,8 @@ type mockShortenerService struct {
 	mock.Mock
 }
 
-func (m *mockShortenerService) ListLinkVisitsWithCount(optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error) {
-	args := m.Called(optsBuilder)
+func (m *mockShortenerService) ListLinkVisitsWithCount(ctx context.Context, optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error) {
+	args := m.Called(ctx, optsBuilder)
 
 	return args.Get(0).([]shortener.LinkVisit), args.Int(1), args.Error(2)
 }
@@ -61,7 +62,7 @@ func TestHandler_list(t *testing.T) {
 	t.Run("should list link visits with count successfully", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("ListLinkVisitsWithCount", mock.Anything).
+			On("ListLinkVisitsWithCount", mock.Anything, mock.Anything).
 			Return([]shortener.LinkVisit{
 				{
 					ID:        1,
@@ -96,7 +97,7 @@ func TestHandler_list(t *testing.T) {
 	t.Run("should parse range successfully", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
 		mocks.shortener.
-			On("ListLinkVisitsWithCount", mock.Anything).
+			On("ListLinkVisitsWithCount", mock.Anything, mock.Anything).
 			Return([]shortener.LinkVisit{}, 42, nil).
 			Once()
 

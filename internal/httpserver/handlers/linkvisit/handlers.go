@@ -1,6 +1,7 @@
 package linkvisit
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type shortenerService interface {
-	ListLinkVisitsWithCount(optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error)
+	ListLinkVisitsWithCount(ctx context.Context, optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error)
 }
 type handler struct {
 	shortener shortenerService
@@ -25,7 +26,7 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	visits, count, err := h.shortener.ListLinkVisitsWithCount(optsBuilder)
+	visits, count, err := h.shortener.ListLinkVisitsWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
 		httpserver.WriteErrorResponse(ctx, err)
 

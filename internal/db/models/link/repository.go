@@ -1,6 +1,7 @@
 package link
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"shortener/internal/db"
@@ -19,13 +20,13 @@ func NewRepository(database *db.DataBase) *Repository {
 }
 
 // CreateOne inserts a shortened link row.
-func (r *Repository) CreateOne(insert Insert) (Record, error) {
+func (r *Repository) CreateOne(ctx context.Context, insert Insert) (Record, error) {
 	record := Record{
 		OriginalURL: insert.OriginalURL,
 		ShortName:   insert.ShortName,
 	}
 
-	result := r.DB.Create(&record)
+	result := r.DB.WithContext(ctx).Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 			return Record{}, db.ErrObjectAlreadyExists
@@ -38,10 +39,10 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 }
 
 // GetByID returns a link row by ID.
-func (r *Repository) GetByID(ID uint) (Record, error) {
+func (r *Repository) GetByID(ctx context.Context, ID uint) (Record, error) {
 	var record Record
 
-	result := r.DB.First(&record, ID)
+	result := r.DB.WithContext(ctx).First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return Record{}, db.ErrObjectDoesNotExist
@@ -54,10 +55,10 @@ func (r *Repository) GetByID(ID uint) (Record, error) {
 }
 
 // GetMany returns link rows matching the provided list options.
-func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
+func (r *Repository) GetMany(ctx context.Context, options ListOptions) ([]Record, error) {
 	records := make([]Record, 0)
 
-	statement := r.DB.Model(&Record{})
+	statement := r.DB.WithContext(ctx).Model(&Record{})
 	if len(options.ShortNames) > 0 {
 		statement = statement.Where("short_name IN ?", options.ShortNames)
 	}
@@ -76,10 +77,10 @@ func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
 }
 
 // Count returns the total number of link rows.
-func (r *Repository) Count() (int, error) {
+func (r *Repository) Count(ctx context.Context) (int, error) {
 	var count int64
 
-	result := r.DB.Model(&Record{}).Count(&count)
+	result := r.DB.WithContext(ctx).Model(&Record{}).Count(&count)
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -88,10 +89,10 @@ func (r *Repository) Count() (int, error) {
 }
 
 // UpdateByID replaces URL fields for a link row by ID.
-func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
+func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Record, error) {
 	var record Record
 
-	result := r.DB.First(&record, ID)
+	result := r.DB.WithContext(ctx).First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return Record{}, db.ErrObjectDoesNotExist
@@ -103,7 +104,7 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 	record.OriginalURL = update.OriginalURL
 	record.ShortName = update.ShortName
 
-	result = r.DB.Save(&record)
+	result = r.DB.WithContext(ctx).Save(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 			return Record{}, db.ErrObjectAlreadyExists
@@ -116,8 +117,8 @@ func (r *Repository) UpdateByID(ID uint, update Update) (Record, error) {
 }
 
 // DeleteByID deletes a link row by ID.
-func (r *Repository) DeleteByID(ID uint) error {
-	result := r.DB.Where("id = ?", ID).Delete(&Record{})
+func (r *Repository) DeleteByID(ctx context.Context, ID uint) error {
+	result := r.DB.WithContext(ctx).Where("id = ?", ID).Delete(&Record{})
 	if result.Error != nil {
 		return result.Error
 	}

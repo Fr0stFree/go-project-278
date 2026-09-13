@@ -1,6 +1,7 @@
 package shortener
 
 import (
+	"context"
 	"shortener/internal/config"
 	"shortener/internal/db"
 	"shortener/internal/db/models/link"
@@ -19,38 +20,38 @@ type mockLinkRepository struct {
 	mock.Mock
 }
 
-func (m *mockLinkRepository) CreateOne(insert link.Insert) (link.Record, error) {
-	args := m.Called(insert)
+func (m *mockLinkRepository) CreateOne(ctx context.Context, insert link.Insert) (link.Record, error) {
+	args := m.Called(ctx, insert)
 
 	return args.Get(0).(link.Record), args.Error(1)
 }
 
-func (m *mockLinkRepository) GetByID(id uint) (link.Record, error) {
-	args := m.Called(id)
+func (m *mockLinkRepository) GetByID(ctx context.Context, id uint) (link.Record, error) {
+	args := m.Called(ctx, id)
 
 	return args.Get(0).(link.Record), args.Error(1)
 }
 
-func (m *mockLinkRepository) GetMany(options link.ListOptions) ([]link.Record, error) {
-	args := m.Called(options)
+func (m *mockLinkRepository) GetMany(ctx context.Context, options link.ListOptions) ([]link.Record, error) {
+	args := m.Called(ctx, options)
 
 	return args.Get(0).([]link.Record), args.Error(1)
 }
 
-func (m *mockLinkRepository) Count() (int, error) {
-	args := m.Called()
+func (m *mockLinkRepository) Count(ctx context.Context) (int, error) {
+	args := m.Called(ctx)
 
 	return args.Int(0), args.Error(1)
 }
 
-func (m *mockLinkRepository) UpdateByID(id uint, update link.Update) (link.Record, error) {
-	args := m.Called(id, update)
+func (m *mockLinkRepository) UpdateByID(ctx context.Context, id uint, update link.Update) (link.Record, error) {
+	args := m.Called(ctx, id, update)
 
 	return args.Get(0).(link.Record), args.Error(1)
 }
 
-func (m *mockLinkRepository) DeleteByID(id uint) error {
-	args := m.Called(id)
+func (m *mockLinkRepository) DeleteByID(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
 
 	return args.Error(0)
 }
@@ -59,20 +60,20 @@ type mockLinkVisitRepository struct {
 	mock.Mock
 }
 
-func (m *mockLinkVisitRepository) CreateOne(insert linkvisit.Insert) (linkvisit.Record, error) {
-	args := m.Called(insert)
+func (m *mockLinkVisitRepository) CreateOne(ctx context.Context, insert linkvisit.Insert) (linkvisit.Record, error) {
+	args := m.Called(ctx, insert)
 
 	return args.Get(0).(linkvisit.Record), args.Error(1)
 }
 
-func (m *mockLinkVisitRepository) GetMany(options linkvisit.ListOptions) ([]linkvisit.Record, error) {
-	args := m.Called(options)
+func (m *mockLinkVisitRepository) GetMany(ctx context.Context, options linkvisit.ListOptions) ([]linkvisit.Record, error) {
+	args := m.Called(ctx, options)
 
 	return args.Get(0).([]linkvisit.Record), args.Error(1)
 }
 
-func (m *mockLinkVisitRepository) Count() (int, error) {
-	args := m.Called()
+func (m *mockLinkVisitRepository) Count(ctx context.Context) (int, error) {
+	args := m.Called(ctx)
 
 	return args.Int(0), args.Error(1)
 }
@@ -115,7 +116,7 @@ func TestService_CreateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("CreateOne", link.Insert{
+			On("CreateOne", t.Context(), link.Insert{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
@@ -126,7 +127,7 @@ func TestService_CreateLink(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, err := mocks.service.CreateLink(originalURL, shortName)
+		result, err := mocks.service.CreateLink(t.Context(), originalURL, shortName)
 
 		require.NoError(t, err)
 		assert.Equal(t, Link{
@@ -146,7 +147,7 @@ func TestService_CreateLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		expectedShortName := utils.ToHashString(originalURL, 6)
 		mocks.linkRepo.
-			On("CreateOne", link.Insert{
+			On("CreateOne", t.Context(), link.Insert{
 				OriginalURL: originalURL,
 				ShortName:   expectedShortName,
 			}).
@@ -157,7 +158,7 @@ func TestService_CreateLink(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, err := mocks.service.CreateLink(originalURL, "")
+		result, err := mocks.service.CreateLink(t.Context(), originalURL, "")
 
 		require.NoError(t, err)
 		assert.Equal(t, Link{
@@ -176,14 +177,14 @@ func TestService_CreateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("CreateOne", link.Insert{
+			On("CreateOne", t.Context(), link.Insert{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
 			Return(link.Record{}, db.ErrObjectAlreadyExists).
 			Once()
 
-		result, err := mocks.service.CreateLink(originalURL, shortName)
+		result, err := mocks.service.CreateLink(t.Context(), originalURL, shortName)
 
 		require.Error(t, err)
 		assert.Equal(t, Link{}, result)
@@ -201,7 +202,7 @@ func TestService_GetLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("GetByID", id).
+			On("GetByID", t.Context(), id).
 			Return(link.Record{
 				Model:       gorm.Model{ID: id},
 				OriginalURL: originalURL,
@@ -209,7 +210,7 @@ func TestService_GetLink(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, err := mocks.service.GetLink(id)
+		result, err := mocks.service.GetLink(t.Context(), id)
 
 		require.NoError(t, err)
 		assert.Equal(t, Link{
@@ -225,11 +226,11 @@ func TestService_GetLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("GetByID", id).
+			On("GetByID", t.Context(), id).
 			Return(link.Record{}, db.ErrObjectDoesNotExist).
 			Once()
 
-		result, err := mocks.service.GetLink(id)
+		result, err := mocks.service.GetLink(t.Context(), id)
 
 		require.Error(t, err)
 		assert.Equal(t, Link{}, result)
@@ -246,7 +247,7 @@ func TestService_GetRedirectLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("GetMany", link.ListOptions{
+			On("GetMany", t.Context(), link.ListOptions{
 				ListOptions: db.ListOptions{
 					Limit:     1,
 					Offset:    0,
@@ -264,7 +265,7 @@ func TestService_GetRedirectLink(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, err := mocks.service.GetRedirectLink(shortName)
+		result, err := mocks.service.GetRedirectLink(t.Context(), shortName)
 
 		require.NoError(t, err)
 		assert.Equal(t, Link{
@@ -280,7 +281,7 @@ func TestService_GetRedirectLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("GetMany", link.ListOptions{
+			On("GetMany", t.Context(), link.ListOptions{
 				ListOptions: db.ListOptions{
 					Limit:     1,
 					Offset:    0,
@@ -292,7 +293,7 @@ func TestService_GetRedirectLink(t *testing.T) {
 			Return([]link.Record{}, nil).
 			Once()
 
-		result, err := mocks.service.GetRedirectLink(shortName)
+		result, err := mocks.service.GetRedirectLink(t.Context(), shortName)
 
 		require.Error(t, err)
 		assert.Equal(t, Link{}, result)
@@ -303,11 +304,11 @@ func TestService_ListLinksWithCount(t *testing.T) {
 	t.Run("should list links with count successfully", func(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("Count").
+			On("Count", t.Context()).
 			Return(42, nil).
 			Once()
 		mocks.linkRepo.
-			On("GetMany", link.ListOptions{
+			On("GetMany", t.Context(), link.ListOptions{
 				ListOptions: db.ListOptions{
 					Limit:     10,
 					Offset:    0,
@@ -329,7 +330,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, count, err := mocks.service.ListLinksWithCount(nil)
+		result, count, err := mocks.service.ListLinksWithCount(t.Context(), nil)
 
 		require.NoError(t, err)
 		assert.Equal(t, 42, count)
@@ -356,11 +357,11 @@ func TestService_ListLinksWithCount(t *testing.T) {
 		builder.WithRange(10, 19)
 		builder.WithSort("short_name", "asc")
 		mocks.linkRepo.
-			On("Count").
+			On("Count", t.Context()).
 			Return(0, nil).
 			Once()
 		mocks.linkRepo.
-			On("GetMany", link.ListOptions{
+			On("GetMany", t.Context(), link.ListOptions{
 				ListOptions: db.ListOptions{
 					Limit:     10,
 					Offset:    10,
@@ -374,7 +375,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 			Return([]link.Record{}, nil).
 			Once()
 
-		result, count, err := mocks.service.ListLinksWithCount(builder)
+		result, count, err := mocks.service.ListLinksWithCount(t.Context(), builder)
 
 		require.NoError(t, err)
 		assert.Empty(t, result)
@@ -386,7 +387,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 		builder := NewLinkListOptionsBuilder()
 		builder.WithRange(-1, 10)
 
-		result, count, err := mocks.service.ListLinksWithCount(builder)
+		result, count, err := mocks.service.ListLinksWithCount(t.Context(), builder)
 
 		require.Error(t, err)
 		assert.Nil(t, result)
@@ -406,7 +407,7 @@ func TestService_UpdateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("UpdateByID", id, link.Update{
+			On("UpdateByID", t.Context(), id, link.Update{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
@@ -417,7 +418,7 @@ func TestService_UpdateLink(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, err := mocks.service.UpdateLink(id, originalURL, shortName)
+		result, err := mocks.service.UpdateLink(t.Context(), id, originalURL, shortName)
 
 		require.NoError(t, err)
 		assert.Equal(t, Link{
@@ -437,14 +438,14 @@ func TestService_UpdateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("UpdateByID", id, link.Update{
+			On("UpdateByID", t.Context(), id, link.Update{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
 			Return(link.Record{}, db.ErrObjectDoesNotExist).
 			Once()
 
-		result, err := mocks.service.UpdateLink(id, originalURL, shortName)
+		result, err := mocks.service.UpdateLink(t.Context(), id, originalURL, shortName)
 
 		require.Error(t, err)
 		assert.Equal(t, Link{}, result)
@@ -457,11 +458,11 @@ func TestService_DeleteLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("DeleteByID", id).
+			On("DeleteByID", t.Context(), id).
 			Return(nil).
 			Once()
 
-		err := mocks.service.DeleteLink(id)
+		err := mocks.service.DeleteLink(t.Context(), id)
 
 		require.NoError(t, err)
 	})
@@ -471,11 +472,11 @@ func TestService_DeleteLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("DeleteByID", id).
+			On("DeleteByID", t.Context(), id).
 			Return(db.ErrObjectDoesNotExist).
 			Once()
 
-		err := mocks.service.DeleteLink(id)
+		err := mocks.service.DeleteLink(t.Context(), id)
 
 		require.Error(t, err)
 	})
@@ -495,7 +496,7 @@ func TestService_SaveLinkVisit(t *testing.T) {
 		updatedAt := time.Date(2026, 9, 4, 12, 35, 0, 0, time.UTC)
 		mocks := newServiceMocks(t)
 		mocks.linkVisitRepo.
-			On("CreateOne", linkvisit.Insert{
+			On("CreateOne", t.Context(), linkvisit.Insert{
 				LinkID:    linkID,
 				IP:        ip,
 				UserAgent: userAgent,
@@ -516,7 +517,7 @@ func TestService_SaveLinkVisit(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, err := mocks.service.SaveLinkVisit(linkID, ip, userAgent, referrer, status)
+		result, err := mocks.service.SaveLinkVisit(t.Context(), linkID, ip, userAgent, referrer, status)
 
 		require.NoError(t, err)
 		assert.Equal(t, LinkVisit{
@@ -542,7 +543,7 @@ func TestService_SaveLinkVisit(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkVisitRepo.
-			On("CreateOne", linkvisit.Insert{
+			On("CreateOne", t.Context(), linkvisit.Insert{
 				LinkID:    linkID,
 				IP:        ip,
 				UserAgent: userAgent,
@@ -552,7 +553,7 @@ func TestService_SaveLinkVisit(t *testing.T) {
 			Return(linkvisit.Record{}, db.ErrObjectAlreadyExists).
 			Once()
 
-		result, err := mocks.service.SaveLinkVisit(linkID, ip, userAgent, referrer, status)
+		result, err := mocks.service.SaveLinkVisit(t.Context(), linkID, ip, userAgent, referrer, status)
 
 		require.Error(t, err)
 		assert.Equal(t, LinkVisit{}, result)
@@ -565,11 +566,11 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 		builder := NewLinkVisitListOptionsBuilder()
 
 		mocks.linkVisitRepo.
-			On("Count").
+			On("Count", t.Context()).
 			Return(42, nil).
 			Once()
 		mocks.linkVisitRepo.
-			On("GetMany", builder.build()).
+			On("GetMany", t.Context(), builder.build()).
 			Return([]linkvisit.Record{
 				{
 					Model:     gorm.Model{ID: 1},
@@ -590,7 +591,7 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 			}, nil).
 			Once()
 
-		result, count, err := mocks.service.ListLinkVisitsWithCount(builder)
+		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
 
 		require.NoError(t, err)
 		assert.Equal(t, 42, count)
@@ -600,15 +601,15 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 	t.Run("should list link visits without filters successfully", func(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkVisitRepo.
-			On("Count").
+			On("Count", t.Context()).
 			Return(0, nil).
 			Once()
 		mocks.linkVisitRepo.
-			On("GetMany", mock.AnythingOfType("linkvisit.ListOptions")).
+			On("GetMany", t.Context(), mock.AnythingOfType("linkvisit.ListOptions")).
 			Return([]linkvisit.Record{}, nil).
 			Once()
 
-		result, count, err := mocks.service.ListLinkVisitsWithCount(nil)
+		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), nil)
 
 		require.NoError(t, err)
 		assert.Empty(t, result)
@@ -620,7 +621,7 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 		builder := NewLinkVisitListOptionsBuilder()
 		builder.WithRange(-1, 10)
 
-		result, count, err := mocks.service.ListLinkVisitsWithCount(builder)
+		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
 
 		require.Error(t, err)
 		assert.Nil(t, result)
@@ -634,11 +635,11 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 		builder := NewLinkVisitListOptionsBuilder()
 
 		mocks.linkVisitRepo.
-			On("GetMany", builder.build()).
+			On("GetMany", t.Context(), builder.build()).
 			Return([]linkvisit.Record{}, db.ErrObjectDoesNotExist).
 			Once()
 
-		result, count, err := mocks.service.ListLinkVisitsWithCount(builder)
+		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
 
 		require.Error(t, err)
 		assert.Nil(t, result)
@@ -649,15 +650,15 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 		mocks := newServiceMocks(t)
 		builder := NewLinkVisitListOptionsBuilder()
 		mocks.linkVisitRepo.
-			On("GetMany", builder.build()).
+			On("GetMany", t.Context(), builder.build()).
 			Return([]linkvisit.Record{}, nil).
 			Once()
 		mocks.linkVisitRepo.
-			On("Count").
+			On("Count", t.Context()).
 			Return(0, db.ErrObjectDoesNotExist).
 			Once()
 
-		result, count, err := mocks.service.ListLinkVisitsWithCount(builder)
+		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
 
 		require.Error(t, err)
 		assert.Nil(t, result)
