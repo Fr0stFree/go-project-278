@@ -1,6 +1,7 @@
 package linkvisit
 
 import (
+	"shortener/internal/db/models/common"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -8,8 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	gormpostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	"shortener/internal/db"
 )
 
 func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {
@@ -30,9 +29,7 @@ func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {
 	)
 	require.NoError(t, err)
 
-	database := &db.DataBase{DB: gormDB}
-
-	return NewRepository(database), sqlMock
+	return NewRepository(gormDB), sqlMock
 }
 
 func TestRepository_CreateOne(t *testing.T) {
@@ -68,7 +65,7 @@ func TestRepository_GetMany(t *testing.T) {
 	t.Run("should get visits successfully", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 		opts := ListOptions{
-			db.ListOptions{Limit: 10, Offset: 0},
+			common.ListOptions{Limit: 10, Offset: 0},
 			Filters{LinkIDs: []uint{1}},
 		}
 
@@ -97,7 +94,7 @@ func TestRepository_GetMany(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 
 		opts := ListOptions{
-			ListOptions: db.ListOptions{
+			ListOptions: common.ListOptions{
 				Limit:     10,
 				SortBy:    "created_at",
 				SortOrder: "DESC",

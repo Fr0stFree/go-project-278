@@ -4,16 +4,17 @@ package linkvisit
 import (
 	"context"
 	"fmt"
-	"shortener/internal/db"
+
+	"gorm.io/gorm"
 )
 
 // Repository stores redirect visits in PostgreSQL.
 type Repository struct {
-	*db.DataBase
+	*gorm.DB
 }
 
 // NewRepository creates a visit repository backed by the provided database.
-func NewRepository(db *db.DataBase) *Repository {
+func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 

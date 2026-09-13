@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
-	"shortener/internal/httpserver"
+	"shortener/internal/httpserver/httptools"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
@@ -21,14 +20,14 @@ type handler struct {
 func (h *handler) list(ctx *gin.Context) {
 	optsBuilder, err := parseFilterOpts(ctx)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
 
 	visits, count, err := h.shortener.ListLinkVisitsWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}

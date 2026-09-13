@@ -1,4 +1,5 @@
-package httpserver
+// Package httptools provides utility functions for parsing and processing HTTP.
+package httptools
 
 import (
 	"fmt"

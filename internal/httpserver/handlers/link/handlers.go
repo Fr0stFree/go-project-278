@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"shortener/internal/httpserver"
+	"shortener/internal/httpserver/httptools"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +30,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 
 	link, err := h.shortener.GetRedirectLink(ctx.Request.Context(), shortName)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -42,7 +42,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 
 	_, err = h.shortener.SaveLinkVisit(ctx.Request.Context(), link.ID, ip, userAgent, referrer, uint(status))
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -55,14 +55,14 @@ func (h *handler) create(ctx *gin.Context) {
 
 	err := ctx.ShouldBindJSON(&body)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
 
 	link, err := h.shortener.CreateLink(ctx.Request.Context(), body.OriginalURL, body.ShortName)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -73,14 +73,14 @@ func (h *handler) create(ctx *gin.Context) {
 func (h *handler) get(ctx *gin.Context) {
 	linkID, err := parseLinkID(ctx)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
 
 	link, err := h.shortener.GetLink(ctx.Request.Context(), linkID)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -91,14 +91,14 @@ func (h *handler) get(ctx *gin.Context) {
 func (h *handler) list(ctx *gin.Context) {
 	optsBuilder, err := parseFilterOpts(ctx)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
 
 	links, count, err := h.shortener.ListLinksWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -112,7 +112,7 @@ func (h *handler) list(ctx *gin.Context) {
 func (h *handler) update(ctx *gin.Context) {
 	linkID, err := parseLinkID(ctx)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -121,14 +121,14 @@ func (h *handler) update(ctx *gin.Context) {
 
 	err = ctx.ShouldBindJSON(&body)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
 
 	link, err := h.shortener.UpdateLink(ctx.Request.Context(), linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
@@ -139,14 +139,14 @@ func (h *handler) update(ctx *gin.Context) {
 func (h *handler) delete(ctx *gin.Context) {
 	linkID, err := parseLinkID(ctx)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}
 
 	err = h.shortener.DeleteLink(ctx.Request.Context(), linkID)
 	if err != nil {
-		httpserver.WriteErrorResponse(ctx, err)
+		httptools.WriteErrorResponse(ctx, err)
 
 		return
 	}

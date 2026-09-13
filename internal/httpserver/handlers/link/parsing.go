@@ -3,12 +3,12 @@ package link
 import (
 	"github.com/gin-gonic/gin"
 
-	"shortener/internal/httpserver"
+	"shortener/internal/httpserver/httptools"
 	"shortener/internal/services/shortener"
 )
 
 func parseLinkID(ctx *gin.Context) (uint, error) {
-	linkID, err := httpserver.ParsePositiveIntParam(ctx.Param("id"))
+	linkID, err := httptools.ParsePositiveIntParam(ctx.Param("id"))
 	if err != nil {
 		return 0, shortener.NewValidationError(err.Error(), "link_id")
 	}
@@ -21,7 +21,7 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error
 
 	rangeRaw := ctx.Query("range")
 	if rangeRaw != "" {
-		from, to, err := httpserver.ParseQueryRange(rangeRaw)
+		from, to, err := httptools.ParseQueryRange(rangeRaw)
 		if err != nil {
 			return nil, shortener.NewValidationError(err.Error(), "range")
 		}
@@ -31,7 +31,7 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error
 
 	sortRaw := ctx.Query("sort")
 	if sortRaw != "" {
-		sortBy, sortOrder, err := httpserver.ParseQuerySort(sortRaw)
+		sortBy, sortOrder, err := httptools.ParseQuerySort(sortRaw)
 		if err != nil {
 			return nil, shortener.NewValidationError(err.Error(), "sort")
 		}

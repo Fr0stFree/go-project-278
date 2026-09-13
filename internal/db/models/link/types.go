@@ -2,7 +2,7 @@
 package link
 
 import (
-	"shortener/internal/db"
+	"shortener/internal/db/models/common"
 
 	"gorm.io/gorm"
 )
@@ -38,6 +38,6 @@ type Filters struct {
 
 // ListOptions combines pagination, sorting, and link filters.
 type ListOptions struct {
-	db.ListOptions
+	common.ListOptions
 	Filters
 }

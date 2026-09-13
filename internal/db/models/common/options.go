@@ -1,4 +1,4 @@
-package db
+package common
 
 // ListOptions stores pagination and sorting values shared by storage queries.
 type ListOptions struct {
