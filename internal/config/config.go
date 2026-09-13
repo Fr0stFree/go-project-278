@@ -17,7 +17,7 @@ type Root struct {
 
 // App contains settings used by business logic.
 type App struct {
-	BaseURL string `env:"APP_BASE_URL"`
+	BaseURL string `env:"APP_BASE_URL,required"`
 }
 
 // HTTP contains server address and timeout settings.
