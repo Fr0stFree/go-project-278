@@ -10,6 +10,8 @@ import (
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
 	"time"
+
+	"github.com/samber/lo"
 )
 
 type linkVisitRepository interface {
@@ -46,9 +48,7 @@ func NewService(linkRepository linkRepository, linkVisitRepository linkVisitRepo
 // CreateLink creates a shortened link, generating a short name when one is not provided.
 func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string) (Link, error) {
 	isShortNameProvided := shortName != ""
-	if !isShortNameProvided {
-		shortName = textutils.RandomString(6)
-	}
+	shortName = lo.Ternary(isShortNameProvided, shortName, textutils.RandomString(6))
 
 	insert := link.Insert{
 		OriginalURL: originalURL,
