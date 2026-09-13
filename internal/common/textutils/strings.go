@@ -1,5 +1,5 @@
-// Package utils provides utility functions for common operations.
-package utils
+// Package textutils provides strings utility functions for common operations.
+package textutils
 
 import (
 	"math/rand/v2"

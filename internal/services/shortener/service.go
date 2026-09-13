@@ -4,11 +4,11 @@ package shortener
 import (
 	"context"
 	"errors"
+	"shortener/internal/common/textutils"
 	"shortener/internal/config"
 	"shortener/internal/db/models/common"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
-	"shortener/internal/services/utils"
 	"time"
 )
 
@@ -32,7 +32,7 @@ func NewService(linkRepository LinkRepository, linkVisitRepository LinkVisitRepo
 func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string) (Link, error) {
 	isShortNameProvided := shortName != ""
 	if !isShortNameProvided {
-		shortName = utils.RandomString(6)
+		shortName = textutils.RandomString(6)
 	}
 
 	insert := link.Insert{

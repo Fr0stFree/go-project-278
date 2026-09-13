@@ -2,11 +2,11 @@ package shortener
 
 import (
 	"context"
+	"shortener/internal/common/textutils"
 	"shortener/internal/config"
 	"shortener/internal/db/models/common"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
-	"shortener/internal/services/utils"
 	"testing"
 	"time"
 
@@ -145,7 +145,7 @@ func TestService_CreateLink(t *testing.T) {
 		)
 
 		mocks := newServiceMocks(t)
-		expectedShortName := utils.RandomString(6)
+		expectedShortName := textutils.RandomString(6)
 		mocks.linkRepo.
 			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
 				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
@@ -204,7 +204,7 @@ func TestService_CreateLink(t *testing.T) {
 			Return(link.Record{}, common.ErrObjectAlreadyExists).
 			Once()
 
-		expectedShortName := utils.RandomString(6)
+		expectedShortName := textutils.RandomString(6)
 
 		mocks.linkRepo.
 			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
