@@ -16,9 +16,9 @@ import (
 
 // Database owns the SQL connection pool and its repositories.
 type Database struct {
-	pool      *sql.DB
-	Link      *link.Repository
-	LinkVisit *linkvisit.Repository
+	pool       *sql.DB
+	Links      *link.Repository
+	LinkVisits *linkvisit.Repository
 }
 
 // New opens PostgreSQL, and configures the connection pool.
@@ -38,9 +38,9 @@ func New(cfg *config.DataBase) (*Database, error) {
 	pool.SetConnMaxLifetime(cfg.ConnectionMaxLifetime)
 
 	db := &Database{
-		pool:      pool,
-		Link:      link.NewRepository(gormDB),
-		LinkVisit: linkvisit.NewRepository(gormDB),
+		pool:       pool,
+		Links:      link.NewRepository(gormDB),
+		LinkVisits: linkvisit.NewRepository(gormDB),
 	}
 
 	slog.Info("PostgreSQL connection pool opened successfully",

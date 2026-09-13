@@ -53,8 +53,6 @@ func (a *App) Run(ctx context.Context) error {
 		if err != nil {
 			errs = append(errs, fmt.Errorf("close database: %w", err))
 		}
-
-		return errors.Join(errs...)
 	case err := <-errCh:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errs = append(errs, fmt.Errorf("run HTTP server: %w", err))
@@ -64,7 +62,7 @@ func (a *App) Run(ctx context.Context) error {
 		if err != nil {
 			errs = append(errs, fmt.Errorf("close database: %w", err))
 		}
-
-		return errors.Join(errs...)
 	}
+
+	return errors.Join(errs...)
 }

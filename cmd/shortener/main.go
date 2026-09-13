@@ -33,7 +33,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	service := shortener.NewService(database.Link, database.LinkVisit, &cfg.App)
+	service := shortener.NewService(database.Links, database.LinkVisits, &cfg.App)
 	server := httpserver.New(service, &cfg.HTTP)
 	app := app.New(server, database, cfg)
 
