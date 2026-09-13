@@ -272,7 +272,7 @@ Response:
 DELETE /api/links/:id
 ```
 
-Successful deletion returns `204 No Content`.
+Successful deletion returns `204 No Content`. Links are soft-deleted: they are excluded from lookups, lists, and redirects, while their recorded visits are retained. A deleted link's short name remains reserved and cannot be reused.
 
 ### Redirect
 
