@@ -37,3 +37,19 @@ func (h *handler) list(ctx *gin.Context) {
 	ctx.Header("Content-Range", fmt.Sprintf("link_visits %d-%d/%d", from, to, count))
 	ctx.JSON(http.StatusOK, listLinksVisitsResponseBody(visits))
 }
+
+func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, error) {
+	builder := shortener.NewLinkVisitListOptionsBuilder()
+
+	rangeRaw := ctx.Query("range")
+	if rangeRaw != "" {
+		from, to, err := httptools.ParseQueryRange(rangeRaw)
+		if err != nil {
+			return nil, shortener.NewValidationError(err.Error(), "range")
+		}
+
+		builder.WithRange(from, to)
+	}
+
+	return builder, nil
+}
