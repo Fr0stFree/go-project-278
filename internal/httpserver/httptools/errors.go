@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"shortener/internal/services/shortener"
@@ -44,6 +45,14 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 	case errors.As(err, &validationErr): // 422
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": map[string]string{validationErr.Field: validationErr.Message}})
 	default:
+		slog.ErrorContext(
+			ctx,
+			"internal error",
+			slog.String("reason", err.Error()),
+			slog.String("operation", ctx.HandlerName()),
+			slog.String("method", ctx.Request.Method),
+			slog.String("url", ctx.Request.URL.String()),
+		)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 	}
 }

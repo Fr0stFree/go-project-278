@@ -3,6 +3,7 @@ package httpserver
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"shortener/internal/config"
 	"shortener/internal/httpserver/handlers/health"
@@ -29,6 +30,11 @@ func New(shortener *shortener.Service, cfg *config.HTTP) *http.Server {
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 	}
+	slog.Info("HTTP server configured successfully",
+		slog.Int("port", cfg.Port),
+		slog.Duration("read_timeout", cfg.ReadTimeout),
+		slog.Duration("write_timeout", cfg.WriteTimeout),
+	)
 
 	return server
 }

@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
+	"os"
 	"os/signal"
 	"shortener/internal/app"
 	"shortener/internal/config"
@@ -14,6 +16,10 @@ import (
 )
 
 func main() {
+	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	logger := slog.New(logHandler)
+	slog.SetDefault(logger)
+
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatal(err)

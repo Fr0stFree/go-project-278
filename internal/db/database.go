@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"log/slog"
 	"shortener/internal/config"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
@@ -36,11 +37,20 @@ func New(cfg *config.DataBase) (*Database, error) {
 	pool.SetMaxIdleConns(cfg.MaxIdleConnections)
 	pool.SetConnMaxLifetime(cfg.ConnectionMaxLifetime)
 
-	return &Database{
+	db := &Database{
 		pool:      pool,
 		Link:      link.NewRepository(gormDB),
 		LinkVisit: linkvisit.NewRepository(gormDB),
-	}, nil
+	}
+
+	slog.Info("PostgreSQL connection pool opened successfully",
+		slog.String("url", cfg.URL),
+		slog.Int("max_open_connections", cfg.MaxOpenConnections),
+		slog.Int("max_idle_connections", cfg.MaxIdleConnections),
+		slog.Duration("connection_max_lifetime", cfg.ConnectionMaxLifetime),
+	)
+
+	return db, nil
 }
 
 // Close releases all connections in the SQL pool.
