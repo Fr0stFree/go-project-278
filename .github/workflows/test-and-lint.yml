@@ -53,8 +53,14 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Verify module files
+        run: make tidy-check
+
       - name: Install golangci-lint
         run: make install-lint
+
+      - name: Check formatting
+        run: make fmt-check
 
       - name: Run the linters
         run: make lint

@@ -13,7 +13,7 @@ DOCKER_IMAGE := frostfree/shortener
 DOCKER_TAG ?= latest
 DOCKER_PLATFORM := linux/amd64
 
-.PHONY: build run dev test test-coverage lint lint-fix fmt install-lint require-lint docker-build docker-push
+.PHONY: build run dev test test-coverage lint lint-fix fmt fmt-check tidy-check install-lint require-lint docker-build docker-push
 
 build:
 	@go build -o $(BINARY_PATH) $(ENTRYPOINT_PATH)
@@ -38,10 +38,16 @@ require-lint:
 	@test -x $(GOLANGCI_LINT) || (echo "golangci-lint not found. Run 'make install-lint' first."; exit 1)
 
 lint: require-lint
-	@$(GOLANGCI_LINT) run $(ARGS) --config $(GOLANGCI_LINT_CONFIG) 
+	@$(GOLANGCI_LINT) run $(ARGS) --config $(GOLANGCI_LINT_CONFIG)
 
 fmt: require-lint
 	@$(GOLANGCI_LINT) fmt --config $(GOLANGCI_LINT_CONFIG)
+
+fmt-check: require-lint
+	@$(GOLANGCI_LINT) fmt --diff --config $(GOLANGCI_LINT_CONFIG)
+
+tidy-check:
+	@go mod tidy -diff
 
 lint-fix: require-lint
 	@$(MAKE) fmt

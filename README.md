@@ -369,6 +369,8 @@ Common statuses:
 | `make install-lint` | Installs the configured `golangci-lint` version. |
 | `make lint` | Runs `golangci-lint` with the project config. |
 | `make fmt` | Formats code through `golangci-lint fmt`. |
+| `make fmt-check` | Checks formatting without modifying files. |
+| `make tidy-check` | Checks that `go.mod` and `go.sum` are tidy. |
 | `make lint-fix` | Formats code and applies automatic lint fixes. |
 | `make docker-build` | Builds the Docker image for `linux/amd64`. |
 | `make docker-push` | Builds and pushes the Docker image for `linux/amd64`. |
@@ -392,6 +394,8 @@ Typical local check before pushing changes:
 make install-lint
 make test
 make test-coverage
+make fmt-check
+make tidy-check
 make lint
 ```
 
