@@ -27,10 +27,9 @@ func New(server *http.Server, db *db.Database, shortener *shortener.Service, cfg
 
 // Run starts the HTTP server and returns unexpected server errors.
 func (a *App) Run(ctx context.Context) error {
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- a.server.ListenAndServe()
-	}()
+	var errs []error
+
+	errCh := a.startHTTPServer()
 
 	select {
 	case <-ctx.Done():
@@ -39,20 +38,34 @@ func (a *App) Run(ctx context.Context) error {
 
 		err := a.server.Shutdown(shutdownCtx)
 		if err != nil {
-			return fmt.Errorf("shutdown HTTP server: %w", err)
+			errs = append(errs, fmt.Errorf("shutdown HTTP server: %w", err))
 		}
 
 		err = a.db.Close()
 		if err != nil {
-			return fmt.Errorf("close database: %w", err)
+			errs = append(errs, fmt.Errorf("close database: %w", err))
 		}
 
-		return nil
+		return errors.Join(errs...)
 	case err := <-errCh:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			return fmt.Errorf("run HTTP server: %w", err)
+			errs = append(errs, fmt.Errorf("run HTTP server: %w", err))
 		}
 
-		return nil
+		err = a.db.Close()
+		if err != nil {
+			errs = append(errs, fmt.Errorf("close database: %w", err))
+		}
+
+		return errors.Join(errs...)
 	}
+}
+
+func (a *App) startHTTPServer() <-chan error {
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- a.server.ListenAndServe()
+	}()
+
+	return errCh
 }
