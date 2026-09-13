@@ -62,11 +62,11 @@ func TestRepository_GetByID(t *testing.T) {
 		record, err := repository.GetByID(t.Context(), 1)
 
 		require.NoError(t, err)
-		assert.Equal(t, record, Record{
+		assert.Equal(t, Record{
 			Model:       gorm.Model{ID: 1},
 			OriginalURL: "https://example.com",
 			ShortName:   "abc123",
-		})
+		}, record)
 	})
 }
 
@@ -95,16 +95,16 @@ func TestRepository_GetMany(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		assert.Equal(t, records[0], Record{
+		assert.Equal(t, Record{
 			Model:       gorm.Model{ID: 1},
 			OriginalURL: "https://example.com",
 			ShortName:   "abc123",
-		})
-		assert.Equal(t, records[1], Record{
+		}, records[0])
+		assert.Equal(t, Record{
 			Model:       gorm.Model{ID: 2},
 			OriginalURL: "https://example.org",
 			ShortName:   "def456",
-		})
+		}, records[1])
 	})
 }
 
@@ -118,7 +118,7 @@ func TestRepository_Count(t *testing.T) {
 		count, err := repository.Count(t.Context())
 
 		require.NoError(t, err)
-		assert.Equal(t, count, 42)
+		assert.Equal(t, 42, count)
 	})
 }
 
