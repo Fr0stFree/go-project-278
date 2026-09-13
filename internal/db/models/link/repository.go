@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"shortener/internal/db/models/common"
+	"shortener/internal/db/models"
 
 	"gorm.io/gorm"
 )
@@ -29,7 +29,7 @@ func (r *Repository) CreateOne(ctx context.Context, insert Insert) (Record, erro
 	result := r.DB.WithContext(ctx).Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, common.ErrObjectAlreadyExists
+			return Record{}, models.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -45,7 +45,7 @@ func (r *Repository) GetByID(ctx context.Context, ID uint) (Record, error) {
 	result := r.DB.WithContext(ctx).First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, common.ErrObjectDoesNotExist
+			return Record{}, models.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -95,7 +95,7 @@ func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Re
 	result := r.DB.WithContext(ctx).First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, common.ErrObjectDoesNotExist
+			return Record{}, models.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -107,7 +107,7 @@ func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Re
 	result = r.DB.WithContext(ctx).Save(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, common.ErrObjectAlreadyExists
+			return Record{}, models.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -124,7 +124,7 @@ func (r *Repository) DeleteByID(ctx context.Context, ID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return common.ErrObjectDoesNotExist
+		return models.ErrObjectDoesNotExist
 	}
 
 	return nil

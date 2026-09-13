@@ -1,5 +1,5 @@
-// Package common defines contracts shared by persistence implementations.
-package common
+// Package models defines contracts shared by persistence implementations.
+package models
 
 import "errors"
 

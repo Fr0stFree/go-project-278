@@ -1,7 +1,7 @@
 package link
 
 import (
-	"shortener/internal/db/models/common"
+	"shortener/internal/db/models"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -83,7 +83,7 @@ func TestRepository_GetMany(t *testing.T) {
 			)
 
 		options := ListOptions{
-			ListOptions: common.ListOptions{
+			ListOptions: models.ListOptions{
 				Limit:     10,
 				SortBy:    "id",
 				SortOrder: "asc",
