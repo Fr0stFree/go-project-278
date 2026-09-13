@@ -260,6 +260,12 @@ func TestHandler_create(t *testing.T) {
 				expectedStatus:   http.StatusUnprocessableEntity,
 			},
 			{
+				name:             "invalid original_url",
+				body:             `{"original_url": "invalid-url", "short_name": "abc123"}`,
+				expectedResponse: `{"errors": {"original_url": "Key: 'createLinkRequestBody.OriginalURL' Error:Field validation for 'OriginalURL' failed on the 'http_url' tag"}}`,
+				expectedStatus:   http.StatusUnprocessableEntity,
+			},
+			{
 				name:             "empty body",
 				body:             "",
 				expectedResponse: `{"error": "invalid request"}`,
