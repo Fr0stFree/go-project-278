@@ -74,6 +74,7 @@ func TestRepository_GetMany(t *testing.T) {
 
 		sqlMock.
 			ExpectQuery(`SELECT \* FROM "shortened_link_visits"`).
+			WithArgs(1, 10).
 			WillReturnRows(
 				sqlmock.NewRows([]string{"id", "link_id", "ip", "user_agent", "status", "referrer"}).
 					AddRow(1, 1, "127.0.0.1", "Mozilla/5.0", 200, "https://example.com").
@@ -90,6 +91,31 @@ func TestRepository_GetMany(t *testing.T) {
 		assert.Equal(t, "Mozilla/5.0", records[0].UserAgent)
 		assert.Equal(t, uint(200), records[0].Status)
 		assert.Equal(t, "https://example.com", records[0].Referrer)
+	})
+
+	t.Run("should filter by multiple link ids", func(t *testing.T) {
+		repository, sqlMock := newRepositoryMock(t)
+
+		opts := ListOptions{
+			ListOptions: db.ListOptions{
+				Limit:     10,
+				SortBy:    "created_at",
+				SortOrder: "DESC",
+			},
+			Filters: Filters{LinkIDs: []uint{1, 2, 3}},
+		}
+
+		sqlMock.
+			ExpectQuery(`SELECT \* FROM "shortened_link_visits".*WHERE link_id IN`).
+			WithArgs(1, 2, 3, 10).
+			WillReturnRows(
+				sqlmock.NewRows([]string{"id", "link_id", "ip", "user_agent", "status", "referrer"}),
+			)
+
+		records, err := repository.GetMany(opts)
+
+		require.NoError(t, err)
+		assert.Empty(t, records)
 	})
 }
 

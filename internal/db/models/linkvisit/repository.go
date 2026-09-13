@@ -37,8 +37,13 @@ func (r *Repository) CreateOne(insert Insert) (Record, error) {
 // GetMany returns visit rows matching the provided list options.
 func (r *Repository) GetMany(options ListOptions) ([]Record, error) {
 	records := make([]Record, 0)
+	statement := r.DB.Model(&Record{})
 
-	result := r.DB.
+	if len(options.LinkIDs) > 0 {
+		statement = statement.Where("link_id IN ?", options.LinkIDs)
+	}
+
+	result := statement.
 		Limit(options.Limit).
 		Offset(options.Offset).
 		Order(fmt.Sprintf("%s %s", options.SortBy, options.SortOrder)).
