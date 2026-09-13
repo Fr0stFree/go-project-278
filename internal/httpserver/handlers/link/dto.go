@@ -6,7 +6,7 @@ import (
 
 type createLinkRequestBody struct {
 	OriginalURL string `json:"original_url" binding:"required"`
-	ShortName   string `json:"short_name"`
+	ShortName   string `json:"short_name" binding:"min=5,max=20,alphanum"`
 }
 
 type createLinkResponseBody shortener.Link
