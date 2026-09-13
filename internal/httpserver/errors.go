@@ -3,6 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 
 	"shortener/internal/services/shortener"
@@ -24,21 +25,24 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 	)
 
 	switch {
-	case errors.As(err, &validationErr):
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": map[string]string{validationErr.Field: validationErr.Message}})
-	case errors.As(err, &notFoundErr):
-		ctx.JSON(http.StatusNotFound, gin.H{"error": notFoundErr.Message})
-	case errors.As(err, &conflictErr):
-		ctx.JSON(http.StatusConflict, gin.H{"error": map[string]string{conflictErr.Field: conflictErr.Message}})
-	case errors.As(err, &jsonSyntaxErr) || errors.As(err, &jsonTypeErr):
+	case errors.As(err, &jsonSyntaxErr) ||
+		errors.As(err, &jsonTypeErr) ||
+		errors.Is(err, io.EOF) ||
+		errors.Is(err, io.ErrUnexpectedEOF): // 400
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-	case errors.As(err, &validatorErr):
+	case errors.As(err, &notFoundErr): // 404
+		ctx.JSON(http.StatusNotFound, gin.H{"error": notFoundErr.Message})
+	case errors.As(err, &conflictErr): // 409
+		ctx.JSON(http.StatusConflict, gin.H{"error": map[string]string{conflictErr.Field: conflictErr.Message}})
+	case errors.As(err, &validatorErr): // 422
 		fieldErrors := make(map[string]string)
 		for _, fieldErr := range validatorErr {
 			fieldErrors[utils.ToSnakeCase(fieldErr.Field())] = fieldErr.Error()
 		}
 
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": fieldErrors})
+	case errors.As(err, &validationErr): // 422
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": map[string]string{validationErr.Field: validationErr.Message}})
 	default:
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 	}

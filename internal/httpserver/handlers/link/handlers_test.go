@@ -187,7 +187,81 @@ func TestHandler_create(t *testing.T) {
 		}`, recorder.Body.String())
 	})
 
-	// TODO: add more test cases
+	t.Run("should handle conflict error when creating a link with an existing short name", func(t *testing.T) {
+		const (
+			originalURL = "https://example.com"
+			shortName   = "abc123"
+		)
+
+		mocks := newHandlerMocks(t)
+		mocks.shortener.
+			On("CreateLink", originalURL, shortName).
+			Return(shortener.Link{}, &shortener.ConflictError{
+				Field:   "short_name",
+				Message: "short name already exists",
+			}).
+			Once()
+
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(
+			http.MethodPost,
+			"/api/links",
+			strings.NewReader(`{
+				"original_url": "https://example.com",
+				"short_name": "abc123"
+			}`),
+		)
+		request.Header.Set("Content-Type", "application/json")
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusConflict, recorder.Code)
+		assert.JSONEq(t, `{"error": {"short_name": "short name already exists"}}`, recorder.Body.String())
+	})
+
+	t.Run("should handle an error properly", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+
+		subtests := []struct {
+			name             string
+			body             string
+			expectedResponse string
+			expectedStatus   int
+		}{
+			{
+				name:             "invalid json",
+				body:             "invalid json",
+				expectedResponse: `{"error": "invalid request"}`,
+				expectedStatus:   http.StatusBadRequest,
+			},
+			{
+				name:             "missing original_url",
+				body:             `{"short_name": "abc123"}`,
+				expectedResponse: `{"errors": {"original_url": "Key: 'createLinkRequestBody.OriginalURL' Error:Field validation for 'OriginalURL' failed on the 'required' tag"}}`,
+				expectedStatus:   http.StatusUnprocessableEntity,
+			},
+			{
+				name:             "empty body",
+				body:             "",
+				expectedResponse: `{"error": "invalid request"}`,
+				expectedStatus:   http.StatusBadRequest,
+			},
+		}
+		for _, subtest := range subtests {
+			t.Run(subtest.name, func(t *testing.T) {
+				router := newRouter(t, mocks.shortener)
+				recorder := httptest.NewRecorder()
+				request := httptest.NewRequest(http.MethodPost, "/api/links", strings.NewReader(subtest.body))
+				request.Header.Set("Content-Type", "application/json")
+
+				router.ServeHTTP(recorder, request)
+
+				require.Equal(t, subtest.expectedStatus, recorder.Code)
+				assert.JSONEq(t, subtest.expectedResponse, recorder.Body.String())
+			})
+		}
+	})
 }
 
 func TestHandler_get(t *testing.T) {
@@ -227,7 +301,26 @@ func TestHandler_get(t *testing.T) {
 		}`, recorder.Body.String())
 	})
 
-	// TODO: add more test cases
+	t.Run("should handle not found error when getting a non-existing link", func(t *testing.T) {
+		const linkID = 999
+
+		mocks := newHandlerMocks(t)
+		mocks.shortener.
+			On("GetLink", uint(linkID)).
+			Return(shortener.Link{}, &shortener.NotFoundError{
+				Message: "link not found",
+			}).
+			Once()
+
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/links/999", nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusNotFound, recorder.Code)
+		assert.JSONEq(t, `{"error": "link not found"}`, recorder.Body.String())
+	})
 }
 
 func TestHandler_list(t *testing.T) {
