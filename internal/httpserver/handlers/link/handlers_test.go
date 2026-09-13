@@ -14,61 +14,61 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockShortenerService struct {
+type mockService struct {
 	mock.Mock
 }
 
-func (m *mockShortenerService) GetRedirectLink(ctx context.Context, shortName string) (shortener.Link, error) {
+func (m *mockService) GetRedirectLink(ctx context.Context, shortName string) (shortener.Link, error) {
 	args := m.Called(ctx, shortName)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) SaveLinkVisit(ctx context.Context, linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error) {
+func (m *mockService) SaveLinkVisit(ctx context.Context, linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error) {
 	args := m.Called(ctx, linkID, ip, userAgent, referrer, status)
 
 	return args.Get(0).(shortener.LinkVisit), args.Error(1)
 }
 
-func (m *mockShortenerService) CreateLink(ctx context.Context, originalURL, shortName string) (shortener.Link, error) {
+func (m *mockService) CreateLink(ctx context.Context, originalURL, shortName string) (shortener.Link, error) {
 	args := m.Called(ctx, originalURL, shortName)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) GetLink(ctx context.Context, id uint) (shortener.Link, error) {
+func (m *mockService) GetLink(ctx context.Context, id uint) (shortener.Link, error) {
 	args := m.Called(ctx, id)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) ListLinksWithCount(ctx context.Context, optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error) {
+func (m *mockService) ListLinksWithCount(ctx context.Context, optsBuilder *shortener.LinkListOptionsBuilder) ([]shortener.Link, int, error) {
 	args := m.Called(ctx, optsBuilder)
 
 	return args.Get(0).([]shortener.Link), args.Int(1), args.Error(2)
 }
 
-func (m *mockShortenerService) UpdateLink(ctx context.Context, id uint, originalURL, shortName string) (shortener.Link, error) {
+func (m *mockService) UpdateLink(ctx context.Context, id uint, originalURL, shortName string) (shortener.Link, error) {
 	args := m.Called(ctx, id, originalURL, shortName)
 
 	return args.Get(0).(shortener.Link), args.Error(1)
 }
 
-func (m *mockShortenerService) DeleteLink(ctx context.Context, id uint) error {
+func (m *mockService) DeleteLink(ctx context.Context, id uint) error {
 	args := m.Called(ctx, id)
 
 	return args.Error(0)
 }
 
 type handlerMocks struct {
-	shortener *mockShortenerService
+	shortener *mockService
 	handler   *handler
 }
 
 func newHandlerMocks(t *testing.T) handlerMocks {
 	t.Helper()
 
-	shortener := new(mockShortenerService)
+	shortener := new(mockService)
 	router := gin.New()
 
 	handler := &handler{shortener}
@@ -84,7 +84,7 @@ func newHandlerMocks(t *testing.T) handlerMocks {
 	}
 }
 
-func newRouter(t *testing.T, shortener shortenerService) *gin.Engine {
+func newRouter(t *testing.T, shortener Service) *gin.Engine {
 	t.Helper()
 
 	router := gin.New()

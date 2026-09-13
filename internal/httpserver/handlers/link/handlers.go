@@ -11,7 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type shortenerService interface {
+// Service defines the link management operations used by the HTTP layer.
+type Service interface {
 	GetRedirectLink(ctx context.Context, shortName string) (shortener.Link, error)
 	SaveLinkVisit(ctx context.Context, linkID uint, ip, userAgent, referrer string, status uint) (shortener.LinkVisit, error)
 	CreateLink(ctx context.Context, originalURL, shortName string) (shortener.Link, error)
@@ -22,13 +23,13 @@ type shortenerService interface {
 }
 
 type handler struct {
-	shortener shortenerService
+	service Service
 }
 
 func (h *handler) redirect(ctx *gin.Context) {
 	shortName := ctx.Param("short_name")
 
-	link, err := h.shortener.GetRedirectLink(ctx.Request.Context(), shortName)
+	link, err := h.service.GetRedirectLink(ctx.Request.Context(), shortName)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 
@@ -40,7 +41,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 	referrer := ctx.GetHeader("Referer")
 	status := http.StatusFound
 
-	_, err = h.shortener.SaveLinkVisit(ctx.Request.Context(), link.ID, ip, userAgent, referrer, uint(status))
+	_, err = h.service.SaveLinkVisit(ctx.Request.Context(), link.ID, ip, userAgent, referrer, uint(status))
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 
@@ -60,7 +61,7 @@ func (h *handler) create(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.shortener.CreateLink(ctx.Request.Context(), body.OriginalURL, body.ShortName)
+	link, err := h.service.CreateLink(ctx.Request.Context(), body.OriginalURL, body.ShortName)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 
@@ -78,7 +79,7 @@ func (h *handler) get(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.shortener.GetLink(ctx.Request.Context(), linkID)
+	link, err := h.service.GetLink(ctx.Request.Context(), linkID)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 
@@ -96,7 +97,7 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	links, count, err := h.shortener.ListLinksWithCount(ctx.Request.Context(), optsBuilder)
+	links, count, err := h.service.ListLinksWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 
@@ -126,7 +127,7 @@ func (h *handler) update(ctx *gin.Context) {
 		return
 	}
 
-	link, err := h.shortener.UpdateLink(ctx.Request.Context(), linkID, body.OriginalURL, body.ShortName)
+	link, err := h.service.UpdateLink(ctx.Request.Context(), linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 
@@ -144,7 +145,7 @@ func (h *handler) delete(ctx *gin.Context) {
 		return
 	}
 
-	err = h.shortener.DeleteLink(ctx.Request.Context(), linkID)
+	err = h.service.DeleteLink(ctx.Request.Context(), linkID)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 

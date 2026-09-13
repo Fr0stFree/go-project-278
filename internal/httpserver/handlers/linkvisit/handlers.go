@@ -10,11 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type shortenerService interface {
+// Service defines the link management operations used by the HTTP layer.
+type Service interface {
 	ListLinkVisitsWithCount(ctx context.Context, optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error)
 }
+
 type handler struct {
-	shortener shortenerService
+	service Service
 }
 
 func (h *handler) list(ctx *gin.Context) {
@@ -25,7 +27,7 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	visits, count, err := h.shortener.ListLinkVisitsWithCount(ctx.Request.Context(), optsBuilder)
+	visits, count, err := h.service.ListLinkVisitsWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
 		httptools.WriteErrorResponse(ctx, err)
 

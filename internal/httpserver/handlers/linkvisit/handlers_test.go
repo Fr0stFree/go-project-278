@@ -13,25 +13,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type mockShortenerService struct {
+type mockService struct {
 	mock.Mock
 }
 
-func (m *mockShortenerService) ListLinkVisitsWithCount(ctx context.Context, optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error) {
+func (m *mockService) ListLinkVisitsWithCount(ctx context.Context, optsBuilder *shortener.LinkVisitListOptionsBuilder) ([]shortener.LinkVisit, int, error) {
 	args := m.Called(ctx, optsBuilder)
 
 	return args.Get(0).([]shortener.LinkVisit), args.Int(1), args.Error(2)
 }
 
 type handlerMocks struct {
-	shortener *mockShortenerService
+	shortener *mockService
 	handler   *handler
 }
 
 func newHandlerMocks(t *testing.T) handlerMocks {
 	t.Helper()
 
-	shortener := new(mockShortenerService)
+	shortener := new(mockService)
 	router := gin.New()
 
 	handler := &handler{shortener}
@@ -47,11 +47,11 @@ func newHandlerMocks(t *testing.T) handlerMocks {
 	}
 }
 
-func newRouter(t *testing.T, shortener shortenerService) *gin.Engine {
+func newRouter(t *testing.T, service Service) *gin.Engine {
 	t.Helper()
 
 	router := gin.New()
-	RegisterRoutes(shortener, router)
+	RegisterRoutes(service, router)
 
 	return router
 }

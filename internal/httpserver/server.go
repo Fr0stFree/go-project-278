@@ -9,20 +9,24 @@ import (
 	"shortener/internal/httpserver/handlers/health"
 	"shortener/internal/httpserver/handlers/link"
 	"shortener/internal/httpserver/handlers/linkvisit"
-	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
 )
 
+type service interface {
+	linkvisit.Service
+	link.Service
+}
+
 // New creates an HTTP server for the provided handler and configuration.
-func New(shortener *shortener.Service, cfg *config.HTTP) *http.Server {
+func New(service service, cfg *config.HTTP) *http.Server {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
 	health.RegisterRoutes(router)
-	link.RegisterRoutes(shortener, router)
-	linkvisit.RegisterRoutes(shortener, router)
+	link.RegisterRoutes(service, router)
+	linkvisit.RegisterRoutes(service, router)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
