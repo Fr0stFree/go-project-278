@@ -30,8 +30,9 @@ func NewService(linkRepository LinkRepository, linkVisitRepository LinkVisitRepo
 
 // CreateLink creates a shortened link, generating a short name when one is not provided.
 func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string) (Link, error) {
-	if shortName == "" {
-		shortName = utils.ToHashString(originalURL, 6)
+	isShortNameProvided := shortName != ""
+	if !isShortNameProvided {
+		shortName = utils.RandomString(6)
 	}
 
 	insert := link.Insert{
@@ -41,6 +42,11 @@ func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string)
 
 	record, err := s.linkRepo.CreateOne(ctx, insert)
 	if err != nil {
+		if errors.Is(err, db.ErrObjectAlreadyExists) && !isShortNameProvided {
+			// If the short name was generated and already exists, try again with a new random short name.
+			return s.CreateLink(ctx, originalURL, "")
+		}
+
 		return Link{}, s.mapStorageErrorToServiceError(err)
 	}
 

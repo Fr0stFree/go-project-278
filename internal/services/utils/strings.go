@@ -2,6 +2,7 @@
 package utils
 
 import (
+	"math/rand/v2"
 	"unicode"
 )
 
@@ -22,6 +23,18 @@ func ToSnakeCase(s string) string {
 		} else {
 			result = append(result, r)
 		}
+	}
+
+	return string(result)
+}
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+// RandomString generates a random string of the specified size using the defined charset.
+func RandomString(size int) string {
+	result := make([]byte, size)
+	for i := range result {
+		result[i] = charset[rand.IntN(len(charset))]
 	}
 
 	return string(result)

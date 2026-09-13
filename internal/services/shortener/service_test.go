@@ -145,12 +145,11 @@ func TestService_CreateLink(t *testing.T) {
 		)
 
 		mocks := newServiceMocks(t)
-		expectedShortName := utils.ToHashString(originalURL, 6)
+		expectedShortName := utils.RandomString(6)
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), link.Insert{
-				OriginalURL: originalURL,
-				ShortName:   expectedShortName,
-			}).
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
+			})).
 			Return(link.Record{
 				Model:       gorm.Model{ID: id},
 				OriginalURL: originalURL,
@@ -188,6 +187,47 @@ func TestService_CreateLink(t *testing.T) {
 
 		require.Error(t, err)
 		assert.Equal(t, Link{}, result)
+	})
+
+	t.Run("should retry when generated short name already exists", func(t *testing.T) {
+		const (
+			id          uint = 42
+			originalURL      = "https://example.com/some/page"
+		)
+
+		mocks := newServiceMocks(t)
+
+		mocks.linkRepo.
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
+			})).
+			Return(link.Record{}, db.ErrObjectAlreadyExists).
+			Once()
+
+		expectedShortName := utils.RandomString(6)
+
+		mocks.linkRepo.
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
+			})).
+			Return(link.Record{
+				Model:       gorm.Model{ID: id},
+				OriginalURL: originalURL,
+				ShortName:   expectedShortName,
+			}, nil).
+			Once()
+
+		result, err := mocks.service.CreateLink(t.Context(), originalURL, "")
+
+		require.NoError(t, err)
+		assert.Equal(t, Link{
+			ID:          id,
+			OriginalURL: originalURL,
+			ShortName:   expectedShortName,
+			ShortURL:    "https://short.example.com/r/" + expectedShortName,
+		}, result)
+
+		mocks.linkRepo.AssertNumberOfCalls(t, "CreateOne", 2)
 	})
 }
 

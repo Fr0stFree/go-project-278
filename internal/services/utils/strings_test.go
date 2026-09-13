@@ -67,3 +67,20 @@ func TestToSnakeCase(t *testing.T) {
 		})
 	}
 }
+
+func TestRandomString(t *testing.T) {
+	t.Run("should generate a random string of the specified length", func(t *testing.T) {
+		length := 10
+		randomStr := RandomString(length)
+
+		assert.Equal(t, length, len(randomStr))
+	})
+
+	t.Run("should generate different strings on subsequent calls", func(t *testing.T) {
+		length := 10
+		randomStr1 := RandomString(length)
+		randomStr2 := RandomString(length)
+
+		assert.NotEqual(t, randomStr1, randomStr2)
+	})
+}
