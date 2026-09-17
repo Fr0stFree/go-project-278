@@ -22,9 +22,12 @@ type service interface {
 // New creates an HTTP server for the provided handler and configuration.
 func New(service service, cfg *config.HTTP) *http.Server {
 	router := gin.New()
+	router.Use(httptools.MaxBodySize(cfg.MaxBodySize))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	router.Use(httptools.MaxBodySize(cfg.MaxBodySize))
+	router.NoRoute(handleRouteNotFound)
+	router.HandleMethodNotAllowed = true
+	router.NoMethod(handleMethodNotAllowed)
 
 	health.RegisterRoutes(router)
 	link.RegisterRoutes(service, router)
@@ -45,4 +48,18 @@ func New(service service, cfg *config.HTTP) *http.Server {
 	)
 
 	return server
+}
+
+func handleRouteNotFound(ctx *gin.Context) {
+	ctx.JSON(
+		http.StatusNotFound,
+		gin.H{"error": fmt.Sprintf("route not found: %s", ctx.Request.URL.Path)},
+	)
+}
+
+func handleMethodNotAllowed(ctx *gin.Context) {
+	ctx.JSON(
+		http.StatusMethodNotAllowed,
+		gin.H{"error": fmt.Sprintf("method %s is not allowed for %s", ctx.Request.Method, ctx.Request.URL.Path)},
+	)
 }
