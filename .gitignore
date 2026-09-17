@@ -34,3 +34,5 @@ todo.md
 tmp/
 
 node_modules/
+
+.githooks/

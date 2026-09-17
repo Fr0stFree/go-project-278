@@ -65,6 +65,7 @@ APP_BASE_URL=http://localhost:8080
 HTTP_PORT=8080
 HTTP_READ_TIMEOUT=10s
 HTTP_WRITE_TIMEOUT=10s
+HTTP_IDLE_TIMEOUT=5s
 
 # DB
 DATABASE_URL=postgres://shortener:password@localhost:5432/shortener?sslmode=disable
@@ -81,6 +82,7 @@ Environment variables:
 | `HTTP_PORT` | HTTP server port | `8080` |
 | `HTTP_READ_TIMEOUT` | HTTP read timeout | `10s` |
 | `HTTP_WRITE_TIMEOUT` | HTTP write timeout | `10s` |
+| `HTTP_IDLE_TIMEOUT` | HTTP idle timeout | `5s` |
 | `DATABASE_URL` | PostgreSQL connection URL | required |
 | `DB_MAX_OPEN_CONNECTIONS` | Maximum open database connections | `10` |
 | `DB_MAX_IDLE_CONNECTIONS` | Maximum idle database connections | `5` |

@@ -33,11 +33,13 @@ func New(service service, cfg *config.HTTP) *http.Server {
 		Handler:      router,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
 	}
 	slog.Info("HTTP server configured successfully",
 		slog.Int("port", cfg.Port),
 		slog.Duration("read_timeout", cfg.ReadTimeout),
 		slog.Duration("write_timeout", cfg.WriteTimeout),
+		slog.Duration("idle_timeout", cfg.IdleTimeout),
 	)
 
 	return server
