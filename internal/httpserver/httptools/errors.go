@@ -22,6 +22,7 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 		conflictErr   *shortener.ConflictError
 		jsonTypeErr   *json.UnmarshalTypeError
 		jsonSyntaxErr *json.SyntaxError
+		maxBytesErr   *http.MaxBytesError
 		validatorErr  validator.ValidationErrors
 	)
 
@@ -36,6 +37,8 @@ func WriteErrorResponse(ctx *gin.Context, err error) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": notFoundErr.Message})
 	case errors.As(err, &conflictErr): // 409
 		ctx.JSON(http.StatusConflict, gin.H{"error": map[string]string{conflictErr.Field: conflictErr.Message}})
+	case errors.As(err, &maxBytesErr): // 413
+		ctx.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "request body too large"})
 	case errors.As(err, &validatorErr): // 422
 		fieldErrors := make(map[string]string)
 		for _, fieldErr := range validatorErr {

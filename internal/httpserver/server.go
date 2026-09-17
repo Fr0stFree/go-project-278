@@ -9,6 +9,7 @@ import (
 	"shortener/internal/httpserver/handlers/health"
 	"shortener/internal/httpserver/handlers/link"
 	"shortener/internal/httpserver/handlers/linkvisit"
+	"shortener/internal/httpserver/httptools"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +24,7 @@ func New(service service, cfg *config.HTTP) *http.Server {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(httptools.MaxBodySize(cfg.MaxBodySize))
 
 	health.RegisterRoutes(router)
 	link.RegisterRoutes(service, router)

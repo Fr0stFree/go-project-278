@@ -27,6 +27,7 @@ type HTTP struct {
 	ReadTimeout     time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"10s"`
 	WriteTimeout    time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"10s"`
 	IdleTimeout     time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"10s"`
+	MaxBodySize     int64         `env:"HTTP_MAX_BODY_SIZE" envDefault:"16384"` // 16KiB
 	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
 }
 

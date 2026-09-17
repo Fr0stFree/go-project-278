@@ -13,7 +13,21 @@ DOCKER_IMAGE := frostfree/shortener
 DOCKER_TAG ?= latest
 DOCKER_PLATFORM := linux/amd64
 
-.PHONY: build run dev test test-coverage lint lint-fix fmt fmt-check tidy-check install-lint require-lint docker-build docker-push
+.PHONY: \
+	build \
+	run \
+	dev \
+	test \
+	test-coverage \
+	lint \
+	lint-fix \
+	fmt \
+	fmt-check \
+	tidy-check \
+	install-lint \
+	require-lint \
+	docker-build \
+	docker-push
 
 build:
 	@go build -o $(BINARY_PATH) $(ENTRYPOINT_PATH)
