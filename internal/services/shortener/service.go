@@ -10,8 +10,6 @@ import (
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
 	"time"
-
-	"github.com/samber/lo"
 )
 
 type linkVisitRepository interface {
@@ -29,43 +27,62 @@ type linkRepository interface {
 	DeleteByID(ctx context.Context, ID uint) error
 }
 
-// Service coordinates link and visit repositories.
+type serviceOpts struct {
+	shortNameGenerationMaxAttempts int
+	shortNameDefaultLength         int
+}
+
+// Service coordinates link shortening and visit tracking operations.
 type Service struct {
 	links      linkRepository
 	linkVisits linkVisitRepository
 	cfg        *config.App
+	opts       serviceOpts
 }
 
 // NewService creates a shortener service with link and visit repositories.
-func NewService(linkRepository linkRepository, linkVisitRepository linkVisitRepository, config *config.App) *Service {
+func NewService(
+	linkRepository linkRepository,
+	linkVisitRepository linkVisitRepository,
+	config *config.App,
+) *Service {
 	return &Service{
 		links:      linkRepository,
 		linkVisits: linkVisitRepository,
 		cfg:        config,
+		opts: serviceOpts{
+			shortNameGenerationMaxAttempts: 10,
+			shortNameDefaultLength:         6,
+		},
 	}
 }
 
 // CreateLink creates a shortened link, generating a short name when one is not provided.
 func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string) (Link, error) {
 	isShortNameProvided := shortName != ""
-	shortName = lo.Ternary(isShortNameProvided, shortName, textutils.RandomString(6))
-
-	insert := link.Insert{
-		OriginalURL: originalURL,
-		ShortName:   shortName,
-	}
-
-	record, err := s.links.CreateOne(ctx, insert)
-	if err != nil {
-		if errors.Is(err, models.ErrObjectAlreadyExists) && !isShortNameProvided {
-			// If the short name was generated and already exists, try again with a new random short name.
-			return s.CreateLink(ctx, originalURL, "")
+	for range s.opts.shortNameGenerationMaxAttempts {
+		if !isShortNameProvided {
+			shortName = textutils.RandomString(s.opts.shortNameDefaultLength)
 		}
 
-		return Link{}, s.mapStorageErrorToServiceError(err)
+		insert := link.Insert{
+			OriginalURL: originalURL,
+			ShortName:   shortName,
+		}
+
+		record, err := s.links.CreateOne(ctx, insert)
+		if err != nil {
+			if errors.Is(err, models.ErrObjectAlreadyExists) && !isShortNameProvided {
+				continue
+			}
+
+			return Link{}, s.mapStorageErrorToServiceError(err)
+		}
+
+		return s.buildLink(record), nil
 	}
 
-	return s.buildLink(record), nil
+	return Link{}, ErrShortNameGenerationExhausted
 }
 
 // GetLink returns a shortened link by ID.

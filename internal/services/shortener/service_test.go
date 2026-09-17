@@ -145,10 +145,10 @@ func TestService_CreateLink(t *testing.T) {
 		)
 
 		mocks := newServiceMocks(t)
-		expectedShortName := textutils.RandomString(6)
+		expectedShortName := textutils.RandomString(mocks.service.opts.shortNameDefaultLength)
 		mocks.linkRepo.
 			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
-				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
+				return insert.OriginalURL == originalURL && len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
 			Return(link.Record{
 				Model:       gorm.Model{ID: id},
@@ -199,16 +199,16 @@ func TestService_CreateLink(t *testing.T) {
 
 		mocks.linkRepo.
 			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
-				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
+				return insert.OriginalURL == originalURL && len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
 			Return(link.Record{}, models.ErrObjectAlreadyExists).
 			Once()
 
-		expectedShortName := textutils.RandomString(6)
+		expectedShortName := textutils.RandomString(mocks.service.opts.shortNameDefaultLength)
 
 		mocks.linkRepo.
 			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
-				return insert.OriginalURL == originalURL && len(insert.ShortName) == 6
+				return insert.OriginalURL == originalURL && len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
 			Return(link.Record{
 				Model:       gorm.Model{ID: id},
@@ -228,6 +228,26 @@ func TestService_CreateLink(t *testing.T) {
 		}, result)
 
 		mocks.linkRepo.AssertNumberOfCalls(t, "CreateOne", 2)
+	})
+
+	t.Run("should return error when short name generation attempts are exhausted", func(t *testing.T) {
+		const originalURL = "https://example.com/some/page"
+
+		mocks := newServiceMocks(t)
+
+		mocks.linkRepo.
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+				return insert.OriginalURL == originalURL &&
+					len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
+			})).
+			Return(link.Record{}, models.ErrObjectAlreadyExists).
+			Times(mocks.service.opts.shortNameGenerationMaxAttempts)
+
+		result, err := mocks.service.CreateLink(t.Context(), originalURL, "")
+
+		require.ErrorIs(t, err, ErrShortNameGenerationExhausted)
+		assert.Equal(t, Link{}, result)
+		mocks.linkRepo.AssertNumberOfCalls(t, "CreateOne", mocks.service.opts.shortNameGenerationMaxAttempts)
 	})
 }
 

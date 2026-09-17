@@ -1,5 +1,7 @@
 package shortener
 
+import "errors"
+
 // ValidationError represents a validation error, typically used when input data does not meet certain criteria.
 type ValidationError struct {
 	Message string
@@ -43,3 +45,6 @@ func (e *ConflictError) Error() string {
 func NewConflictError(message, field string) *ConflictError {
 	return &ConflictError{Message: message, Field: field}
 }
+
+// ErrShortNameGenerationExhausted indicates that a unique short name could not be generated within the allowed number of attempts.
+var ErrShortNameGenerationExhausted = errors.New("failed to generate a unique short name")
