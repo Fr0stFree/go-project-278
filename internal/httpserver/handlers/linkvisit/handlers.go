@@ -2,7 +2,6 @@ package linkvisit
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"shortener/internal/httpserver/httptools"
 	"shortener/internal/services/shortener"
@@ -34,9 +33,8 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	from, to := optsBuilder.Range()
-
-	ctx.Header("Content-Range", fmt.Sprintf("link_visits %d-%d/%d", from, to, count))
+	from, _ := optsBuilder.Range()
+	ctx.Header("Content-Range", httptools.FormatContentRange("link_visits", from, len(visits), count))
 	ctx.JSON(http.StatusOK, listLinksVisitsResponseBody(visits))
 }
 

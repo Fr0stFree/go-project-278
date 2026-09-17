@@ -61,6 +61,10 @@ func TestHandler_list(t *testing.T) {
 
 	t.Run("should list link visits with count successfully", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/link_visits", nil)
+
 		mocks.shortener.
 			On("ListLinkVisitsWithCount", mock.Anything, mock.Anything).
 			Return([]shortener.LinkVisit{
@@ -74,10 +78,6 @@ func TestHandler_list(t *testing.T) {
 				},
 			}, 1, nil).
 			Once()
-
-		router := newRouter(t, mocks.shortener)
-		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/api/link_visits", nil)
 
 		router.ServeHTTP(recorder, request)
 
@@ -94,22 +94,44 @@ func TestHandler_list(t *testing.T) {
 		]`, recorder.Body.String())
 	})
 
-	t.Run("should parse range successfully", func(t *testing.T) {
+	t.Run("should return empty content range when requested page is empty", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/link_visits?range=%5B10%2C19%5D", nil)
+
 		mocks.shortener.
 			On("ListLinkVisitsWithCount", mock.Anything, mock.Anything).
 			Return([]shortener.LinkVisit{}, 42, nil).
 			Once()
 
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, "link_visits */42", recorder.Header().Get("Content-Range"))
+		assert.JSONEq(t, `[]`, recorder.Body.String())
+	})
+
+	t.Run("should build content range from actual number of returned visits", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
 		router := newRouter(t, mocks.shortener)
 		recorder := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "/api/link_visits?range=%5B10%2C19%5D", nil)
 
+		mocks.shortener.
+			On("ListLinkVisitsWithCount", mock.Anything, mock.Anything).
+			Return([]shortener.LinkVisit{
+				{ID: 11, LinkID: 1},
+				{ID: 12, LinkID: 1},
+				{ID: 13, LinkID: 1},
+				{ID: 14, LinkID: 1},
+			}, 14, nil).
+			Once()
+
 		router.ServeHTTP(recorder, request)
 
 		require.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, "link_visits 10-19/42", recorder.Header().Get("Content-Range"))
-		assert.JSONEq(t, `[]`, recorder.Body.String())
+		assert.Equal(t, "link_visits 10-13/14", recorder.Header().Get("Content-Range"))
 	})
 
 	t.Run("should return bad request for invalid range", func(t *testing.T) {

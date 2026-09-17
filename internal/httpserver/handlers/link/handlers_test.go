@@ -421,22 +421,49 @@ func TestHandler_list(t *testing.T) {
 		]`, recorder.Body.String())
 	})
 
-	t.Run("should parse range and set content range header", func(t *testing.T) {
+	t.Run("should return empty content range when requested page is empty", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
-		mocks.shortener.
-			On("ListLinksWithCount", mock.Anything, mock.Anything).
-			Return([]shortener.Link{}, 42, nil).
-			Once()
-
 		router := newRouter(t, mocks.shortener)
 		recorder := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "/api/links?range=[10,19]", nil)
 
+		mocks.shortener.
+			On("ListLinksWithCount", mock.Anything,
+				mock.MatchedBy(func(builder *shortener.LinkListOptionsBuilder) bool {
+					from, to := builder.Range()
+
+					return from == 10 && to == 19
+				}),
+			).
+			Return([]shortener.Link{}, 42, nil).
+			Once()
+
 		router.ServeHTTP(recorder, request)
 
 		require.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, "links 10-19/42", recorder.Header().Get("Content-Range"))
+		assert.Equal(t, "links */42", recorder.Header().Get("Content-Range"))
 		assert.JSONEq(t, `[]`, recorder.Body.String())
+	})
+
+	t.Run("should build content range from actual number of returned links", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/links?range=[10,19]", nil)
+
+		mocks.shortener.
+			On("ListLinksWithCount", mock.Anything, mock.MatchedBy(func(builder *shortener.LinkListOptionsBuilder) bool {
+				from, to := builder.Range()
+
+				return from == 10 && to == 19
+			})).
+			Return([]shortener.Link{{ID: 11}, {ID: 12}, {ID: 13}, {ID: 14}}, 14, nil).
+			Once()
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, "links 10-13/14", recorder.Header().Get("Content-Range"))
 	})
 
 	t.Run("should handle invalid range parameter", func(t *testing.T) {

@@ -3,7 +3,6 @@ package link
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"shortener/internal/httpserver/httptools"
@@ -109,9 +108,8 @@ func (h *handler) list(ctx *gin.Context) {
 		return
 	}
 
-	from, to := optsBuilder.Range()
-
-	ctx.Header("Content-Range", fmt.Sprintf("links %d-%d/%d", from, to, count))
+	from, _ := optsBuilder.Range()
+	ctx.Header("Content-Range", httptools.FormatContentRange("links", from, len(links), count))
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 
