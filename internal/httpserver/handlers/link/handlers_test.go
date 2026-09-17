@@ -2,6 +2,7 @@ package link
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"shortener/internal/services/shortener"
@@ -141,7 +142,44 @@ func TestHandler_redirect(t *testing.T) {
 		assert.Equal(t, originalURL, recorder.Header().Get("Location"))
 	})
 
-	// TODO: add more test cases
+	t.Run("should redirect even when saving link visit fails", func(t *testing.T) {
+		const (
+			shortName        = "abc123"
+			originalURL      = "https://example.com"
+			ip               = "127.0.0.1"
+			userAgent        = "Mozilla/5.0"
+			referrer         = "https://referrer.com"
+			status      uint = http.StatusFound
+		)
+
+		mocks := newHandlerMocks(t)
+		mocks.shortener.
+			On("GetRedirectLink", mock.Anything, shortName).
+			Return(shortener.Link{
+				ID:          1,
+				OriginalURL: originalURL,
+				ShortName:   shortName,
+				ShortURL:    "http://localhost/r/" + shortName,
+			}, nil).
+			Once()
+
+		mocks.shortener.
+			On("SaveLinkVisit", mock.Anything, uint(1), ip, userAgent, referrer, status).
+			Return(shortener.LinkVisit{}, errors.New("database is unavailable")).
+			Once()
+
+		recorder := httptest.NewRecorder()
+		router := newRouter(t, mocks.shortener)
+		request := httptest.NewRequest(http.MethodGet, "/r/"+shortName, nil)
+		request.RemoteAddr = ip + ":12345"
+		request.Header.Set("User-Agent", userAgent)
+		request.Header.Set("Referer", referrer)
+
+		router.ServeHTTP(recorder, request)
+
+		assert.Equal(t, http.StatusFound, recorder.Code)
+		assert.Equal(t, originalURL, recorder.Header().Get("Location"))
+	})
 }
 
 func TestHandler_create(t *testing.T) {

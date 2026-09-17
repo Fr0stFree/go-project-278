@@ -4,6 +4,7 @@ package link
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"shortener/internal/httpserver/httptools"
 	"shortener/internal/services/shortener"
@@ -43,9 +44,13 @@ func (h *handler) redirect(ctx *gin.Context) {
 
 	_, err = h.service.SaveLinkVisit(ctx.Request.Context(), link.ID, ip, userAgent, referrer, uint(status))
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
-
-		return
+		slog.Error(
+			"Failed to save link visit; redirect will continue",
+			slog.Any("error", err),
+			slog.Uint64("link_id", uint64(link.ID)),
+			slog.String("short_name", shortName),
+			slog.Int("status", status),
+		)
 	}
 
 	ctx.Redirect(status, link.OriginalURL)
