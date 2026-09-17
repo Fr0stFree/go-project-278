@@ -423,6 +423,8 @@ func TestService_ListLinksWithCount(t *testing.T) {
 	})
 
 	t.Run("should return validation error for invalid options", func(t *testing.T) {
+		var validationErr *ValidationError
+
 		mocks := newServiceMocks(t)
 		builder := NewLinkListOptionsBuilder()
 		builder.WithRange(-1, 10)
@@ -430,8 +432,30 @@ func TestService_ListLinksWithCount(t *testing.T) {
 		result, count, err := mocks.service.ListLinksWithCount(t.Context(), builder)
 
 		require.Error(t, err)
+		require.ErrorAs(t, err, &validationErr)
+		assert.Equal(t, "range", validationErr.Field)
 		assert.Nil(t, result)
 		assert.Zero(t, count)
+		assert.Equal(t, "range start must be non-negative: -1", validationErr.Message)
+		mocks.linkRepo.AssertNotCalled(t, "GetMany")
+		mocks.linkRepo.AssertNotCalled(t, "Count")
+	})
+
+	t.Run("should fail when range contains more records than max limit", func(t *testing.T) {
+		var validationErr *ValidationError
+
+		mocks := newServiceMocks(t)
+		builder := NewLinkListOptionsBuilder()
+		builder.WithRange(0, 999)
+
+		result, count, err := mocks.service.ListLinksWithCount(t.Context(), builder)
+
+		require.Error(t, err)
+		require.ErrorAs(t, err, &validationErr)
+		assert.Equal(t, "range", validationErr.Field)
+		assert.Nil(t, result)
+		assert.Zero(t, count)
+		assert.Equal(t, "range must contain at most 100 records, got 1000", validationErr.Message)
 		mocks.linkRepo.AssertNotCalled(t, "GetMany")
 		mocks.linkRepo.AssertNotCalled(t, "Count")
 	})
@@ -657,6 +681,8 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 	})
 
 	t.Run("should return validation error for invalid options", func(t *testing.T) {
+		var validationErr *ValidationError
+
 		mocks := newServiceMocks(t)
 		builder := NewLinkVisitListOptionsBuilder()
 		builder.WithRange(-1, 10)
@@ -664,10 +690,32 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
 
 		require.Error(t, err)
+		require.ErrorAs(t, err, &validationErr)
+		assert.Equal(t, "range", validationErr.Field)
 		assert.Nil(t, result)
 		assert.Zero(t, count)
-		mocks.linkVisitRepo.AssertNotCalled(t, "GetMany")
-		mocks.linkVisitRepo.AssertNotCalled(t, "Count")
+		assert.Equal(t, "range start must be non-negative: -1", validationErr.Message)
+		mocks.linkRepo.AssertNotCalled(t, "GetMany")
+		mocks.linkRepo.AssertNotCalled(t, "Count")
+	})
+
+	t.Run("should fail when range contains more records than max limit", func(t *testing.T) {
+		var validationErr *ValidationError
+
+		mocks := newServiceMocks(t)
+		builder := NewLinkVisitListOptionsBuilder()
+		builder.WithRange(0, 999)
+
+		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
+
+		require.Error(t, err)
+		require.ErrorAs(t, err, &validationErr)
+		assert.Equal(t, "range", validationErr.Field)
+		assert.Nil(t, result)
+		assert.Zero(t, count)
+		assert.Equal(t, "range must contain at most 100 records, got 1000", validationErr.Message)
+		mocks.linkRepo.AssertNotCalled(t, "GetMany")
+		mocks.linkRepo.AssertNotCalled(t, "Count")
 	})
 
 	t.Run("should return error when getting link visits fails", func(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 type ListOptionsBuilder struct {
 	sortFields map[string]string
 	options    models.ListOptions
+	maxLimit   int
 	err        error
 }
 
@@ -33,8 +34,15 @@ func (b *ListOptionsBuilder) WithRange(from, to int) {
 		return
 	}
 
+	limit := to - from + 1
+	if limit > b.maxLimit {
+		b.err = NewValidationError(fmt.Sprintf("range must contain at most %d records, got %d", b.maxLimit, limit), "range")
+
+		return
+	}
+
 	b.options.Offset = from
-	b.options.Limit = to - from + 1
+	b.options.Limit = limit
 }
 
 // WithSort validates and sets the sort field and order.
@@ -88,12 +96,14 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 		defaultSortBy    = "id"
 		defaultSortOrder = "DESC"
 		defaultLimit     = 10
+		maxLimit         = 100
 		defaultOffset    = 0
 	)
 
 	return &LinkListOptionsBuilder{
 		ListOptionsBuilder: &ListOptionsBuilder{
 			sortFields: sortFields,
+			maxLimit:   maxLimit,
 			options: models.ListOptions{
 				Limit:     defaultLimit,
 				Offset:    defaultOffset,
@@ -138,12 +148,14 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 		defaultSortBy    = "created_at"
 		defaultSortOrder = "DESC"
 		defaultLimit     = 10
+		maxLimit         = 100
 		defaultOffset    = 0
 	)
 
 	return &LinkVisitListOptionsBuilder{
 		ListOptionsBuilder: &ListOptionsBuilder{
 			sortFields: sortFields,
+			maxLimit:   maxLimit,
 			options: models.ListOptions{
 				Limit:     defaultLimit,
 				Offset:    defaultOffset,
