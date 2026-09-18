@@ -262,12 +262,14 @@ func TestHandler_create(t *testing.T) {
 	t.Run("should handle invalid request data properly", func(t *testing.T) {
 		mocks := newHandlerMocks(t)
 
-		subtests := []struct {
+		type subTest struct {
 			name             string
 			body             string
 			expectedResponse string
 			expectedStatus   int
-		}{
+		}
+
+		subTests := []subTest{
 			{
 				name:             "invalid json",
 				body:             "invalid json",
@@ -281,15 +283,21 @@ func TestHandler_create(t *testing.T) {
 				expectedStatus:   http.StatusUnprocessableEntity,
 			},
 			{
-				name:             "short_name containing a path separator",
-				body:             `{"original_url": "https://example.com", "short_name": "abr/123"}`,
-				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'excludes' tag"}}`,
-				expectedStatus:   http.StatusUnprocessableEntity,
-			},
-			{
 				name:             "invalid original_url",
 				body:             `{"original_url": "invalid-url", "short_name": "abc123"}`,
 				expectedResponse: `{"errors": {"original_url": "Key: 'createLinkRequestBody.OriginalURL' Error:Field validation for 'OriginalURL' failed on the 'http_url' tag"}}`,
+				expectedStatus:   http.StatusUnprocessableEntity,
+			},
+			{
+				name:             "short_name too short",
+				body:             `{"original_url": "https://example.com", "short_name": "ab"}`,
+				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'min' tag"}}`,
+				expectedStatus:   http.StatusUnprocessableEntity,
+			},
+			{
+				name:             "short_name too long",
+				body:             `{"original_url": "https://example.com", "short_name": "abcdefghijklmnopqrstuvwxyz1234567"}`,
+				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'max' tag"}}`,
 				expectedStatus:   http.StatusUnprocessableEntity,
 			},
 			{
@@ -299,17 +307,17 @@ func TestHandler_create(t *testing.T) {
 				expectedStatus:   http.StatusBadRequest,
 			},
 		}
-		for _, subtest := range subtests {
-			t.Run(subtest.name, func(t *testing.T) {
+		for _, subTest := range subTests {
+			t.Run(subTest.name, func(t *testing.T) {
 				router := newRouter(t, mocks.shortener)
 				recorder := httptest.NewRecorder()
-				request := httptest.NewRequest(http.MethodPost, "/api/links", strings.NewReader(subtest.body))
+				request := httptest.NewRequest(http.MethodPost, "/api/links", strings.NewReader(subTest.body))
 				request.Header.Set("Content-Type", "application/json")
 
 				router.ServeHTTP(recorder, request)
 
-				require.Equal(t, subtest.expectedStatus, recorder.Code)
-				assert.JSONEq(t, subtest.expectedResponse, recorder.Body.String())
+				require.Equal(t, subTest.expectedStatus, recorder.Code)
+				assert.JSONEq(t, subTest.expectedResponse, recorder.Body.String())
 			})
 		}
 	})
@@ -553,7 +561,47 @@ func TestHandler_update(t *testing.T) {
 		}`, recorder.Body.String())
 	})
 
-	// TODO: add more test cases
+	t.Run("should handle invalid request data properly", func(t *testing.T) {
+		type subTest struct {
+			name             string
+			body             string
+			expectedResponse string
+			expectedStatus   int
+		}
+
+		subTests := []subTest{
+			{
+				name:             "short name too short",
+				body:             `{"original_url": "https://example.com", "short_name": "ab"}`,
+				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'min' tag"}}`,
+				expectedStatus:   http.StatusUnprocessableEntity,
+			},
+			{
+				name:             "short name too long",
+				body:             `{"original_url": "https://example.com", "short_name": "abcdefghijklmnopqrstuvwxyz1234567"}`,
+				expectedResponse: `{"errors": {"short_name": "Key: 'createLinkRequestBody.ShortName' Error:Field validation for 'ShortName' failed on the 'max' tag"}}`,
+				expectedStatus:   http.StatusUnprocessableEntity,
+			},
+		}
+		for _, subTest := range subTests {
+			t.Run(subTest.name, func(t *testing.T) {
+				mocks := newHandlerMocks(t)
+				router := newRouter(t, mocks.shortener)
+				recorder := httptest.NewRecorder()
+				request := httptest.NewRequest(
+					http.MethodPost,
+					"/api/links",
+					strings.NewReader(subTest.body),
+				)
+				request.Header.Set("Content-Type", "application/json")
+
+				router.ServeHTTP(recorder, request)
+
+				require.Equal(t, subTest.expectedStatus, recorder.Code)
+				assert.JSONEq(t, subTest.expectedResponse, recorder.Body.String())
+			})
+		}
+	})
 }
 
 func TestHandler_delete(t *testing.T) {

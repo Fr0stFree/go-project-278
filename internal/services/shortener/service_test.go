@@ -249,6 +249,40 @@ func TestService_CreateLink(t *testing.T) {
 		assert.Equal(t, Link{}, result)
 		mocks.linkRepo.AssertNumberOfCalls(t, "CreateOne", mocks.service.opts.shortNameGenerationMaxAttempts)
 	})
+
+	t.Run("should return validation error for invalid short name", func(t *testing.T) {
+		type subTest struct {
+			name        string
+			shortName   string
+			originalURL string
+		}
+
+		subTests := []subTest{
+			{
+				name:        "short name too short",
+				shortName:   "ab",
+				originalURL: "https://example.com/updated",
+			},
+			{
+				name:        "short name too long",
+				shortName:   "abcdefghijklmnopqrstuvwxyz1234567",
+				originalURL: "https://example.com/updated",
+			},
+		}
+		for _, subTest := range subTests {
+			t.Run(subTest.name, func(t *testing.T) {
+				var validationErr *ValidationError
+
+				mocks := newServiceMocks(t)
+
+				result, err := mocks.service.CreateLink(t.Context(), subTest.originalURL, subTest.shortName)
+
+				require.Error(t, err)
+				require.ErrorAs(t, err, &validationErr)
+				assert.Equal(t, Link{}, result)
+			})
+		}
+	})
 }
 
 func TestService_GetLink(t *testing.T) {
@@ -533,6 +567,43 @@ func TestService_UpdateLink(t *testing.T) {
 
 		require.Error(t, err)
 		assert.Equal(t, Link{}, result)
+	})
+
+	t.Run("should return validation error for invalid short name", func(t *testing.T) {
+		type subTest struct {
+			name        string
+			id          uint
+			shortName   string
+			originalURL string
+		}
+
+		subTests := []subTest{
+			{
+				name:        "short name too short",
+				shortName:   "ab",
+				id:          1,
+				originalURL: "https://example.com/updated",
+			},
+			{
+				name:        "short name too long",
+				shortName:   "abcdefghijklmnopqrstuvwxyz1234567",
+				id:          1,
+				originalURL: "https://example.com/updated",
+			},
+		}
+		for _, subTest := range subTests {
+			t.Run(subTest.name, func(t *testing.T) {
+				mocks := newServiceMocks(t)
+
+				var validationErr *ValidationError
+
+				result, err := mocks.service.UpdateLink(t.Context(), subTest.id, subTest.originalURL, subTest.shortName)
+
+				require.Error(t, err)
+				require.ErrorAs(t, err, &validationErr)
+				assert.Equal(t, Link{}, result)
+			})
+		}
 	})
 }
 

@@ -4,6 +4,7 @@ package shortener
 import (
 	"context"
 	"errors"
+	"regexp"
 	"shortener/internal/common/textutils"
 	"shortener/internal/config"
 	"shortener/internal/db/models"
@@ -30,6 +31,9 @@ type linkRepository interface {
 type serviceOpts struct {
 	shortNameGenerationMaxAttempts int
 	shortNameDefaultLength         int
+	shortNameMinLength             int
+	shortNameMaxLength             int
+	shortNameRegexPattern          regexp.Regexp
 }
 
 // Service coordinates link shortening and visit tracking operations.
@@ -53,6 +57,9 @@ func NewService(
 		opts: serviceOpts{
 			shortNameGenerationMaxAttempts: 10,
 			shortNameDefaultLength:         6,
+			shortNameMinLength:             3,
+			shortNameMaxLength:             32,
+			shortNameRegexPattern:          *regexp.MustCompile(`^[a-zA-Z0-9_-]+$`),
 		},
 	}
 }
@@ -60,9 +67,14 @@ func NewService(
 // CreateLink creates a shortened link, generating a short name when one is not provided.
 func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string) (Link, error) {
 	isShortNameProvided := shortName != ""
+
 	for range s.opts.shortNameGenerationMaxAttempts {
 		if !isShortNameProvided {
 			shortName = textutils.RandomString(s.opts.shortNameDefaultLength)
+		}
+
+		if err := s.validateShortName(shortName); err != nil {
+			return Link{}, NewValidationError(err.Error(), "short_name")
 		}
 
 		insert := link.Insert{
@@ -147,6 +159,10 @@ func (s *Service) ListLinksWithCount(ctx context.Context, builder *LinkListOptio
 
 // UpdateLink replaces URL fields for a shortened link by ID.
 func (s *Service) UpdateLink(ctx context.Context, id uint, originalURL, shortName string) (Link, error) {
+	if err := s.validateShortName(shortName); err != nil {
+		return Link{}, NewValidationError(err.Error(), "short_name")
+	}
+
 	update := link.Update{
 		OriginalURL: originalURL,
 		ShortName:   shortName,
