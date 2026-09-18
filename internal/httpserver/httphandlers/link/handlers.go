@@ -25,6 +25,7 @@ type Service interface {
 
 type handler struct {
 	service Service
+	baseURL string
 }
 
 func (h *handler) redirect(ctx *gin.Context) {
@@ -81,7 +82,7 @@ func (h *handler) create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, createLinkResponseBody(link))
+	ctx.JSON(http.StatusCreated, createLinkResponseBody(newLinkResponseBody(link, h.baseURL)))
 }
 
 func (h *handler) get(ctx *gin.Context) {
@@ -99,7 +100,7 @@ func (h *handler) get(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, getLinkResponseBody(link))
+	ctx.JSON(http.StatusOK, getLinkResponseBody(newLinkResponseBody(link, h.baseURL)))
 }
 
 func (h *handler) list(ctx *gin.Context) {
@@ -119,7 +120,7 @@ func (h *handler) list(ctx *gin.Context) {
 
 	from, _ := optsBuilder.Range()
 	httpparam.WriteContentRangeHeader(ctx, "links", from, len(links), count)
-	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
+	ctx.JSON(http.StatusOK, newListLinksResponseBody(links, h.baseURL))
 }
 
 func (h *handler) update(ctx *gin.Context) {
@@ -146,7 +147,7 @@ func (h *handler) update(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, updateLinkResponseBody(link))
+	ctx.JSON(http.StatusOK, updateLinkResponseBody(newLinkResponseBody(link, h.baseURL)))
 }
 
 func (h *handler) delete(ctx *gin.Context) {
@@ -185,7 +186,12 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error
 	}
 
 	if sortQuery != nil {
-		builder.WithSort(sortQuery.Field, sortQuery.Direction)
+		sortField := sortQuery.Field
+		if sortField == "short_url" {
+			sortField = string(shortener.LinkSortByShortName)
+		}
+
+		builder.WithSort(sortField, sortQuery.Direction)
 	}
 
 	return builder, nil

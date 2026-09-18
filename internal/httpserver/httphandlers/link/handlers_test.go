@@ -72,8 +72,8 @@ func newHandlerMocks(t *testing.T) handlerMocks {
 	shortener := new(mockService)
 	router := gin.New()
 
-	handler := &handler{shortener}
-	RegisterRoutes(shortener, router)
+	handler := &handler{service: shortener, baseURL: "https://short.example.com"}
+	RegisterRoutes(shortener, router, "https://short.example.com")
 
 	t.Cleanup(func() {
 		shortener.AssertExpectations(t)
@@ -89,7 +89,7 @@ func newRouter(t *testing.T, shortener Service) *gin.Engine {
 	t.Helper()
 
 	router := gin.New()
-	RegisterRoutes(shortener, router)
+	RegisterRoutes(shortener, router, "https://short.example.com")
 
 	return router
 }
@@ -114,7 +114,6 @@ func TestHandler_redirect(t *testing.T) {
 				ID:          1,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
-				ShortURL:    "http://localhost/r/" + shortName,
 			}, nil).
 			Once()
 		mocks.shortener.
@@ -159,7 +158,6 @@ func TestHandler_redirect(t *testing.T) {
 				ID:          1,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
-				ShortURL:    "http://localhost/r/" + shortName,
 			}, nil).
 			Once()
 
@@ -189,7 +187,7 @@ func TestHandler_create(t *testing.T) {
 		const (
 			originalURL = "https://example.com"
 			shortName   = "abc-123"
-			shortURL    = "https://short.example.com/abc-123"
+			shortURL    = "https://short.example.com/r/abc-123"
 		)
 
 		mocks := newHandlerMocks(t)
@@ -199,7 +197,6 @@ func TestHandler_create(t *testing.T) {
 				ID:          1,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
-				ShortURL:    shortURL,
 			}, nil).
 			Once()
 
@@ -222,7 +219,7 @@ func TestHandler_create(t *testing.T) {
 			"id": 1,
 			"original_url": "https://example.com",
 			"short_name": "abc-123",
-			"short_url": "https://short.example.com/abc-123"
+			"short_url": "https://short.example.com/r/abc-123"
 		}`, recorder.Body.String())
 	})
 
@@ -331,7 +328,7 @@ func TestHandler_get(t *testing.T) {
 			linkID      = 1
 			originalURL = "https://example.com"
 			shortName   = "abc123"
-			shortURL    = "https://short.example.com/abc123"
+			shortURL    = "https://short.example.com/r/abc123"
 		)
 
 		mocks := newHandlerMocks(t)
@@ -341,7 +338,6 @@ func TestHandler_get(t *testing.T) {
 				ID:          linkID,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
-				ShortURL:    shortURL,
 			}, nil).
 			Once()
 
@@ -356,7 +352,7 @@ func TestHandler_get(t *testing.T) {
 			"id": 1,
 			"original_url": "https://example.com",
 			"short_name": "abc123",
-			"short_url": "https://short.example.com/abc123"
+			"short_url": "https://short.example.com/r/abc123"
 		}`, recorder.Body.String())
 	})
 
@@ -407,7 +403,6 @@ func TestHandler_list(t *testing.T) {
 					ID:          1,
 					OriginalURL: "https://example.com",
 					ShortName:   "abc123",
-					ShortURL:    "https://short.example.com/abc123",
 				},
 			}, 1, nil).
 			Once()
@@ -424,7 +419,7 @@ func TestHandler_list(t *testing.T) {
 				"id": 1,
 				"original_url": "https://example.com",
 				"short_name": "abc123",
-				"short_url": "https://short.example.com/abc123"
+				"short_url": "https://short.example.com/r/abc123"
 			}
 		]`, recorder.Body.String())
 	})
@@ -495,7 +490,7 @@ func TestHandler_list(t *testing.T) {
 
 		router := newRouter(t, mocks.shortener)
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, `/api/links?sort=["original_url","asc"]`, nil)
+		request := httptest.NewRequest(http.MethodGet, `/api/links?sort=["short_url","asc"]`, nil)
 
 		router.ServeHTTP(recorder, request)
 
@@ -524,7 +519,7 @@ func TestHandler_update(t *testing.T) {
 			linkID      = 1
 			originalURL = "https://example.com"
 			shortName   = "abc123"
-			shortURL    = "https://short.example.com/abc123"
+			shortURL    = "https://short.example.com/r/abc123"
 		)
 
 		mocks := newHandlerMocks(t)
@@ -534,7 +529,6 @@ func TestHandler_update(t *testing.T) {
 				ID:          linkID,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
-				ShortURL:    shortURL,
 			}, nil).
 			Once()
 
@@ -557,7 +551,7 @@ func TestHandler_update(t *testing.T) {
 			"id": 1,
 			"original_url": "https://example.com",
 			"short_name": "abc123",
-			"short_url": "https://short.example.com/abc123"
+			"short_url": "https://short.example.com/r/abc123"
 		}`, recorder.Body.String())
 	})
 

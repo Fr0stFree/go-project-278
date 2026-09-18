@@ -2,16 +2,65 @@ package shortener
 
 import (
 	"fmt"
-	"shortener/internal/db/models/link"
-	"shortener/internal/db/models/linkvisit"
-	"shortener/internal/db/storage"
 	"strings"
 )
 
-// ListOptionsBuilder validates and builds common list options.
+// SortDirection describes the order of a list result.
+type SortDirection string
+
+// Supported sort directions.
+const (
+	SortAscending  SortDirection = "ASC"
+	SortDescending SortDirection = "DESC"
+)
+
+// LinkSortField is a persistence-independent link sort key.
+type LinkSortField string
+
+// Supported link sort fields.
+const (
+	LinkSortByID          LinkSortField = "id"
+	LinkSortByOriginalURL LinkSortField = "original_url"
+	LinkSortByShortName   LinkSortField = "short_name"
+	LinkSortByCreatedAt   LinkSortField = "created_at"
+)
+
+// LinkVisitSortField is a persistence-independent visit sort key.
+type LinkVisitSortField string
+
+// Supported visit sort fields.
+const (
+	LinkVisitSortByID        LinkVisitSortField = "id"
+	LinkVisitSortByLinkID    LinkVisitSortField = "link_id"
+	LinkVisitSortByCreatedAt LinkVisitSortField = "created_at"
+)
+
+// ListOptions contains pagination and ordering shared by list operations.
+type ListOptions struct {
+	Limit     int
+	Offset    int
+	SortOrder SortDirection
+}
+
+// LinkListOptions contains link query criteria.
+type LinkListOptions struct {
+	ListOptions
+	SortBy     LinkSortField
+	ShortNames []string
+}
+
+// LinkVisitListOptions contains visit query criteria.
+type LinkVisitListOptions struct {
+	ListOptions
+	SortBy  LinkVisitSortField
+	LinkIDs []uint
+}
+
+// ListOptionsBuilder validates common list options.
 type ListOptionsBuilder struct {
-	sortFields map[string]string
-	options    storage.ListOptions
+	sortFields map[string]struct{}
+	sortBy     string
+	options    ListOptions
 	maxLimit   int
 	err        error
 }
@@ -51,7 +100,7 @@ func (b *ListOptionsBuilder) WithSort(field, order string) {
 		return
 	}
 
-	sortBy, ok := b.sortFields[field]
+	_, ok := b.sortFields[field]
 	if !ok {
 		b.err = NewValidationError(fmt.Sprintf("unsupported sort field: %q", field), "sort")
 
@@ -59,16 +108,14 @@ func (b *ListOptionsBuilder) WithSort(field, order string) {
 	}
 
 	order = strings.ToUpper(order)
-	switch order {
-	case "ASC", "DESC":
-	default:
+	if order != string(SortAscending) && order != string(SortDescending) {
 		b.err = NewValidationError(fmt.Sprintf("unsupported sort order: %q", order), "sort")
 
 		return
 	}
 
-	b.options.SortBy = sortBy
-	b.options.SortOrder = order
+	b.sortBy = field
+	b.options.SortOrder = SortDirection(order)
 }
 
 // Range returns the inclusive range of records.
@@ -79,105 +126,60 @@ func (b *ListOptionsBuilder) Range() (int, int) {
 // LinkListOptionsBuilder builds options for listing links.
 type LinkListOptionsBuilder struct {
 	*ListOptionsBuilder
-	filters link.Filters
+	shortNames []string
 }
 
-// NewLinkListOptionsBuilder creates a new builder for link list options.
+// NewLinkListOptionsBuilder creates a link options builder with safe defaults.
 func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
-	var sortFields = map[string]string{
-		"id":           "id",
-		"original_url": "original_url",
-		"short_name":   "short_name",
-		"short_url":    "short_name",
-		"created_at":   "created_at",
-	}
-
-	const (
-		defaultSortBy    = "id"
-		defaultSortOrder = "DESC"
-		defaultLimit     = 10
-		maxLimit         = 100
-		defaultOffset    = 0
-	)
-
-	return &LinkListOptionsBuilder{
-		ListOptionsBuilder: &ListOptionsBuilder{
-			sortFields: sortFields,
-			maxLimit:   maxLimit,
-			options: storage.ListOptions{
-				Limit:     defaultLimit,
-				Offset:    defaultOffset,
-				SortBy:    defaultSortBy,
-				SortOrder: defaultSortOrder,
-			},
+	return &LinkListOptionsBuilder{ListOptionsBuilder: &ListOptionsBuilder{
+		sortFields: map[string]struct{}{
+			string(LinkSortByID):          {},
+			string(LinkSortByOriginalURL): {},
+			string(LinkSortByShortName):   {},
+			string(LinkSortByCreatedAt):   {},
 		},
-	}
+		sortBy: string(LinkSortByID), maxLimit: 100,
+		options: ListOptions{Limit: 10, SortOrder: SortDescending},
+	}}
 }
 
 // WithShortNames sets the short names to filter by.
 func (b *LinkListOptionsBuilder) WithShortNames(shortNames ...string) {
-	if b.err != nil {
-		return
+	if b.err == nil {
+		b.shortNames = append(b.shortNames, shortNames...)
 	}
-
-	b.filters.ShortNames = append(b.filters.ShortNames, shortNames...)
 }
 
-func (b *LinkListOptionsBuilder) build() link.ListOptions {
-	return link.ListOptions{
-		ListOptions: b.options,
-		Filters:     b.filters,
-	}
+func (b *LinkListOptionsBuilder) build() LinkListOptions {
+	return LinkListOptions{ListOptions: b.options, SortBy: LinkSortField(b.sortBy), ShortNames: b.shortNames}
 }
 
 // LinkVisitListOptionsBuilder builds options for listing link visits.
 type LinkVisitListOptionsBuilder struct {
 	*ListOptionsBuilder
-	filters linkvisit.Filters
+	linkIDs []uint
 }
 
-// NewLinkVisitListOptionsBuilder creates a new builder for link visit list options.
+// NewLinkVisitListOptionsBuilder creates a visit options builder with safe defaults.
 func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
-	var sortFields = map[string]string{
-		"id":         "id",
-		"link_id":    "link_id",
-		"created_at": "created_at",
-	}
-
-	const (
-		defaultSortBy    = "created_at"
-		defaultSortOrder = "DESC"
-		defaultLimit     = 10
-		maxLimit         = 100
-		defaultOffset    = 0
-	)
-
-	return &LinkVisitListOptionsBuilder{
-		ListOptionsBuilder: &ListOptionsBuilder{
-			sortFields: sortFields,
-			maxLimit:   maxLimit,
-			options: storage.ListOptions{
-				Limit:     defaultLimit,
-				Offset:    defaultOffset,
-				SortBy:    defaultSortBy,
-				SortOrder: defaultSortOrder,
-			},
+	return &LinkVisitListOptionsBuilder{ListOptionsBuilder: &ListOptionsBuilder{
+		sortFields: map[string]struct{}{
+			string(LinkVisitSortByID):        {},
+			string(LinkVisitSortByLinkID):    {},
+			string(LinkVisitSortByCreatedAt): {},
 		},
-	}
+		sortBy: string(LinkVisitSortByCreatedAt), maxLimit: 100,
+		options: ListOptions{Limit: 10, SortOrder: SortDescending},
+	}}
 }
 
 // WithLinkIDs sets the link IDs to filter by.
 func (b *LinkVisitListOptionsBuilder) WithLinkIDs(linkIDs ...uint) {
-	if b.err != nil {
-		return
+	if b.err == nil {
+		b.linkIDs = append(b.linkIDs, linkIDs...)
 	}
-
-	b.filters.LinkIDs = append(b.filters.LinkIDs, linkIDs...)
 }
 
-func (b *LinkVisitListOptionsBuilder) build() linkvisit.ListOptions {
-	return linkvisit.ListOptions{
-		ListOptions: b.options,
-		Filters:     b.filters,
-	}
+func (b *LinkVisitListOptionsBuilder) build() LinkVisitListOptions {
+	return LinkVisitListOptions{ListOptions: b.options, SortBy: LinkVisitSortField(b.sortBy), LinkIDs: b.linkIDs}
 }

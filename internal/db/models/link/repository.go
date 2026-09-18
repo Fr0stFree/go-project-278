@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"shortener/internal/db/storage"
+	"shortener/internal/services/shortener"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -21,42 +21,42 @@ func NewRepository(database *gorm.DB) *Repository {
 }
 
 // CreateOne inserts a shortened link row.
-func (r *Repository) CreateOne(ctx context.Context, insert Insert) (Record, error) {
+func (r *Repository) CreateOne(ctx context.Context, params shortener.CreateLinkParams) (shortener.Link, error) {
 	record := Record{
-		OriginalURL: insert.OriginalURL,
-		ShortName:   insert.ShortName,
+		OriginalURL: params.OriginalURL,
+		ShortName:   params.ShortName,
 	}
 
 	result := r.DB.WithContext(ctx).Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, storage.ErrObjectAlreadyExists
+			return shortener.Link{}, shortener.ErrRepositoryConflict
 		}
 
-		return Record{}, result.Error
+		return shortener.Link{}, result.Error
 	}
 
-	return record, nil
+	return toServiceLink(record), nil
 }
 
 // GetByID returns a link row by ID.
-func (r *Repository) GetByID(ctx context.Context, ID uint) (Record, error) {
+func (r *Repository) GetByID(ctx context.Context, ID uint) (shortener.Link, error) {
 	var record Record
 
 	result := r.DB.WithContext(ctx).First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, storage.ErrObjectDoesNotExist
+			return shortener.Link{}, shortener.ErrRepositoryNotFound
 		}
 
-		return Record{}, result.Error
+		return shortener.Link{}, result.Error
 	}
 
-	return record, nil
+	return toServiceLink(record), nil
 }
 
 // GetMany returns link rows matching the provided list options.
-func (r *Repository) GetMany(ctx context.Context, options ListOptions) ([]Record, error) {
+func (r *Repository) GetMany(ctx context.Context, options shortener.LinkListOptions) ([]shortener.Link, error) {
 	records := make([]Record, 0)
 
 	statement := r.DB.WithContext(ctx).Model(&Record{})
@@ -67,14 +67,19 @@ func (r *Repository) GetMany(ctx context.Context, options ListOptions) ([]Record
 	result := statement.
 		Limit(options.Limit).
 		Offset(options.Offset).
-		Order(fmt.Sprintf("%s %s", options.SortBy, options.SortOrder)).
+		Order(fmt.Sprintf("%s %s", linkSortColumn(options.SortBy), options.SortOrder)).
 		Find(&records)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return records, nil
+	links := make([]shortener.Link, len(records))
+	for i, record := range records {
+		links[i] = toServiceLink(record)
+	}
+
+	return links, nil
 }
 
 // Count returns the total number of link rows.
@@ -90,7 +95,7 @@ func (r *Repository) Count(ctx context.Context) (int, error) {
 }
 
 // UpdateByID replaces URL fields for a link row by ID.
-func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Record, error) {
+func (r *Repository) UpdateByID(ctx context.Context, ID uint, params shortener.UpdateLinkParams) (shortener.Link, error) {
 	var record Record
 
 	result := r.DB.
@@ -98,21 +103,21 @@ func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Re
 		Model(&record).
 		Clauses(clause.Returning{}).
 		Where("id = ?", ID).
-		Updates(Record{OriginalURL: update.OriginalURL, ShortName: update.ShortName})
+		Updates(Record{OriginalURL: params.OriginalURL, ShortName: params.ShortName})
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, storage.ErrObjectAlreadyExists
+			return shortener.Link{}, shortener.ErrRepositoryConflict
 		}
 
-		return Record{}, result.Error
+		return shortener.Link{}, result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return Record{}, storage.ErrObjectDoesNotExist
+		return shortener.Link{}, shortener.ErrRepositoryNotFound
 	}
 
-	return record, nil
+	return toServiceLink(record), nil
 }
 
 // DeleteByID deletes a link row by ID.
@@ -123,8 +128,28 @@ func (r *Repository) DeleteByID(ctx context.Context, ID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return storage.ErrObjectDoesNotExist
+		return shortener.ErrRepositoryNotFound
 	}
 
 	return nil
+}
+
+func toServiceLink(record Record) shortener.Link {
+	return shortener.Link{
+		ID: record.ID, OriginalURL: record.OriginalURL, ShortName: record.ShortName,
+		CreatedAt: record.CreatedAt, UpdatedAt: record.UpdatedAt,
+	}
+}
+
+func linkSortColumn(field shortener.LinkSortField) string {
+	switch field {
+	case shortener.LinkSortByOriginalURL:
+		return "original_url"
+	case shortener.LinkSortByShortName:
+		return "short_name"
+	case shortener.LinkSortByCreatedAt:
+		return "created_at"
+	default:
+		return "id"
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"shortener/internal/services/shortener"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -71,7 +72,7 @@ func TestHandler_list(t *testing.T) {
 				{
 					ID:        1,
 					LinkID:    1,
-					CreatedAt: "2026-09-04T12:00:00Z",
+					CreatedAt: time.Date(2026, 9, 4, 12, 0, 0, 0, time.UTC),
 					IP:        "127.0.0.1",
 					UserAgent: "Mozilla/5.0",
 					Status:    http.StatusFound,

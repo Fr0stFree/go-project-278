@@ -21,7 +21,7 @@ type service interface {
 }
 
 // New creates an HTTP server for the provided handler and configuration.
-func New(service service, cfg *config.HTTP) *http.Server {
+func New(service service, cfg *config.HTTP, baseURL string) *http.Server {
 	router := gin.New()
 	router.Use(middleware.RequestID())
 	router.Use(middleware.AccessLogger())
@@ -35,7 +35,7 @@ func New(service service, cfg *config.HTTP) *http.Server {
 	router.NoMethod(handleMethodNotAllowed)
 
 	health.RegisterRoutes(router)
-	link.RegisterRoutes(service, router)
+	link.RegisterRoutes(service, router, baseURL)
 	linkvisit.RegisterRoutes(service, router)
 
 	server := &http.Server{

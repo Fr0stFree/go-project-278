@@ -34,8 +34,8 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	service := shortener.NewService(database.Links, database.LinkVisits, &cfg.App)
-	server := httpserver.New(service, &cfg.HTTP)
+	service := shortener.NewService(database.Links, database.LinkVisits)
+	server := httpserver.New(service, &cfg.HTTP, cfg.App.BaseURL)
 
 	if err := sentry.Connect(cfg.HTTP.Sentry); err != nil {
 		log.Fatal(err)

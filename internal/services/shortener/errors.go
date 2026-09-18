@@ -48,3 +48,10 @@ func NewConflictError(message, field string) *ConflictError {
 
 // ErrShortNameGenerationExhausted indicates that a unique short name could not be generated within the allowed number of attempts.
 var ErrShortNameGenerationExhausted = errors.New("failed to generate a unique short name")
+
+var (
+	// ErrRepositoryNotFound is returned when a requested entity does not exist.
+	ErrRepositoryNotFound = errors.New("repository entity does not exist")
+	// ErrRepositoryConflict is returned on a repository uniqueness conflict.
+	ErrRepositoryConflict = errors.New("repository entity already exists")
+)

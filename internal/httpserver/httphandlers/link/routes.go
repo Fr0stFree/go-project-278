@@ -5,8 +5,8 @@ import (
 )
 
 // RegisterRoutes mounts link management and redirect routes.
-func RegisterRoutes(service Service, router gin.IRouter) {
-	h := &handler{service: service}
+func RegisterRoutes(service Service, router gin.IRouter, baseURL string) {
+	h := &handler{service: service, baseURL: baseURL}
 	router.POST("/api/links", h.create)
 	router.GET("/api/links/:id", h.get)
 	router.GET("/api/links", h.list)

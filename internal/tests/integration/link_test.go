@@ -33,6 +33,13 @@ const (
 	migrationsDir = "../../../db/migrations"
 )
 
+type linkResponse struct {
+	ID          uint   `json:"id"`
+	OriginalURL string `json:"original_url"`
+	ShortName   string `json:"short_name"`
+	ShortURL    string `json:"short_url"`
+}
+
 func applyMigrations(t *testing.T, databaseURL string) {
 	t.Helper()
 	database, err := sql.Open("pgx", databaseURL)
@@ -79,10 +86,9 @@ func startApp(t *testing.T, databaseURL string) string {
 	service := shortener.NewService(
 		database.Links,
 		database.LinkVisits,
-		&cfg.App,
 	)
 
-	server := httpserver.New(service, &cfg.HTTP)
+	server := httpserver.New(service, &cfg.HTTP, cfg.App.BaseURL)
 	application := app.New(server, database, cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -138,7 +144,7 @@ func TestLinkCreation(t *testing.T) {
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
-	var link shortener.Link
+	var link linkResponse
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&link))
 	require.Equal(t, "https://example.com", link.OriginalURL)
@@ -149,7 +155,7 @@ func TestLinkCreation(t *testing.T) {
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
-	var retrievedLink shortener.Link
+	var retrievedLink linkResponse
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&retrievedLink))
 	require.Equal(t, link.ID, retrievedLink.ID)

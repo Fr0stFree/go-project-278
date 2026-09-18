@@ -4,6 +4,7 @@ package linkvisit
 import (
 	"context"
 	"fmt"
+	"shortener/internal/services/shortener"
 
 	"gorm.io/gorm"
 )
@@ -19,25 +20,25 @@ func NewRepository(db *gorm.DB) *Repository {
 }
 
 // CreateOne inserts a redirect visit row.
-func (r *Repository) CreateOne(ctx context.Context, insert Insert) (Record, error) {
+func (r *Repository) CreateOne(ctx context.Context, params shortener.CreateLinkVisitParams) (shortener.LinkVisit, error) {
 	record := Record{
-		LinkID:    insert.LinkID,
-		IP:        insert.IP,
-		UserAgent: insert.UserAgent,
-		Status:    insert.Status,
-		Referrer:  insert.Referrer,
+		LinkID:    params.LinkID,
+		IP:        params.IP,
+		UserAgent: params.UserAgent,
+		Status:    params.Status,
+		Referrer:  params.Referrer,
 	}
 
 	result := r.DB.WithContext(ctx).Create(&record)
 	if result.Error != nil {
-		return Record{}, result.Error
+		return shortener.LinkVisit{}, result.Error
 	}
 
-	return record, nil
+	return toServiceLinkVisit(record), nil
 }
 
 // GetMany returns visit rows matching the provided list options.
-func (r *Repository) GetMany(ctx context.Context, options ListOptions) ([]Record, error) {
+func (r *Repository) GetMany(ctx context.Context, options shortener.LinkVisitListOptions) ([]shortener.LinkVisit, error) {
 	records := make([]Record, 0)
 	statement := r.DB.WithContext(ctx).Model(&Record{})
 
@@ -48,14 +49,37 @@ func (r *Repository) GetMany(ctx context.Context, options ListOptions) ([]Record
 	result := statement.
 		Limit(options.Limit).
 		Offset(options.Offset).
-		Order(fmt.Sprintf("%s %s", options.SortBy, options.SortOrder)).
+		Order(fmt.Sprintf("%s %s", linkVisitSortColumn(options.SortBy), options.SortOrder)).
 		Find(&records)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return records, nil
+	visits := make([]shortener.LinkVisit, len(records))
+	for i, record := range records {
+		visits[i] = toServiceLinkVisit(record)
+	}
+
+	return visits, nil
+}
+
+func toServiceLinkVisit(record Record) shortener.LinkVisit {
+	return shortener.LinkVisit{
+		ID: record.ID, LinkID: record.LinkID, CreatedAt: record.CreatedAt, UpdatedAt: record.UpdatedAt,
+		IP: record.IP, UserAgent: record.UserAgent, Status: record.Status, Referrer: record.Referrer,
+	}
+}
+
+func linkVisitSortColumn(field shortener.LinkVisitSortField) string {
+	switch field {
+	case shortener.LinkVisitSortByLinkID:
+		return "link_id"
+	case shortener.LinkVisitSortByCreatedAt:
+		return "created_at"
+	default:
+		return "id"
+	}
 }
 
 // Count returns the total number of visit rows.

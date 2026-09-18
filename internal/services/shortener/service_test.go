@@ -3,39 +3,35 @@ package shortener
 import (
 	"context"
 	"shortener/internal/common/textutils"
-	"shortener/internal/config"
-	"shortener/internal/db/models/link"
-	"shortener/internal/db/models/linkvisit"
-	"shortener/internal/db/storage"
+
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 type mockLinkRepository struct {
 	mock.Mock
 }
 
-func (m *mockLinkRepository) CreateOne(ctx context.Context, insert link.Insert) (link.Record, error) {
+func (m *mockLinkRepository) CreateOne(ctx context.Context, insert CreateLinkParams) (Link, error) {
 	args := m.Called(ctx, insert)
 
-	return args.Get(0).(link.Record), args.Error(1)
+	return args.Get(0).(Link), args.Error(1)
 }
 
-func (m *mockLinkRepository) GetByID(ctx context.Context, id uint) (link.Record, error) {
+func (m *mockLinkRepository) GetByID(ctx context.Context, id uint) (Link, error) {
 	args := m.Called(ctx, id)
 
-	return args.Get(0).(link.Record), args.Error(1)
+	return args.Get(0).(Link), args.Error(1)
 }
 
-func (m *mockLinkRepository) GetMany(ctx context.Context, options link.ListOptions) ([]link.Record, error) {
+func (m *mockLinkRepository) GetMany(ctx context.Context, options LinkListOptions) ([]Link, error) {
 	args := m.Called(ctx, options)
 
-	return args.Get(0).([]link.Record), args.Error(1)
+	return args.Get(0).([]Link), args.Error(1)
 }
 
 func (m *mockLinkRepository) Count(ctx context.Context) (int, error) {
@@ -44,10 +40,10 @@ func (m *mockLinkRepository) Count(ctx context.Context) (int, error) {
 	return args.Int(0), args.Error(1)
 }
 
-func (m *mockLinkRepository) UpdateByID(ctx context.Context, id uint, update link.Update) (link.Record, error) {
+func (m *mockLinkRepository) UpdateByID(ctx context.Context, id uint, update UpdateLinkParams) (Link, error) {
 	args := m.Called(ctx, id, update)
 
-	return args.Get(0).(link.Record), args.Error(1)
+	return args.Get(0).(Link), args.Error(1)
 }
 
 func (m *mockLinkRepository) DeleteByID(ctx context.Context, id uint) error {
@@ -60,16 +56,16 @@ type mockLinkVisitRepository struct {
 	mock.Mock
 }
 
-func (m *mockLinkVisitRepository) CreateOne(ctx context.Context, insert linkvisit.Insert) (linkvisit.Record, error) {
+func (m *mockLinkVisitRepository) CreateOne(ctx context.Context, insert CreateLinkVisitParams) (LinkVisit, error) {
 	args := m.Called(ctx, insert)
 
-	return args.Get(0).(linkvisit.Record), args.Error(1)
+	return args.Get(0).(LinkVisit), args.Error(1)
 }
 
-func (m *mockLinkVisitRepository) GetMany(ctx context.Context, options linkvisit.ListOptions) ([]linkvisit.Record, error) {
+func (m *mockLinkVisitRepository) GetMany(ctx context.Context, options LinkVisitListOptions) ([]LinkVisit, error) {
 	args := m.Called(ctx, options)
 
-	return args.Get(0).([]linkvisit.Record), args.Error(1)
+	return args.Get(0).([]LinkVisit), args.Error(1)
 }
 
 func (m *mockLinkVisitRepository) Count(ctx context.Context) (int, error) {
@@ -95,8 +91,7 @@ func newServiceMocks(t *testing.T) serviceMocks {
 		linkVisitRepo.AssertExpectations(t)
 	})
 
-	appConfig := &config.App{BaseURL: "https://short.example.com"}
-	service := NewService(linkRepo, linkVisitRepo, appConfig)
+	service := NewService(linkRepo, linkVisitRepo)
 
 	return serviceMocks{
 		service:       service,
@@ -111,17 +106,16 @@ func TestService_CreateLink(t *testing.T) {
 			id          uint = 42
 			originalURL      = "https://example.com/some/page"
 			shortName        = "example"
-			baseURL          = "https://short.example.com"
 		)
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), link.Insert{
+			On("CreateOne", t.Context(), CreateLinkParams{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
-			Return(link.Record{
-				Model:       gorm.Model{ID: id},
+			Return(Link{
+				ID:          id,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}, nil).
@@ -134,7 +128,6 @@ func TestService_CreateLink(t *testing.T) {
 			ID:          id,
 			OriginalURL: originalURL,
 			ShortName:   shortName,
-			ShortURL:    "https://short.example.com/r/example",
 		}, result)
 	})
 
@@ -147,11 +140,11 @@ func TestService_CreateLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		expectedShortName := textutils.RandomString(mocks.service.opts.shortNameDefaultLength)
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert CreateLinkParams) bool {
 				return insert.OriginalURL == originalURL && len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
-			Return(link.Record{
-				Model:       gorm.Model{ID: id},
+			Return(Link{
+				ID:          id,
 				OriginalURL: originalURL,
 				ShortName:   expectedShortName,
 			}, nil).
@@ -164,7 +157,6 @@ func TestService_CreateLink(t *testing.T) {
 			ID:          id,
 			OriginalURL: originalURL,
 			ShortName:   expectedShortName,
-			ShortURL:    "https://short.example.com/r/" + expectedShortName,
 		}, result)
 	})
 
@@ -176,11 +168,11 @@ func TestService_CreateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), link.Insert{
+			On("CreateOne", t.Context(), CreateLinkParams{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
-			Return(link.Record{}, storage.ErrObjectAlreadyExists).
+			Return(Link{}, ErrRepositoryConflict).
 			Once()
 
 		result, err := mocks.service.CreateLink(t.Context(), originalURL, shortName)
@@ -198,20 +190,20 @@ func TestService_CreateLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert CreateLinkParams) bool {
 				return insert.OriginalURL == originalURL && len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
-			Return(link.Record{}, storage.ErrObjectAlreadyExists).
+			Return(Link{}, ErrRepositoryConflict).
 			Once()
 
 		expectedShortName := textutils.RandomString(mocks.service.opts.shortNameDefaultLength)
 
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert CreateLinkParams) bool {
 				return insert.OriginalURL == originalURL && len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
-			Return(link.Record{
-				Model:       gorm.Model{ID: id},
+			Return(Link{
+				ID:          id,
 				OriginalURL: originalURL,
 				ShortName:   expectedShortName,
 			}, nil).
@@ -224,7 +216,6 @@ func TestService_CreateLink(t *testing.T) {
 			ID:          id,
 			OriginalURL: originalURL,
 			ShortName:   expectedShortName,
-			ShortURL:    "https://short.example.com/r/" + expectedShortName,
 		}, result)
 
 		mocks.linkRepo.AssertNumberOfCalls(t, "CreateOne", 2)
@@ -236,11 +227,11 @@ func TestService_CreateLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 
 		mocks.linkRepo.
-			On("CreateOne", t.Context(), mock.MatchedBy(func(insert link.Insert) bool {
+			On("CreateOne", t.Context(), mock.MatchedBy(func(insert CreateLinkParams) bool {
 				return insert.OriginalURL == originalURL &&
 					len(insert.ShortName) == mocks.service.opts.shortNameDefaultLength
 			})).
-			Return(link.Record{}, storage.ErrObjectAlreadyExists).
+			Return(Link{}, ErrRepositoryConflict).
 			Times(mocks.service.opts.shortNameGenerationMaxAttempts)
 
 		result, err := mocks.service.CreateLink(t.Context(), originalURL, "")
@@ -291,14 +282,13 @@ func TestService_GetLink(t *testing.T) {
 			id          uint = 42
 			originalURL      = "https://example.com/some/page"
 			shortName        = "example"
-			baseURL          = "https://short.example.com"
 		)
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("GetByID", t.Context(), id).
-			Return(link.Record{
-				Model:       gorm.Model{ID: id},
+			Return(Link{
+				ID:          id,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}, nil).
@@ -311,7 +301,6 @@ func TestService_GetLink(t *testing.T) {
 			ID:          id,
 			OriginalURL: originalURL,
 			ShortName:   shortName,
-			ShortURL:    "https://short.example.com/r/example",
 		}, result)
 	})
 
@@ -321,7 +310,7 @@ func TestService_GetLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("GetByID", t.Context(), id).
-			Return(link.Record{}, storage.ErrObjectDoesNotExist).
+			Return(Link{}, ErrRepositoryNotFound).
 			Once()
 
 		result, err := mocks.service.GetLink(t.Context(), id)
@@ -341,18 +330,18 @@ func TestService_GetRedirectLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("GetMany", t.Context(), link.ListOptions{
-				ListOptions: storage.ListOptions{
+			On("GetMany", t.Context(), LinkListOptions{
+				ListOptions: ListOptions{
 					Limit:     1,
 					Offset:    0,
-					SortBy:    "id",
 					SortOrder: "DESC",
 				},
-				Filters: link.Filters{ShortNames: []string{shortName}},
+				SortBy:     LinkSortByID,
+				ShortNames: []string{shortName},
 			}).
-			Return([]link.Record{
+			Return([]Link{
 				{
-					Model:       gorm.Model{ID: id},
+					ID:          id,
 					OriginalURL: originalURL,
 					ShortName:   shortName,
 				},
@@ -366,7 +355,6 @@ func TestService_GetRedirectLink(t *testing.T) {
 			ID:          id,
 			OriginalURL: originalURL,
 			ShortName:   shortName,
-			ShortURL:    "https://short.example.com/r/example",
 		}, result)
 	})
 
@@ -375,16 +363,16 @@ func TestService_GetRedirectLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("GetMany", t.Context(), link.ListOptions{
-				ListOptions: storage.ListOptions{
+			On("GetMany", t.Context(), LinkListOptions{
+				ListOptions: ListOptions{
 					Limit:     1,
 					Offset:    0,
-					SortBy:    "id",
 					SortOrder: "DESC",
 				},
-				Filters: link.Filters{ShortNames: []string{shortName}},
+				SortBy:     LinkSortByID,
+				ShortNames: []string{shortName},
 			}).
-			Return([]link.Record{}, nil).
+			Return([]Link{}, nil).
 			Once()
 
 		result, err := mocks.service.GetRedirectLink(t.Context(), shortName)
@@ -402,22 +390,22 @@ func TestService_ListLinksWithCount(t *testing.T) {
 			Return(42, nil).
 			Once()
 		mocks.linkRepo.
-			On("GetMany", t.Context(), link.ListOptions{
-				ListOptions: storage.ListOptions{
+			On("GetMany", t.Context(), LinkListOptions{
+				ListOptions: ListOptions{
 					Limit:     10,
 					Offset:    0,
-					SortBy:    "id",
 					SortOrder: "DESC",
 				},
+				SortBy: LinkSortByID,
 			}).
-			Return([]link.Record{
+			Return([]Link{
 				{
-					Model:       gorm.Model{ID: 1},
+					ID:          1,
 					OriginalURL: "https://example.com/first",
 					ShortName:   "first",
 				},
 				{
-					Model:       gorm.Model{ID: 2},
+					ID:          2,
 					OriginalURL: "https://example.com/second",
 					ShortName:   "second",
 				},
@@ -433,13 +421,11 @@ func TestService_ListLinksWithCount(t *testing.T) {
 				ID:          1,
 				OriginalURL: "https://example.com/first",
 				ShortName:   "first",
-				ShortURL:    "https://short.example.com/r/first",
 			},
 			{
 				ID:          2,
 				OriginalURL: "https://example.com/second",
 				ShortName:   "second",
-				ShortURL:    "https://short.example.com/r/second",
 			},
 		}, result)
 	})
@@ -455,18 +441,16 @@ func TestService_ListLinksWithCount(t *testing.T) {
 			Return(0, nil).
 			Once()
 		mocks.linkRepo.
-			On("GetMany", t.Context(), link.ListOptions{
-				ListOptions: storage.ListOptions{
+			On("GetMany", t.Context(), LinkListOptions{
+				ListOptions: ListOptions{
 					Limit:     10,
 					Offset:    10,
-					SortBy:    "short_name",
 					SortOrder: "ASC",
 				},
-				Filters: link.Filters{
-					ShortNames: []string{"first", "second"},
-				},
+				SortBy:     LinkSortByShortName,
+				ShortNames: []string{"first", "second"},
 			}).
-			Return([]link.Record{}, nil).
+			Return([]Link{}, nil).
 			Once()
 
 		result, count, err := mocks.service.ListLinksWithCount(t.Context(), builder)
@@ -525,12 +509,12 @@ func TestService_UpdateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("UpdateByID", t.Context(), id, link.Update{
+			On("UpdateByID", t.Context(), id, UpdateLinkParams{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
-			Return(link.Record{
-				Model:       gorm.Model{ID: id},
+			Return(Link{
+				ID:          id,
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}, nil).
@@ -543,7 +527,6 @@ func TestService_UpdateLink(t *testing.T) {
 			ID:          id,
 			OriginalURL: originalURL,
 			ShortName:   shortName,
-			ShortURL:    "https://short.example.com/r/updated",
 		}, result)
 	})
 
@@ -556,11 +539,11 @@ func TestService_UpdateLink(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
-			On("UpdateByID", t.Context(), id, link.Update{
+			On("UpdateByID", t.Context(), id, UpdateLinkParams{
 				OriginalURL: originalURL,
 				ShortName:   shortName,
 			}).
-			Return(link.Record{}, storage.ErrObjectDoesNotExist).
+			Return(Link{}, ErrRepositoryNotFound).
 			Once()
 
 		result, err := mocks.service.UpdateLink(t.Context(), id, originalURL, shortName)
@@ -628,7 +611,7 @@ func TestService_DeleteLink(t *testing.T) {
 		mocks := newServiceMocks(t)
 		mocks.linkRepo.
 			On("DeleteByID", t.Context(), id).
-			Return(storage.ErrObjectDoesNotExist).
+			Return(ErrRepositoryNotFound).
 			Once()
 
 		err := mocks.service.DeleteLink(t.Context(), id)
@@ -651,19 +634,17 @@ func TestService_SaveLinkVisit(t *testing.T) {
 		updatedAt := time.Date(2026, 9, 4, 12, 35, 0, 0, time.UTC)
 		mocks := newServiceMocks(t)
 		mocks.linkVisitRepo.
-			On("CreateOne", t.Context(), linkvisit.Insert{
+			On("CreateOne", t.Context(), CreateLinkVisitParams{
 				LinkID:    linkID,
 				IP:        ip,
 				UserAgent: userAgent,
 				Referrer:  referrer,
 				Status:    status,
 			}).
-			Return(linkvisit.Record{
-				Model: gorm.Model{
-					ID:        1,
-					CreatedAt: createdAt,
-					UpdatedAt: updatedAt,
-				},
+			Return(LinkVisit{
+				ID:        1,
+				CreatedAt: createdAt,
+				UpdatedAt: updatedAt,
 				LinkID:    linkID,
 				IP:        ip,
 				UserAgent: userAgent,
@@ -678,8 +659,8 @@ func TestService_SaveLinkVisit(t *testing.T) {
 		assert.Equal(t, LinkVisit{
 			ID:        1,
 			LinkID:    linkID,
-			CreatedAt: createdAt.Format(time.RFC3339),
-			UpdatedAt: updatedAt.Format(time.RFC3339),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 			IP:        ip,
 			UserAgent: userAgent,
 			Referrer:  referrer,
@@ -698,14 +679,14 @@ func TestService_SaveLinkVisit(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		mocks.linkVisitRepo.
-			On("CreateOne", t.Context(), linkvisit.Insert{
+			On("CreateOne", t.Context(), CreateLinkVisitParams{
 				LinkID:    linkID,
 				IP:        ip,
 				UserAgent: userAgent,
 				Referrer:  referrer,
 				Status:    status,
 			}).
-			Return(linkvisit.Record{}, storage.ErrObjectAlreadyExists).
+			Return(LinkVisit{}, ErrRepositoryConflict).
 			Once()
 
 		result, err := mocks.service.SaveLinkVisit(t.Context(), linkID, ip, userAgent, referrer, status)
@@ -726,9 +707,9 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 			Once()
 		mocks.linkVisitRepo.
 			On("GetMany", t.Context(), builder.build()).
-			Return([]linkvisit.Record{
+			Return([]LinkVisit{
 				{
-					Model:     gorm.Model{ID: 1},
+					ID:        1,
 					LinkID:    42,
 					IP:        "127.0.0.1",
 					UserAgent: "Mozilla/5.0",
@@ -736,7 +717,7 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 					Status:    302,
 				},
 				{
-					Model:     gorm.Model{ID: 2},
+					ID:        2,
 					LinkID:    42,
 					IP:        "192.168.0.1",
 					UserAgent: "Mozilla/5.0",
@@ -760,8 +741,8 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 			Return(0, nil).
 			Once()
 		mocks.linkVisitRepo.
-			On("GetMany", t.Context(), mock.AnythingOfType("linkvisit.ListOptions")).
-			Return([]linkvisit.Record{}, nil).
+			On("GetMany", t.Context(), mock.AnythingOfType("LinkVisitListOptions")).
+			Return([]LinkVisit{}, nil).
 			Once()
 
 		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), nil)
@@ -815,7 +796,7 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 
 		mocks.linkVisitRepo.
 			On("GetMany", t.Context(), builder.build()).
-			Return([]linkvisit.Record{}, storage.ErrObjectDoesNotExist).
+			Return([]LinkVisit{}, ErrRepositoryNotFound).
 			Once()
 
 		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)
@@ -830,11 +811,11 @@ func TestService_ListLinkVisitsWithCount(t *testing.T) {
 		builder := NewLinkVisitListOptionsBuilder()
 		mocks.linkVisitRepo.
 			On("GetMany", t.Context(), builder.build()).
-			Return([]linkvisit.Record{}, nil).
+			Return([]LinkVisit{}, nil).
 			Once()
 		mocks.linkVisitRepo.
 			On("Count", t.Context()).
-			Return(0, storage.ErrObjectDoesNotExist).
+			Return(0, ErrRepositoryNotFound).
 			Once()
 
 		result, count, err := mocks.service.ListLinkVisitsWithCount(t.Context(), builder)

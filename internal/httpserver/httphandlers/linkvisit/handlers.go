@@ -36,7 +36,7 @@ func (h *handler) list(ctx *gin.Context) {
 
 	from, _ := optsBuilder.Range()
 	httpparam.WriteContentRangeHeader(ctx, "link_visits", from, len(visits), count)
-	ctx.JSON(http.StatusOK, listLinksVisitsResponseBody(visits))
+	ctx.JSON(http.StatusOK, newListLinkVisitsResponseBody(visits))
 }
 
 func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, error) {

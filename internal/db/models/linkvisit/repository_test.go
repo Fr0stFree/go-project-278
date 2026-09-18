@@ -1,7 +1,7 @@
 package linkvisit
 
 import (
-	"shortener/internal/db/storage"
+	"shortener/internal/services/shortener"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -43,7 +43,7 @@ func TestRepository_CreateOne(t *testing.T) {
 			)
 		sqlMock.ExpectCommit()
 
-		record, err := repository.CreateOne(t.Context(), Insert{
+		record, err := repository.CreateOne(t.Context(), shortener.CreateLinkVisitParams{
 			LinkID:    1,
 			IP:        "127.0.0.1",
 			UserAgent: "Mozilla/5.0",
@@ -64,9 +64,10 @@ func TestRepository_CreateOne(t *testing.T) {
 func TestRepository_GetMany(t *testing.T) {
 	t.Run("should get visits successfully", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
-		opts := ListOptions{
-			storage.ListOptions{Limit: 10, Offset: 0},
-			Filters{LinkIDs: []uint{1}},
+		opts := shortener.LinkVisitListOptions{
+			ListOptions: shortener.ListOptions{Limit: 10, Offset: 0},
+			SortBy:      shortener.LinkVisitSortByID,
+			LinkIDs:     []uint{1},
 		}
 
 		sqlMock.
@@ -93,13 +94,13 @@ func TestRepository_GetMany(t *testing.T) {
 	t.Run("should filter by multiple link ids", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 
-		opts := ListOptions{
-			ListOptions: storage.ListOptions{
+		opts := shortener.LinkVisitListOptions{
+			ListOptions: shortener.ListOptions{
 				Limit:     10,
-				SortBy:    "created_at",
 				SortOrder: "DESC",
 			},
-			Filters: Filters{LinkIDs: []uint{1, 2, 3}},
+			SortBy:  shortener.LinkVisitSortByCreatedAt,
+			LinkIDs: []uint{1, 2, 3},
 		}
 
 		sqlMock.

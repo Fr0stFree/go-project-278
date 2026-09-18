@@ -2,7 +2,6 @@ package linkvisit
 
 import (
 	"shortener/internal/db/models/link"
-	"shortener/internal/db/storage"
 
 	"gorm.io/gorm"
 )
@@ -21,24 +20,4 @@ type Record struct {
 // TableName returns the database table for visit records.
 func (Record) TableName() string {
 	return "shortened_link_visits"
-}
-
-// Insert contains values for creating a visit row.
-type Insert struct {
-	LinkID    uint
-	IP        string
-	UserAgent string
-	Status    uint
-	Referrer  string
-}
-
-// Filters contains visit-specific query filters.
-type Filters struct {
-	LinkIDs []uint
-}
-
-// ListOptions combines pagination, sorting, and visit filters.
-type ListOptions struct {
-	storage.ListOptions
-	Filters
 }

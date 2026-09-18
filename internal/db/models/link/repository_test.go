@@ -2,7 +2,7 @@ package link
 
 import (
 	"errors"
-	"shortener/internal/db/storage"
+	"shortener/internal/services/shortener"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -41,7 +41,7 @@ func TestRepository_CreateOne(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		sqlMock.ExpectCommit()
 
-		record, err := repository.CreateOne(t.Context(), Insert{
+		record, err := repository.CreateOne(t.Context(), shortener.CreateLinkParams{
 			OriginalURL: "https://example.com",
 			ShortName:   "abc123",
 		})
@@ -63,8 +63,8 @@ func TestRepository_GetByID(t *testing.T) {
 		record, err := repository.GetByID(t.Context(), 1)
 
 		require.NoError(t, err)
-		assert.Equal(t, Record{
-			Model:       gorm.Model{ID: 1},
+		assert.Equal(t, shortener.Link{
+			ID:          1,
 			OriginalURL: "https://example.com",
 			ShortName:   "abc123",
 		}, record)
@@ -83,26 +83,26 @@ func TestRepository_GetMany(t *testing.T) {
 					AddRow(2, "https://example.org", "def456"),
 			)
 
-		options := ListOptions{
-			ListOptions: storage.ListOptions{
+		options := shortener.LinkListOptions{
+			ListOptions: shortener.ListOptions{
 				Limit:     10,
-				SortBy:    "id",
 				SortOrder: "asc",
 			},
-			Filters: Filters{ShortNames: []string{"abc123", "def456"}},
+			SortBy:     shortener.LinkSortByID,
+			ShortNames: []string{"abc123", "def456"},
 		}
 
 		records, err := repository.GetMany(t.Context(), options)
 
 		require.NoError(t, err)
 		require.Len(t, records, 2)
-		assert.Equal(t, Record{
-			Model:       gorm.Model{ID: 1},
+		assert.Equal(t, shortener.Link{
+			ID:          1,
 			OriginalURL: "https://example.com",
 			ShortName:   "abc123",
 		}, records[0])
-		assert.Equal(t, Record{
-			Model:       gorm.Model{ID: 2},
+		assert.Equal(t, shortener.Link{
+			ID:          2,
 			OriginalURL: "https://example.org",
 			ShortName:   "def456",
 		}, records[1])
@@ -133,7 +133,7 @@ func TestRepository_UpdateByID(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "original_url", "short_name"}).AddRow(1, "https://example.org", "def456"))
 		sqlMock.ExpectCommit()
 
-		result, err := repository.UpdateByID(t.Context(), 1, Update{
+		result, err := repository.UpdateByID(t.Context(), 1, shortener.UpdateLinkParams{
 			OriginalURL: "https://example.org",
 			ShortName:   "def456",
 		})
@@ -153,13 +153,13 @@ func TestRepository_UpdateByID(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "original_url", "short_name"}))
 		sqlMock.ExpectCommit()
 
-		result, err := repository.UpdateByID(t.Context(), 999, Update{
+		result, err := repository.UpdateByID(t.Context(), 999, shortener.UpdateLinkParams{
 			OriginalURL: "https://example.org",
 			ShortName:   "def456",
 		})
 
-		require.ErrorIs(t, err, storage.ErrObjectDoesNotExist)
-		assert.Equal(t, Record{}, result)
+		require.ErrorIs(t, err, shortener.ErrRepositoryNotFound)
+		assert.Equal(t, shortener.Link{}, result)
 	})
 
 	t.Run("should propagate unexpected database error", func(t *testing.T) {
@@ -172,13 +172,13 @@ func TestRepository_UpdateByID(t *testing.T) {
 			WillReturnError(dbErr)
 		sqlMock.ExpectRollback()
 
-		result, err := repository.UpdateByID(t.Context(), 1, Update{
+		result, err := repository.UpdateByID(t.Context(), 1, shortener.UpdateLinkParams{
 			OriginalURL: "https://example.org",
 			ShortName:   "def456",
 		})
 
 		require.ErrorIs(t, err, dbErr)
-		assert.Equal(t, Record{}, result)
+		assert.Equal(t, shortener.Link{}, result)
 	})
 }
 
