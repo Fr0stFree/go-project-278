@@ -7,6 +7,7 @@ import (
 	"shortener/internal/db/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // Repository stores shortened links in PostgreSQL.
@@ -92,25 +93,23 @@ func (r *Repository) Count(ctx context.Context) (int, error) {
 func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Record, error) {
 	var record Record
 
-	result := r.DB.WithContext(ctx).First(&record, ID)
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, models.ErrObjectDoesNotExist
-		}
+	result := r.DB.
+		WithContext(ctx).
+		Model(&record).
+		Clauses(clause.Returning{}).
+		Where("id = ?", ID).
+		Updates(Record{OriginalURL: update.OriginalURL, ShortName: update.ShortName})
 
-		return Record{}, result.Error
-	}
-
-	record.OriginalURL = update.OriginalURL
-	record.ShortName = update.ShortName
-
-	result = r.DB.WithContext(ctx).Save(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 			return Record{}, models.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return Record{}, models.ErrObjectDoesNotExist
 	}
 
 	return record, nil

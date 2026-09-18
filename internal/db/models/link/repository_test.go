@@ -1,6 +1,7 @@
 package link
 
 import (
+	"errors"
 	"shortener/internal/db/models"
 	"testing"
 
@@ -125,16 +126,11 @@ func TestRepository_Count(t *testing.T) {
 func TestRepository_UpdateByID(t *testing.T) {
 	t.Run("should update link successfully", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
-		sqlMock.
-			ExpectQuery(`SELECT \* FROM "shortened_links"`).
-			WillReturnRows(
-				sqlmock.NewRows([]string{"id", "original_url", "short_name"}).
-					AddRow(1, "https://example.com", "abc123"),
-			)
 		sqlMock.ExpectBegin()
 		sqlMock.
-			ExpectExec(`UPDATE "shortened_links" SET`).
-			WillReturnResult(sqlmock.NewResult(0, 1))
+			ExpectQuery(`UPDATE "shortened_links" SET .* WHERE id = \$[0-9]+ AND "shortened_links"."deleted_at" IS NULL RETURNING \*`).
+			WithArgs(sqlmock.AnyArg(), "https://example.org", "def456", uint(1)).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "original_url", "short_name"}).AddRow(1, "https://example.org", "def456"))
 		sqlMock.ExpectCommit()
 
 		result, err := repository.UpdateByID(t.Context(), 1, Update{
@@ -146,6 +142,43 @@ func TestRepository_UpdateByID(t *testing.T) {
 		assert.Equal(t, uint(1), result.ID)
 		assert.Equal(t, "https://example.org", result.OriginalURL)
 		assert.Equal(t, "def456", result.ShortName)
+	})
+
+	t.Run("should return not found when link does not exist", func(t *testing.T) {
+		repository, sqlMock := newRepositoryMock(t)
+		sqlMock.ExpectBegin()
+		sqlMock.
+			ExpectQuery(`UPDATE "shortened_links" SET .* WHERE id = \$[0-9]+ AND "shortened_links"."deleted_at" IS NULL RETURNING \*`).
+			WithArgs(sqlmock.AnyArg(), "https://example.org", "def456", uint(999)).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "original_url", "short_name"}))
+		sqlMock.ExpectCommit()
+
+		result, err := repository.UpdateByID(t.Context(), 999, Update{
+			OriginalURL: "https://example.org",
+			ShortName:   "def456",
+		})
+
+		require.ErrorIs(t, err, models.ErrObjectDoesNotExist)
+		assert.Equal(t, Record{}, result)
+	})
+
+	t.Run("should propagate unexpected database error", func(t *testing.T) {
+		repository, sqlMock := newRepositoryMock(t)
+		dbErr := errors.New("database unavailable")
+
+		sqlMock.ExpectBegin()
+		sqlMock.ExpectQuery(`UPDATE "shortened_links" SET .* WHERE id = \$[0-9]+ AND "shortened_links"."deleted_at" IS NULL RETURNING \*`).
+			WithArgs(sqlmock.AnyArg(), "https://example.org", "def456", uint(1)).
+			WillReturnError(dbErr)
+		sqlMock.ExpectRollback()
+
+		result, err := repository.UpdateByID(t.Context(), 1, Update{
+			OriginalURL: "https://example.org",
+			ShortName:   "def456",
+		})
+
+		require.ErrorIs(t, err, dbErr)
+		assert.Equal(t, Record{}, result)
 	})
 }
 
