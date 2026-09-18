@@ -43,12 +43,7 @@ func New(cfg *config.Database) (*Database, error) {
 		LinkVisits: linkvisit.NewRepository(gormDB),
 	}
 
-	slog.Info("PostgreSQL connection pool opened successfully",
-		slog.String("url", cfg.URL),
-		slog.Int("max_open_connections", cfg.MaxOpenConnections),
-		slog.Int("max_idle_connections", cfg.MaxIdleConnections),
-		slog.Duration("connection_max_lifetime", cfg.ConnectionMaxLifetime),
-	)
+	slog.Info("PostgreSQL connection pool opened successfully")
 
 	return db, nil
 }
