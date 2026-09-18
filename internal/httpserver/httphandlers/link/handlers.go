@@ -28,7 +28,12 @@ type handler struct {
 }
 
 func (h *handler) redirect(ctx *gin.Context) {
-	shortName := ctx.Param("short_name")
+	shortName, err := httpparam.ReadStringPath(ctx, "short_name")
+	if err != nil {
+		httperror.WriteResponse(ctx, shortener.NewValidationError(err.Error(), "short_name"))
+
+		return
+	}
 
 	link, err := h.service.GetRedirectLink(ctx.Request.Context(), shortName)
 	if err != nil {
@@ -37,15 +42,18 @@ func (h *handler) redirect(ctx *gin.Context) {
 		return
 	}
 
-	ip := ctx.ClientIP()
-	userAgent := ctx.GetHeader("User-Agent")
-	referrer := ctx.GetHeader("Referer")
-	status := http.StatusFound
+	var (
+		ip        = httpparam.ReadClientIP(ctx)
+		userAgent = httpparam.ReadUserAgentHeader(ctx)
+		referrer  = httpparam.ReadReferrerHeader(ctx)
+		status    = http.StatusFound
+	)
 
 	_, err = h.service.SaveLinkVisit(ctx.Request.Context(), link.ID, ip, userAgent, referrer, uint(status))
 	if err != nil {
 		slog.Error(
 			"Failed to save link visit; redirect will continue",
+			slog.String("request_id", httpparam.ReadRequestIDContext(ctx)),
 			slog.Any("error", err),
 			slog.Uint64("link_id", uint64(link.ID)),
 			slog.String("short_name", shortName),

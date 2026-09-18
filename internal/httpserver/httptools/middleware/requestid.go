@@ -3,23 +3,19 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-)
-
-const (
-	requestIDHeader = "X-Request-ID"
-	requestIDCtxKey = "request_id"
+	"shortener/internal/httpserver/httptools/httpparam"
 )
 
 // RequestID ensures that every request has a correlation identifier.
 func RequestID() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestID := ctx.GetHeader(requestIDHeader)
+		requestID := httpparam.ReadRequestIDHeader(ctx)
 		if requestID == "" {
 			requestID = uuid.New().String()
 		}
 
-		ctx.Set(requestIDCtxKey, requestID)
-		ctx.Header(requestIDHeader, requestID)
+		httpparam.WriteRequestIDContext(ctx, requestID)
+		httpparam.WriteRequestIDHeader(ctx, requestID)
 
 		ctx.Next()
 	}

@@ -7,6 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ReadStringPath reads a string from the named path parameter.
+func ReadStringPath(ctx *gin.Context, paramName string) (string, error) {
+	paramValue := ctx.Param(paramName)
+	if paramValue == "" {
+		return "", fmt.Errorf("missing path parameter: %s", paramName)
+	}
+
+	return paramValue, nil
+}
+
 // ReadNonNegativeIntPath reads a non-negative integer from the named path parameter.
 func ReadNonNegativeIntPath(ctx *gin.Context, paramName string) (uint, error) {
 	paramValue := ctx.Param(paramName)

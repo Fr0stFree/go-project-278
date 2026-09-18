@@ -7,8 +7,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-
 	"shortener/internal/common/textutils"
+	"shortener/internal/httpserver/httptools/httpparam"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +53,7 @@ func WriteResponse(ctx *gin.Context, err error) {
 		slog.ErrorContext(
 			ctx,
 			"internal error",
+			slog.String("request_id", httpparam.ReadRequestIDContext(ctx)),
 			slog.String("reason", err.Error()),
 			slog.String("operation", ctx.HandlerName()),
 			slog.String("method", ctx.Request.Method),
