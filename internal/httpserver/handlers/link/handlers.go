@@ -5,7 +5,8 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"shortener/internal/httpserver/httptools"
+	"shortener/internal/httpserver/httptools/httperror"
+	"shortener/internal/httpserver/httptools/httpparam"
 	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
@@ -31,7 +32,7 @@ func (h *handler) redirect(ctx *gin.Context) {
 
 	link, err := h.service.GetRedirectLink(ctx.Request.Context(), shortName)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
@@ -60,14 +61,14 @@ func (h *handler) create(ctx *gin.Context) {
 
 	err := ctx.ShouldBindJSON(&body)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
 
 	link, err := h.service.CreateLink(ctx.Request.Context(), body.OriginalURL, body.ShortName)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
@@ -76,16 +77,16 @@ func (h *handler) create(ctx *gin.Context) {
 }
 
 func (h *handler) get(ctx *gin.Context) {
-	linkID, err := parseLinkID(ctx)
+	linkID, err := httpparam.ReadNonNegativeIntPath(ctx, "id")
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, shortener.NewValidationError(err.Error(), "link_id"))
 
 		return
 	}
 
 	link, err := h.service.GetLink(ctx.Request.Context(), linkID)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
@@ -96,27 +97,27 @@ func (h *handler) get(ctx *gin.Context) {
 func (h *handler) list(ctx *gin.Context) {
 	optsBuilder, err := parseFilterOpts(ctx)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
 
 	links, count, err := h.service.ListLinksWithCount(ctx.Request.Context(), optsBuilder)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
 
 	from, _ := optsBuilder.Range()
-	ctx.Header("Content-Range", httptools.FormatContentRange("links", from, len(links), count))
+	httpparam.WriteContentRangeHeader(ctx, "links", from, len(links), count)
 	ctx.JSON(http.StatusOK, listLinksResponseBody(links))
 }
 
 func (h *handler) update(ctx *gin.Context) {
-	linkID, err := parseLinkID(ctx)
+	linkID, err := httpparam.ReadNonNegativeIntPath(ctx, "id")
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, shortener.NewValidationError(err.Error(), "link_id"))
 
 		return
 	}
@@ -125,14 +126,14 @@ func (h *handler) update(ctx *gin.Context) {
 
 	err = ctx.ShouldBindJSON(&body)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
 
 	link, err := h.service.UpdateLink(ctx.Request.Context(), linkID, body.OriginalURL, body.ShortName)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
@@ -141,16 +142,16 @@ func (h *handler) update(ctx *gin.Context) {
 }
 
 func (h *handler) delete(ctx *gin.Context) {
-	linkID, err := parseLinkID(ctx)
+	linkID, err := httpparam.ReadNonNegativeIntPath(ctx, "id")
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, shortener.NewValidationError(err.Error(), "link_id"))
 
 		return
 	}
 
 	err = h.service.DeleteLink(ctx.Request.Context(), linkID)
 	if err != nil {
-		httptools.WriteErrorResponse(ctx, err)
+		httperror.WriteResponse(ctx, err)
 
 		return
 	}
@@ -158,36 +159,25 @@ func (h *handler) delete(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
-func parseLinkID(ctx *gin.Context) (uint, error) {
-	linkID, err := httptools.ParsePositiveIntParam(ctx.Param("id"))
-	if err != nil {
-		return 0, shortener.NewValidationError(err.Error(), "link_id")
-	}
-
-	return uint(linkID), nil
-}
-
 func parseFilterOpts(ctx *gin.Context) (*shortener.LinkListOptionsBuilder, error) {
 	builder := shortener.NewLinkListOptionsBuilder()
 
-	rangeRaw := ctx.Query("range")
-	if rangeRaw != "" {
-		from, to, err := httptools.ParseQueryRange(rangeRaw)
-		if err != nil {
-			return nil, shortener.NewValidationError(err.Error(), "range")
-		}
-
-		builder.WithRange(from, to)
+	rangeQuery, err := httpparam.ReadRangeQuery(ctx, "range")
+	if err != nil {
+		return nil, shortener.NewValidationError(err.Error(), "range")
 	}
 
-	sortRaw := ctx.Query("sort")
-	if sortRaw != "" {
-		sortBy, sortOrder, err := httptools.ParseQuerySort(sortRaw)
-		if err != nil {
-			return nil, shortener.NewValidationError(err.Error(), "sort")
-		}
+	if rangeQuery != nil {
+		builder.WithRange(rangeQuery.From, rangeQuery.Count)
+	}
 
-		builder.WithSort(sortBy, sortOrder)
+	sortQuery, err := httpparam.ReadSortQuery(ctx, "sort")
+	if err != nil {
+		return nil, shortener.NewValidationError(err.Error(), "sort")
+	}
+
+	if sortQuery != nil {
+		builder.WithSort(sortQuery.Field, sortQuery.Direction)
 	}
 
 	return builder, nil

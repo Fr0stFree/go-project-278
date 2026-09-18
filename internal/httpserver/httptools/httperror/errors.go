@@ -1,4 +1,5 @@
-package httptools
+// Package httperror provides utilities for handling HTTP errors in the application.
+package httperror
 
 import (
 	"encoding/json"
@@ -14,8 +15,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// WriteErrorResponse translates a service error into an HTTP response.
-func WriteErrorResponse(ctx *gin.Context, err error) {
+// WriteResponse translates a service error into an HTTP response.
+func WriteResponse(ctx *gin.Context, err error) {
 	var (
 		validationErr *shortener.ValidationError
 		notFoundErr   *shortener.NotFoundError

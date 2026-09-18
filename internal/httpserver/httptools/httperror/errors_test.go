@@ -1,4 +1,4 @@
-package httptools
+package httperror
 
 import (
 	"encoding/json"
@@ -91,7 +91,7 @@ func TestWriteErrorResponse(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
 
-			WriteErrorResponse(ctx, subTest.err)
+			WriteResponse(ctx, subTest.err)
 
 			assert.Equal(t, subTest.expectedStatus, recorder.Code)
 			assert.Equal(t, "application/json; charset=utf-8", recorder.Header().Get("Content-Type"))

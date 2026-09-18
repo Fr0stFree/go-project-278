@@ -1,4 +1,5 @@
-package httptools
+// Package middleware provides HTTP middleware for the application.
+package middleware
 
 import (
 	"net/http"

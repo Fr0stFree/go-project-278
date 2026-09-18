@@ -9,7 +9,7 @@ import (
 	"shortener/internal/httpserver/handlers/health"
 	"shortener/internal/httpserver/handlers/link"
 	"shortener/internal/httpserver/handlers/linkvisit"
-	"shortener/internal/httpserver/httptools"
+	"shortener/internal/httpserver/httptools/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,9 +22,10 @@ type service interface {
 // New creates an HTTP server for the provided handler and configuration.
 func New(service service, cfg *config.HTTP) *http.Server {
 	router := gin.New()
-	router.Use(httptools.MaxBodySize(cfg.MaxBodySize))
+	router.Use(middleware.MaxBodySize(cfg.MaxBodySize))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(middleware.RequestID())
 	router.NoRoute(handleRouteNotFound)
 	router.HandleMethodNotAllowed = true
 	router.NoMethod(handleMethodNotAllowed)
