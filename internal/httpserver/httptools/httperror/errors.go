@@ -39,7 +39,7 @@ func WriteResponse(ctx *gin.Context, err error) {
 	case errors.As(err, &conflictErr): // 409
 		ctx.JSON(
 			http.StatusConflict,
-			gin.H{"error": map[string]string{conflictErr.Field: conflictErr.Message}},
+			gin.H{"error": conflictErr.Message},
 		)
 	case errors.As(err, &maxBytesErr): // 413
 		ctx.JSON(

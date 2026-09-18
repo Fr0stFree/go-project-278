@@ -253,7 +253,7 @@ func TestHandler_create(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 
 		require.Equal(t, http.StatusConflict, recorder.Code)
-		assert.JSONEq(t, `{"error": {"short_name": "short name already exists"}}`, recorder.Body.String())
+		assert.JSONEq(t, `{"error": "short name already exists"}`, recorder.Body.String())
 	})
 
 	t.Run("should handle invalid request data properly", func(t *testing.T) {
@@ -467,6 +467,27 @@ func TestHandler_list(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, "links 10-13/14", recorder.Header().Get("Content-Range"))
+	})
+
+	t.Run("should accept the full external API range", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/links?range=[0,1000]", nil)
+
+		mocks.shortener.
+			On("ListLinksWithCount", mock.Anything, mock.MatchedBy(func(builder *shortener.LinkListOptionsBuilder) bool {
+				from, to := builder.Range()
+
+				return from == 0 && to == 1000
+			})).
+			Return([]shortener.Link{}, 0, nil).
+			Once()
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		assert.JSONEq(t, `[]`, recorder.Body.String())
 	})
 
 	t.Run("should handle invalid range parameter", func(t *testing.T) {

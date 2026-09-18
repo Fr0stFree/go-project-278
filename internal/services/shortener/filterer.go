@@ -138,7 +138,7 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 			string(LinkSortByShortName):   {},
 			string(LinkSortByCreatedAt):   {},
 		},
-		sortBy: string(LinkSortByID), maxLimit: 100,
+		sortBy: string(LinkSortByID), maxLimit: 1001,
 		options: ListOptions{Limit: 10, SortOrder: SortDescending},
 	}}
 }

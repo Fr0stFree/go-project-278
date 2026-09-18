@@ -157,7 +157,7 @@ GET /api/links
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `range` | Inclusive range `[from,to]`; at most 100 records | `[0,9]` |
+| `range` | Inclusive range `[from,to]`; at most 1001 records | `[0,9]` |
 | `sort` | JSON pair `["field","ASC"]` or `["field","DESC"]` | `["id","DESC"]` |
 
 Supported sort fields are `id`, `original_url`, `short_name`, `short_url`, and `created_at`. Sorting by `short_url` is equivalent to sorting by `short_name`.
@@ -257,15 +257,6 @@ General errors use `error`:
 }
 ```
 
-Conflict errors also use `error`, keyed by the conflicting field:
-
-```json
-{
-  "error": {
-    "short_name": "shortname already in use"
-  }
-}
-```
 
 Validation errors use `errors`:
 
@@ -316,29 +307,6 @@ make test-coverage
 make fmt-check
 make tidy-check
 make lint
-```
-
-To regenerate the coverage badge after `make test-coverage`:
-
-```bash
-.github/scripts/generate-coverage-badge.sh
-```
-
-## Architecture
-
-The HTTP handlers own request/response DTOs, JSON field names, public short URL construction, and time formatting. The application service contains use-case types and rules without depending on HTTP or GORM. Repository adapters translate between those service types and GORM records.
-
-```text
-HTTP handlers and DTOs
-          |
-          v
-  shortener service
-          |
-          v
- repository interfaces
-          |
-          v
-GORM/PostgreSQL adapters
 ```
 
 ## Project Structure

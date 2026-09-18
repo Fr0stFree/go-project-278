@@ -58,7 +58,7 @@ func TestWriteErrorResponse(t *testing.T) {
 				Message: "already exists",
 			},
 			expectedStatus: http.StatusConflict,
-			expectedBody:   `{"error":{"short_name":"already exists"}}`,
+			expectedBody:   `{"error":"already exists"}`,
 		},
 		{
 			name: "should return 413 for request body too large",

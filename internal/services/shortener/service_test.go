@@ -484,7 +484,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 
 		mocks := newServiceMocks(t)
 		builder := NewLinkListOptionsBuilder()
-		builder.WithRange(0, 999)
+		builder.WithRange(0, 1001)
 
 		result, count, err := mocks.service.ListLinksWithCount(t.Context(), builder)
 
@@ -493,7 +493,7 @@ func TestService_ListLinksWithCount(t *testing.T) {
 		assert.Equal(t, "range", validationErr.Field)
 		assert.Nil(t, result)
 		assert.Zero(t, count)
-		assert.Equal(t, "range must contain at most 100 records, got 1000", validationErr.Message)
+		assert.Equal(t, "range must contain at most 1001 records, got 1002", validationErr.Message)
 		mocks.linkRepo.AssertNotCalled(t, "GetMany")
 		mocks.linkRepo.AssertNotCalled(t, "Count")
 	})
