@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"shortener/internal/common/textutils"
 	"shortener/internal/config"
-	"shortener/internal/db/models"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
+	"shortener/internal/db/storage"
 	"time"
 )
 
@@ -84,7 +84,7 @@ func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string)
 
 		record, err := s.links.CreateOne(ctx, insert)
 		if err != nil {
-			if errors.Is(err, models.ErrObjectAlreadyExists) && !isShortNameProvided {
+			if errors.Is(err, storage.ErrObjectAlreadyExists) && !isShortNameProvided {
 				continue
 			}
 
@@ -256,9 +256,9 @@ func (s *Service) buildLinkVisit(record linkvisit.Record) LinkVisit {
 
 func (s *Service) mapStorageErrorToServiceError(err error) error {
 	switch {
-	case errors.Is(err, models.ErrObjectDoesNotExist):
+	case errors.Is(err, storage.ErrObjectDoesNotExist):
 		return NewNotFoundError("link not found")
-	case errors.Is(err, models.ErrObjectAlreadyExists):
+	case errors.Is(err, storage.ErrObjectAlreadyExists):
 		return NewConflictError("shortname already in use", "short_name")
 	default:
 		return err

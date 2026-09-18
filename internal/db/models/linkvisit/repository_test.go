@@ -1,7 +1,7 @@
 package linkvisit
 
 import (
-	"shortener/internal/db/models"
+	"shortener/internal/db/storage"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -65,7 +65,7 @@ func TestRepository_GetMany(t *testing.T) {
 	t.Run("should get visits successfully", func(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 		opts := ListOptions{
-			models.ListOptions{Limit: 10, Offset: 0},
+			storage.ListOptions{Limit: 10, Offset: 0},
 			Filters{LinkIDs: []uint{1}},
 		}
 
@@ -94,7 +94,7 @@ func TestRepository_GetMany(t *testing.T) {
 		repository, sqlMock := newRepositoryMock(t)
 
 		opts := ListOptions{
-			ListOptions: models.ListOptions{
+			ListOptions: storage.ListOptions{
 				Limit:     10,
 				SortBy:    "created_at",
 				SortOrder: "DESC",

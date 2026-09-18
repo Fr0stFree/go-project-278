@@ -1,5 +1,5 @@
-// Package models defines contracts shared by persistence implementations.
-package models
+// Package storage defines contracts shared by persistence implementations.
+package storage
 
 import "errors"
 

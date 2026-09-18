@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"shortener/internal/db/models"
+	"shortener/internal/db/storage"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -30,7 +30,7 @@ func (r *Repository) CreateOne(ctx context.Context, insert Insert) (Record, erro
 	result := r.DB.WithContext(ctx).Create(&record)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, models.ErrObjectAlreadyExists
+			return Record{}, storage.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
@@ -46,7 +46,7 @@ func (r *Repository) GetByID(ctx context.Context, ID uint) (Record, error) {
 	result := r.DB.WithContext(ctx).First(&record, ID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return Record{}, models.ErrObjectDoesNotExist
+			return Record{}, storage.ErrObjectDoesNotExist
 		}
 
 		return Record{}, result.Error
@@ -102,14 +102,14 @@ func (r *Repository) UpdateByID(ctx context.Context, ID uint, update Update) (Re
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
-			return Record{}, models.ErrObjectAlreadyExists
+			return Record{}, storage.ErrObjectAlreadyExists
 		}
 
 		return Record{}, result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return Record{}, models.ErrObjectDoesNotExist
+		return Record{}, storage.ErrObjectDoesNotExist
 	}
 
 	return record, nil
@@ -123,7 +123,7 @@ func (r *Repository) DeleteByID(ctx context.Context, ID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return models.ErrObjectDoesNotExist
+		return storage.ErrObjectDoesNotExist
 	}
 
 	return nil

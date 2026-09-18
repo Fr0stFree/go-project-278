@@ -2,7 +2,7 @@ package link
 
 import (
 	"errors"
-	"shortener/internal/db/models"
+	"shortener/internal/db/storage"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -84,7 +84,7 @@ func TestRepository_GetMany(t *testing.T) {
 			)
 
 		options := ListOptions{
-			ListOptions: models.ListOptions{
+			ListOptions: storage.ListOptions{
 				Limit:     10,
 				SortBy:    "id",
 				SortOrder: "asc",
@@ -158,7 +158,7 @@ func TestRepository_UpdateByID(t *testing.T) {
 			ShortName:   "def456",
 		})
 
-		require.ErrorIs(t, err, models.ErrObjectDoesNotExist)
+		require.ErrorIs(t, err, storage.ErrObjectDoesNotExist)
 		assert.Equal(t, Record{}, result)
 	})
 

@@ -2,16 +2,16 @@ package shortener
 
 import (
 	"fmt"
-	"shortener/internal/db/models"
 	"shortener/internal/db/models/link"
 	"shortener/internal/db/models/linkvisit"
+	"shortener/internal/db/storage"
 	"strings"
 )
 
 // ListOptionsBuilder validates and builds common list options.
 type ListOptionsBuilder struct {
 	sortFields map[string]string
-	options    models.ListOptions
+	options    storage.ListOptions
 	maxLimit   int
 	err        error
 }
@@ -104,7 +104,7 @@ func NewLinkListOptionsBuilder() *LinkListOptionsBuilder {
 		ListOptionsBuilder: &ListOptionsBuilder{
 			sortFields: sortFields,
 			maxLimit:   maxLimit,
-			options: models.ListOptions{
+			options: storage.ListOptions{
 				Limit:     defaultLimit,
 				Offset:    defaultOffset,
 				SortBy:    defaultSortBy,
@@ -156,7 +156,7 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 		ListOptionsBuilder: &ListOptionsBuilder{
 			sortFields: sortFields,
 			maxLimit:   maxLimit,
-			options: models.ListOptions{
+			options: storage.ListOptions{
 				Limit:     defaultLimit,
 				Offset:    defaultOffset,
 				SortBy:    defaultSortBy,
