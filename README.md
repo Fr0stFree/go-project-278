@@ -1,29 +1,24 @@
 # URL Shortener
 
-URL Shortener is a Go web service for creating, managing, and tracking shortened links.
-
-The application exposes a JSON API for link CRUD operations, redirects short URLs to their original targets, and stores redirect visits in PostgreSQL.
+URL Shortener is a Go web service for creating, managing, and tracking shortened links. It exposes a JSON API, redirects short URLs to their original targets, and stores links and redirect visits in PostgreSQL.
 
 [A live deployment](https://shortener-latest.onrender.com/) is available on Render.
 
 ## Features
 
-- Creates short links from original URLs.
-- Generates a deterministic 6-character short name when a custom one is not provided.
-- Supports custom short names with uniqueness checks.
-- Redirects users from `/r/:short_name` to the original URL.
+- Creates, reads, updates, and soft-deletes shortened links.
+- Generates a random 6-character alphanumeric short name when one is not provided.
+- Supports custom short names with validation and uniqueness checks.
+- Redirects `/r/:short_name` requests with `302 Found`.
 - Records redirect visits with IP address, user agent, referrer, and response status.
-- Provides paginated API responses with `Content-Range` headers.
-- Uses PostgreSQL through GORM and SQL migrations.
-- Includes a Docker image that serves the Hexlet frontend through Caddy and proxies API requests to the Go backend.
+- Supports inclusive range pagination, sorting, and `Content-Range` response headers.
+- Uses PostgreSQL, GORM, and versioned Goose migrations.
+- Includes a production Docker image that serves the Hexlet frontend through Caddy and proxies API requests to the Go backend.
 
 ## Pipeline Status
 
 [![Actions Status](https://github.com/Fr0stFree/go-project-278/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Fr0stFree/go-project-278/actions)
 [![CI](https://github.com/Fr0stFree/go-project-278/actions/workflows/test-and-lint.yml/badge.svg?branch=master)](https://github.com/Fr0stFree/go-project-278/actions/workflows/test-and-lint.yml)
-
-## Quality
-
 [![Test Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Fr0stFree/go-project-278/master/.github/badges/coverage-badge.json)](https://github.com/Fr0stFree/go-project-278/actions/workflows/test-and-lint.yml)
 
 ## Requirements
@@ -31,115 +26,91 @@ The application exposes a JSON API for link CRUD operations, redirects short URL
 - Go `1.26.3`
 - PostgreSQL
 - `make`
-- Docker, for container builds
+- Docker for integration tests and container builds
 
-The linter target uses `golangci-lint` `v2.12.2`. Run `make install-lint` once before `make lint`, `make fmt`, or `make lint-fix`.
+The lint and formatting targets use `golangci-lint` `v2.12.2`. Install it once with `make install-lint`.
 
-## Installation
+## Local Setup
 
-Clone the repository and build the binary:
+Clone the repository and create a local configuration file:
 
 ```bash
 git clone git@github.com:Fr0stFree/go-project-278.git
 cd go-project-278
-make build
+cp .env.example .env
 ```
 
-The compiled program will be available at:
+Edit `DATABASE_URL` if your local PostgreSQL credentials differ, create the database, export the example configuration, and apply the migrations. The locally built binary does not run migrations automatically.
 
 ```bash
-./bin/shortener
+set -a
+source .env
+set +a
+go tool goose -dir db/migrations postgres "$DATABASE_URL" up
 ```
 
-## Configuration
-
-The application reads configuration from environment variables. A local `.env` file is optional and is loaded automatically when present.
-
-Example local configuration:
-
-```env
-# APP
-APP_BASE_URL=http://localhost:8080
-
-# HTTP
-HTTP_PORT=8080
-HTTP_READ_TIMEOUT=10s
-HTTP_WRITE_TIMEOUT=10s
-HTTP_IDLE_TIMEOUT=5s
-
-# DB
-DATABASE_URL=postgres://shortener:password@localhost:5432/shortener?sslmode=disable
-DB_MAX_OPEN_CONNECTIONS=10
-DB_MAX_IDLE_CONNECTIONS=5
-DB_CONNECTION_MAX_LIFETIME=5m
-```
-
-Environment variables:
-
-| Variable | Description | Default |
-| --- | --- | --- |
-| `APP_BASE_URL` | Public base URL used to build `short_url` values |  |
-| `HTTP_PORT` | HTTP server port | `8080` |
-| `HTTP_READ_TIMEOUT` | HTTP read timeout | `10s` |
-| `HTTP_WRITE_TIMEOUT` | HTTP write timeout | `10s` |
-| `HTTP_IDLE_TIMEOUT` | HTTP idle timeout | `5s` |
-| `DATABASE_URL` | PostgreSQL connection URL | required |
-| `DB_MAX_OPEN_CONNECTIONS` | Maximum open database connections | `10` |
-| `DB_MAX_IDLE_CONNECTIONS` | Maximum idle database connections | `5` |
-| `DB_CONNECTION_MAX_LIFETIME` | Maximum lifetime of reused database connections | `5m` |
-
-Database schema migrations are stored in `db/migrations` and use `goose` annotations.
-
-## Running Locally
-
-Build and run the server:
+Build and run the backend:
 
 ```bash
 make build
 make run
 ```
 
-The API will be available at:
+The compiled binary is written to `bin/shortener`, and the backend is available at `http://localhost:8080` with the example configuration.
 
-```text
-http://localhost:8080
-```
-
-For live reload development, install Air and run:
+For live reload, install [Air](https://github.com/air-verse/air) and run:
 
 ```bash
+go install github.com/air-verse/air@latest
 make dev
 ```
 
+## Configuration
+
+Configuration is read from environment variables. A local `.env` file is loaded automatically when present; process environment variables take precedence. Start with the committed [`.env.example`](.env.example).
+
+Durations use Go duration syntax such as `2s`, `5m`, or `12h`. `HTTP_MAX_BODY_SIZE` is specified in bytes. Comma-separated values are used for `HTTP_CORS_ALLOW_ORIGINS`.
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `APP_BASE_URL` | Public base URL used to build `short_url` in API responses | `http://localhost:8080` |
+| `HTTP_PORT` | Backend HTTP port | `8080` |
+| `HTTP_READ_TIMEOUT` | HTTP request read timeout | `10s` |
+| `HTTP_WRITE_TIMEOUT` | HTTP response write timeout | `10s` |
+| `HTTP_IDLE_TIMEOUT` | HTTP keep-alive idle timeout | `10s` |
+| `HTTP_MAX_BODY_SIZE` | Maximum request body size in bytes | `16384` |
+| `HTTP_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout | `10s` |
+| `HTTP_CORS_ALLOW_ORIGINS` | Comma-separated allowed CORS origins | `*` |
+| `HTTP_CORS_MAX_AGE` | Browser CORS preflight cache duration | `12h` |
+| `DATABASE_URL` | PostgreSQL connection URL | required |
+| `DB_MAX_OPEN_CONNECTIONS` | Maximum open database connections | `10` |
+| `DB_MAX_IDLE_CONNECTIONS` | Maximum idle database connections | `5` |
+| `DB_CONNECTION_MAX_LIFETIME` | Maximum lifetime of a reused database connection | `5m` |
+| `SENTRY_ENABLED` | Enables Sentry initialization and middleware | `false` |
+| `SENTRY_DSN` | Sentry project DSN; needed when Sentry is enabled | empty |
+| `SENTRY_ENVIRONMENT` | Environment label sent to Sentry | `development` |
+| `SENTRY_FLUSH_TIMEOUT` | Maximum Sentry event delivery wait | `2s` |
+
 ## Docker
 
-Build the Docker image:
+Build the production image:
 
 ```bash
 make docker-build
 ```
 
-The image is tagged as:
-
-```text
-frostfree/shortener:latest
-```
-
-You can override the tag:
+The default image is `frostfree/shortener:latest`. Override the tag with `DOCKER_TAG`:
 
 ```bash
 make docker-build DOCKER_TAG=1.0.0
-```
-
-Push the image:
-
-```bash
 make docker-push DOCKER_TAG=1.0.0
 ```
 
-The container listens on port `80`. It serves the frontend from `/app/public` with Caddy and reverse-proxies all non-static requests to the Go backend on port `8080`.
+The container listens on port `80`. Caddy serves the frontend from `/app/public` and proxies backend requests to the Go process on port `8080` inside the container.
 
-The Docker image does not start PostgreSQL. Provide database environment variables that point to an existing PostgreSQL instance.
+The image does not include PostgreSQL. Supply a `DATABASE_URL` that is reachable from the container. On every container start, `/app/bin/run.sh` applies all pending Goose migrations before launching the backend and Caddy; startup stops immediately if a migration fails.
+
+Keep `HTTP_PORT=8080` inside the container because the bundled Caddy configuration proxies to that port. Set `APP_BASE_URL` to the public URL through which clients reach the container.
 
 ## API
 
@@ -149,11 +120,7 @@ The Docker image does not start PostgreSQL. Provide database environment variabl
 GET /ping
 ```
 
-Response:
-
-```text
-pong
-```
+Returns `200 OK` with the plain-text body `pong`.
 
 ### Create Link
 
@@ -162,8 +129,6 @@ POST /api/links
 Content-Type: application/json
 ```
 
-Request body:
-
 ```json
 {
   "original_url": "https://example.com",
@@ -171,9 +136,9 @@ Request body:
 }
 ```
 
-`short_name` is optional. When it is omitted or empty, the service generates one from the original URL.
+`original_url` must be an HTTP(S) URL. `short_name` is optional; when omitted or empty, a random 6-character alphanumeric value is generated. A custom value must contain 3–32 letters, digits, hyphens, or underscores.
 
-Response:
+Successful response: `201 Created`.
 
 ```json
 {
@@ -190,38 +155,21 @@ Response:
 GET /api/links
 ```
 
-Supported query parameters:
-
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `range` | Inclusive pagination range in the form `[from,to]` | `[0,9]` |
-| `sort` | Sort field and order in the form `["field","ASC"]` or `["field","DESC"]` | `["id","DESC"]` |
+| `range` | Inclusive range `[from,to]`; at most 100 records | `[0,9]` |
+| `sort` | JSON pair `["field","ASC"]` or `["field","DESC"]` | `["id","DESC"]` |
 
-Supported sort fields are `id`, `original_url`, `short_name`, `short_url`, and `created_at`.
-
-Example:
+Supported sort fields are `id`, `original_url`, `short_name`, `short_url`, and `created_at`. Sorting by `short_url` is equivalent to sorting by `short_name`.
 
 ```bash
 curl 'http://localhost:8080/api/links?range=[0,9]&sort=["id","DESC"]'
 ```
 
-Response headers include the total count:
+The response is a JSON array of link objects. The total unfiltered link count is returned in the header:
 
 ```http
 Content-Range: links 0-9/42
-```
-
-Response body:
-
-```json
-[
-  {
-    "id": 1,
-    "original_url": "https://example.com",
-    "short_name": "example",
-    "short_url": "http://localhost:8080/r/example"
-  }
-]
 ```
 
 ### Get Link
@@ -230,16 +178,7 @@ Response body:
 GET /api/links/:id
 ```
 
-Response:
-
-```json
-{
-  "id": 1,
-  "original_url": "https://example.com",
-  "short_name": "example",
-  "short_url": "http://localhost:8080/r/example"
-}
-```
+Returns `200 OK` and the same link representation used by the create endpoint.
 
 ### Update Link
 
@@ -248,7 +187,7 @@ PUT /api/links/:id
 Content-Type: application/json
 ```
 
-Request body:
+Both fields are required:
 
 ```json
 {
@@ -257,16 +196,7 @@ Request body:
 }
 ```
 
-Response:
-
-```json
-{
-  "id": 1,
-  "original_url": "https://example.org",
-  "short_name": "docs",
-  "short_url": "http://localhost:8080/r/docs"
-}
-```
+Returns `200 OK` and the updated link representation.
 
 ### Delete Link
 
@@ -274,7 +204,7 @@ Response:
 DELETE /api/links/:id
 ```
 
-Successful deletion returns `204 No Content`. Links are soft-deleted: they are excluded from lookups, lists, and redirects, while their recorded visits are retained. A deleted link's short name remains reserved and cannot be reused.
+Successful deletion returns `204 No Content`. Links are soft-deleted, so they are excluded from lookups, lists, and redirects. Their visits remain stored, and the database uniqueness constraint keeps the deleted short name reserved.
 
 ### Redirect
 
@@ -282,9 +212,7 @@ Successful deletion returns `204 No Content`. Links are soft-deleted: they are e
 GET /r/:short_name
 ```
 
-The service records a visit and returns `302 Found` with a `Location` header pointing to the original URL.
-
-Example:
+Returns `302 Found` with the original URL in the `Location` header. The redirect continues even if recording its visit fails.
 
 ```bash
 curl -I http://localhost:8080/r/example
@@ -296,25 +224,15 @@ curl -I http://localhost:8080/r/example
 GET /api/link_visits
 ```
 
-Supported query parameters:
-
-| Parameter | Description | Default |
-| --- | --- | --- |
-| `range` | Inclusive pagination range in the form `[from,to]` | `[0,9]` |
-
-Example:
+The endpoint supports the inclusive `range=[from,to]` query parameter, defaults to `[0,9]`, and allows at most 100 records. Visits are ordered by `created_at DESC`.
 
 ```bash
 curl 'http://localhost:8080/api/link_visits?range=[0,9]'
 ```
 
-Response headers include the total count:
-
 ```http
 Content-Range: link_visits 0-9/42
 ```
-
-Response body:
 
 ```json
 [
@@ -331,7 +249,7 @@ Response body:
 
 ## Error Responses
 
-Errors are returned as JSON:
+General errors use `error`:
 
 ```json
 {
@@ -339,7 +257,7 @@ Errors are returned as JSON:
 }
 ```
 
-Validation and conflict errors are keyed by field:
+Conflict errors also use `error`, keyed by the conflicting field:
 
 ```json
 {
@@ -349,56 +267,78 @@ Validation and conflict errors are keyed by field:
 }
 ```
 
-Common statuses:
+Validation errors use `errors`:
+
+```json
+{
+  "errors": {
+    "short_name": "short name must be between 3 and 32 characters long"
+  }
+}
+```
 
 | Status | When it is used |
 | --- | --- |
-| `400 Bad Request` | Invalid JSON or missing required JSON fields |
-| `404 Not Found` | Requested link does not exist |
+| `400 Bad Request` | Malformed, empty, or type-invalid JSON |
+| `404 Not Found` | Link or route does not exist |
+| `405 Method Not Allowed` | Route exists but does not support the HTTP method |
 | `409 Conflict` | `short_name` is already in use |
-| `422 Unprocessable Entity` | Invalid path or query parameter |
-| `500 Internal Server Error` | Unexpected server error |
+| `413 Request Entity Too Large` | Request body exceeds `HTTP_MAX_BODY_SIZE` |
+| `422 Unprocessable Entity` | Binding validation, path validation, range, or sort error |
+| `500 Internal Server Error` | Unexpected internal error |
 
-## Makefile Commands
+## Development Commands
 
 | Command | Description |
 | --- | --- |
-| `make build` | Builds the CLI binary into `bin/shortener`. |
-| `make run` | Runs the compiled binary. Additional arguments can be passed with `ARGS="..."`. |
-| `make dev` | Runs the app with Air live reload. |
-| `make test` | Runs all Go tests with verbose output. |
-| `make test-coverage` | Runs tests, writes `coverage.out`, and prints coverage by function. |
-| `make install-lint` | Installs the configured `golangci-lint` version. |
-| `make lint` | Runs `golangci-lint` with the project config. |
-| `make fmt` | Formats code through `golangci-lint fmt`. |
-| `make fmt-check` | Checks formatting without modifying files. |
-| `make tidy-check` | Checks that `go.mod` and `go.sum` are tidy. |
-| `make lint-fix` | Formats code and applies automatic lint fixes. |
-| `make docker-build` | Builds the Docker image for `linux/amd64`. |
-| `make docker-push` | Builds and pushes the Docker image for `linux/amd64`. |
+| `make build` | Build `bin/shortener` from `cmd/shortener`. |
+| `make run` | Run the compiled binary; accepts `ARGS="..."`. |
+| `make dev` | Run the application with Air live reload. |
+| `make test` | Run unit tests with verbose output. |
+| `make test-integration` | Run PostgreSQL integration tests using Testcontainers; requires Docker. |
+| `make test-coverage` | Write `coverage.out` and print coverage by function. |
+| `make install-lint` | Install the pinned `golangci-lint` version. |
+| `make lint` | Run configured linters. |
+| `make fmt` | Format code through `golangci-lint fmt`. |
+| `make fmt-check` | Check formatting without modifying files. |
+| `make tidy-check` | Verify that `go.mod` and `go.sum` are tidy. |
+| `make lint-fix` | Format code and apply supported lint fixes. |
+| `make docker-build` | Build the `linux/amd64` Docker image. |
+| `make docker-push` | Build and push the `linux/amd64` Docker image. |
 
-Run database migrations with `goose` when preparing a new PostgreSQL database:
-
-```bash
-go tool goose -dir db/migrations postgres "$DATABASE_URL" up
-```
-
-To update the coverage badge manually:
+Typical verification before pushing:
 
 ```bash
-make test-coverage
-.github/scripts/generate-coverage-badge.sh
-```
-
-Typical local check before pushing changes:
-
-```bash
-make install-lint
+make build
 make test
+make test-integration
 make test-coverage
 make fmt-check
 make tidy-check
 make lint
+```
+
+To regenerate the coverage badge after `make test-coverage`:
+
+```bash
+.github/scripts/generate-coverage-badge.sh
+```
+
+## Architecture
+
+The HTTP handlers own request/response DTOs, JSON field names, public short URL construction, and time formatting. The application service contains use-case types and rules without depending on HTTP or GORM. Repository adapters translate between those service types and GORM records.
+
+```text
+HTTP handlers and DTOs
+          |
+          v
+  shortener service
+          |
+          v
+ repository interfaces
+          |
+          v
+GORM/PostgreSQL adapters
 ```
 
 ## Project Structure
@@ -406,17 +346,17 @@ make lint
 ```text
 .
 |-- cmd/shortener                 # Application entry point
-|-- internal/app                  # Dependency wiring and application runner
+|-- db/migrations                 # Goose SQL migrations
+|-- internal/app                  # Application lifecycle
 |-- internal/config               # Environment-based configuration
-|-- internal/db                   # PostgreSQL and GORM setup
-|-- internal/db/models            # Repository layer and storage models
-|-- db/migrations                 # SQL database migrations
-|-- internal/httpserver           # Gin router, HTTP server, and error responses
-|-- internal/services/shortener   # Business logic for links and visits
-|-- .github/badges                # Generated badge data
-|-- .github/scripts               # Maintenance scripts
-|-- .github/workflows             # GitHub Actions workflows
-|-- Caddyfile                     # Runtime frontend/static proxy config
+|-- internal/db                   # PostgreSQL connection and repositories
+|-- internal/httpserver           # Gin server, handlers, DTOs, and middleware
+|-- internal/services/shortener   # Use cases and application contracts
+|-- internal/tests/integration    # Testcontainers integration tests
+|-- .github                       # CI workflows and generated badge data
+|-- .env.example                  # Complete local configuration example
+|-- bin/run.sh                    # Container migrations and process entrypoint
+|-- Caddyfile                     # Frontend/static proxy configuration
 |-- Dockerfile                    # Multi-stage production image
 |-- Makefile                      # Development commands
 `-- README.md                     # Project documentation
