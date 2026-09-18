@@ -22,7 +22,7 @@ type Database struct {
 }
 
 // New opens PostgreSQL, and configures the connection pool.
-func New(cfg *config.DataBase) (*Database, error) {
+func New(cfg *config.Database) (*Database, error) {
 	gormDB, err := gorm.Open(postgres.Open(cfg.URL), &gorm.Config{TranslateError: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)

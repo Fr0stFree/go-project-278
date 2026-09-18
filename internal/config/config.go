@@ -12,7 +12,7 @@ import (
 type Root struct {
 	App      App
 	HTTP     HTTP
-	DataBase DataBase
+	Database Database
 }
 
 // App contains settings used by business logic.
@@ -31,8 +31,8 @@ type HTTP struct {
 	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
 }
 
-// DataBase contains PostgreSQL connection pool settings.
-type DataBase struct {
+// Database contains PostgreSQL connection pool settings.
+type Database struct {
 	URL                   string        `env:"DATABASE_URL,required"`
 	MaxOpenConnections    int           `env:"DB_MAX_OPEN_CONNECTIONS" envDefault:"10"`
 	MaxIdleConnections    int           `env:"DB_MAX_IDLE_CONNECTIONS" envDefault:"5"`
