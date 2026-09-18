@@ -18,6 +18,7 @@ DOCKER_PLATFORM := linux/amd64
 	run \
 	dev \
 	test \
+	test-integration \
 	test-coverage \
 	lint \
 	lint-fix \
@@ -38,12 +39,15 @@ run:
 test:
 	@go test ./... -v
 
-dev:
-	@$(AIR)
+test-integration:
+	@go test -tags=integration ./internal/tests/integration/... -v
 
 test-coverage:
 	@go test ./... -coverprofile=$(COVERAGE_PROFILE)
 	@go tool cover -func=$(COVERAGE_PROFILE)
+
+dev:
+	@$(AIR)
 
 install-lint:
 	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)

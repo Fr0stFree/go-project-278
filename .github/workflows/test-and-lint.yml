@@ -27,6 +27,9 @@ jobs:
       - name: Run the tests
         run: make test
 
+      - name: Run the integration tests
+        run: make test-integration
+
       - name: Generate coverage report
         run: make test-coverage
 
