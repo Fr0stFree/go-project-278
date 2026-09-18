@@ -25,6 +25,7 @@ func New(service service, cfg *config.HTTP) *http.Server {
 	router.Use(middleware.RequestID())
 	router.Use(middleware.AccessLogger())
 	router.Use(gin.Recovery())
+	router.Use(middleware.CORS(cfg.CORS))
 	router.Use(middleware.MaxBodySize(cfg.MaxBodySize))
 
 	router.NoRoute(handleRouteNotFound)

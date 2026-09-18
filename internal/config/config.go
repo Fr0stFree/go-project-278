@@ -17,7 +17,6 @@ type Root struct {
 
 // App contains settings used by business logic.
 type App struct {
-	// Hexlet integration tests will fail if the environment variable is not set
 	BaseURL string `env:"APP_BASE_URL" envDefault:"http://localhost:8080"`
 }
 
@@ -29,6 +28,13 @@ type HTTP struct {
 	IdleTimeout     time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"10s"`
 	MaxBodySize     int64         `env:"HTTP_MAX_BODY_SIZE" envDefault:"16384"` // 16KiB
 	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
+	CORS            CORS
+}
+
+// CORS contains Cross-Origin Resource Sharing settings.
+type CORS struct {
+	AllowOrigins []string      `env:"HTTP_CORS_ALLOW_ORIGINS" envSeparator:"," envDefault:"*"`
+	MaxAge       time.Duration `env:"HTTP_CORS_MAX_AGE" envDefault:"12h"`
 }
 
 // Database contains PostgreSQL connection pool settings.
