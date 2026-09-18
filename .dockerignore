@@ -4,7 +4,8 @@
 .vscode
 
 .env
-bin/
+bin/*
+!bin/run.sh
 coverage.out
 
 README.md
