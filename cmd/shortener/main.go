@@ -11,6 +11,7 @@ import (
 	"shortener/internal/config"
 	"shortener/internal/db"
 	"shortener/internal/httpserver"
+	"shortener/internal/integrations/sentry"
 	"shortener/internal/services/shortener"
 	"syscall"
 )
@@ -35,6 +36,11 @@ func main() {
 
 	service := shortener.NewService(database.Links, database.LinkVisits, &cfg.App)
 	server := httpserver.New(service, &cfg.HTTP)
+
+	if err := sentry.Connect(cfg.HTTP.Sentry); err != nil {
+		log.Fatal(err)
+	}
+
 	app := app.New(server, database, cfg)
 
 	if err := app.Run(ctx); err != nil {

@@ -29,6 +29,7 @@ type HTTP struct {
 	MaxBodySize     int64         `env:"HTTP_MAX_BODY_SIZE" envDefault:"16384"` // 16KiB
 	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
 	CORS            CORS
+	Sentry          Sentry
 }
 
 // CORS contains Cross-Origin Resource Sharing settings.
@@ -43,6 +44,14 @@ type Database struct {
 	MaxOpenConnections    int           `env:"DB_MAX_OPEN_CONNECTIONS" envDefault:"10"`
 	MaxIdleConnections    int           `env:"DB_MAX_IDLE_CONNECTIONS" envDefault:"5"`
 	ConnectionMaxLifetime time.Duration `env:"DB_CONNECTION_MAX_LIFETIME" envDefault:"5m"`
+}
+
+// Sentry contains Sentry error tracking service settings.
+type Sentry struct {
+	IsEnabled    bool          `env:"SENTRY_ENABLED" envDefault:"false"`
+	DSN          string        `env:"SENTRY_DSN"`
+	Environment  string        `env:"SENTRY_ENVIRONMENT" envDefault:"development"`
+	FlushTimeout time.Duration `env:"SENTRY_FLUSH_TIMEOUT" envDefault:"2s"`
 }
 
 // New returns the default local development configuration.

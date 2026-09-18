@@ -5,6 +5,8 @@ go 1.26.3
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/caarlos0/env/v11 v11.4.1
+	github.com/getsentry/sentry-go v0.49.0
+	github.com/getsentry/sentry-go/gin v0.49.0
 	github.com/gin-contrib/cors v1.7.8
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-playground/validator/v10 v10.30.3

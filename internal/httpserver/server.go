@@ -10,6 +10,7 @@ import (
 	"shortener/internal/httpserver/httphandlers/link"
 	"shortener/internal/httpserver/httphandlers/linkvisit"
 	"shortener/internal/httpserver/httptools/middleware"
+	"shortener/internal/integrations/sentry"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,6 +28,7 @@ func New(service service, cfg *config.HTTP) *http.Server {
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS(cfg.CORS))
 	router.Use(middleware.MaxBodySize(cfg.MaxBodySize))
+	router.Use(sentry.Middleware(cfg.Sentry))
 
 	router.NoRoute(handleRouteNotFound)
 	router.HandleMethodNotAllowed = true

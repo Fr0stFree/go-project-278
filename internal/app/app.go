@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"shortener/internal/config"
 )
@@ -35,7 +36,10 @@ func (a *App) Run(ctx context.Context) error {
 	var errs []error
 
 	errCh := make(chan error, 1)
+
 	go func() {
+		slog.Info("App started successfully")
+
 		errCh <- a.server.ListenAndServe()
 	}()
 
