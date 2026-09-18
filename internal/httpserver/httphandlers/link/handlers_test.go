@@ -383,7 +383,7 @@ func TestHandler_get(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 
 		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
-		assert.JSONEq(t, `{"error": {"link_id": "invalid positive integer: invalid-id"}}`, recorder.Body.String())
+		assert.JSONEq(t, `{"errors": {"link_id": "invalid positive integer: invalid-id"}}`, recorder.Body.String())
 	})
 }
 
@@ -475,7 +475,7 @@ func TestHandler_list(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 
 		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
-		assert.JSONEq(t, `{"error": {"range": "invalid range format: invalid-range"}}`, recorder.Body.String())
+		assert.JSONEq(t, `{"errors": {"range": "invalid range format: invalid-range"}}`, recorder.Body.String())
 	})
 
 	t.Run("should handle sort parameter", func(t *testing.T) {
@@ -504,7 +504,7 @@ func TestHandler_list(t *testing.T) {
 		router.ServeHTTP(recorder, request)
 
 		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
-		assert.JSONEq(t, `{"error": {"sort": "invalid sort format: invalid-sort"}}`, recorder.Body.String())
+		assert.JSONEq(t, `{"errors": {"sort": "invalid sort format: invalid-sort"}}`, recorder.Body.String())
 	})
 }
 

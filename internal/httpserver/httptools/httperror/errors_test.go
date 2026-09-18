@@ -75,7 +75,7 @@ func TestWriteErrorResponse(t *testing.T) {
 				Message: "invalid URL",
 			},
 			expectedStatus: http.StatusUnprocessableEntity,
-			expectedBody:   `{"error":{"original_url":"invalid URL"}}`,
+			expectedBody:   `{"errors":{"original_url":"invalid URL"}}`,
 		},
 		{
 			name:           "should return 500 for unknown error",
