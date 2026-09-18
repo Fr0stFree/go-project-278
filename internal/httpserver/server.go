@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"net/http"
 	"shortener/internal/config"
-	"shortener/internal/httpserver/handlers/health"
-	"shortener/internal/httpserver/handlers/link"
-	"shortener/internal/httpserver/handlers/linkvisit"
+	"shortener/internal/httpserver/httphandlers/health"
+	"shortener/internal/httpserver/httphandlers/link"
+	"shortener/internal/httpserver/httphandlers/linkvisit"
 	"shortener/internal/httpserver/httptools/middleware"
 
 	"github.com/gin-gonic/gin"
