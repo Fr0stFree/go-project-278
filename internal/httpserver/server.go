@@ -22,10 +22,11 @@ type service interface {
 // New creates an HTTP server for the provided handler and configuration.
 func New(service service, cfg *config.HTTP) *http.Server {
 	router := gin.New()
-	router.Use(middleware.MaxBodySize(cfg.MaxBodySize))
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
 	router.Use(middleware.RequestID())
+	router.Use(middleware.AccessLogger())
+	router.Use(gin.Recovery())
+	router.Use(middleware.MaxBodySize(cfg.MaxBodySize))
+
 	router.NoRoute(handleRouteNotFound)
 	router.HandleMethodNotAllowed = true
 	router.NoMethod(handleMethodNotAllowed)
