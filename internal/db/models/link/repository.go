@@ -68,7 +68,7 @@ func (r *Repository) GetMany(ctx context.Context, options shortener.LinkListOpti
 	result := statement.
 		Limit(options.Limit).
 		Offset(options.Offset).
-		Order(fmt.Sprintf("%s %s", linkSortColumn(options.SortBy), options.SortOrder)).
+		Order(toSortOrder(options.SortBy, options.SortOrder)).
 		Find(&records)
 
 	if result.Error != nil {
@@ -142,15 +142,15 @@ func toServiceLink(record Record) shortener.Link {
 	}
 }
 
-func linkSortColumn(field shortener.LinkSortField) string {
+func toSortOrder(field shortener.LinkSortField, direction shortener.SortDirection) string {
 	switch field {
 	case shortener.LinkSortByOriginalURL:
-		return "original_url"
+		return fmt.Sprintf("original_url %s, id %s", direction, direction)
 	case shortener.LinkSortByShortName:
-		return "short_name"
+		return fmt.Sprintf("short_name %s, id %s", direction, direction)
 	case shortener.LinkSortByCreatedAt:
-		return "created_at"
+		return fmt.Sprintf("created_at %s, id %s", direction, direction)
 	default:
-		return "id"
+		return fmt.Sprintf("id %s", direction)
 	}
 }
