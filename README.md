@@ -38,6 +38,7 @@ Clone the repository and create a local configuration file:
 git clone git@github.com:Fr0stFree/go-project-278.git
 cd go-project-278
 cp .env.example .env
+make install
 ```
 
 Edit `DATABASE_URL` if your local PostgreSQL credentials differ, create the database, export the example configuration, and apply the migrations. The locally built binary does not run migrations automatically.
@@ -52,11 +53,10 @@ go tool goose -dir db/migrations postgres "$DATABASE_URL" up
 Build and run the backend:
 
 ```bash
-make build
-make run
+make start
 ```
 
-The compiled binary is written to `bin/shortener`, and the backend is available at `http://localhost:8080` with the example configuration.
+`make start` builds the current source into `bin/shortener` and then runs it. The backend is available at `http://localhost:8080` with the example configuration.
 
 For live reload, install [Air](https://github.com/air-verse/air) and run:
 

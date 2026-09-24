@@ -21,6 +21,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install dependencies
+        run: make install
+
       - name: Build the app
         run: make build
 

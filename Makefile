@@ -14,6 +14,8 @@ DOCKER_TAG ?= latest
 DOCKER_PLATFORM := linux/amd64
 
 .PHONY: \
+	install \
+	start \
 	build \
 	run \
 	dev \
@@ -29,6 +31,12 @@ DOCKER_PLATFORM := linux/amd64
 	require-lint \
 	docker-build \
 	docker-push
+
+install:
+	@go mod download
+
+start: build
+	@$(BINARY_PATH) $(ARGS)
 
 build:
 	@go build -o $(BINARY_PATH) $(ENTRYPOINT_PATH)
