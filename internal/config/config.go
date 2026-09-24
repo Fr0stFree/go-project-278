@@ -22,14 +22,15 @@ type App struct {
 
 // HTTP contains server address and timeout settings.
 type HTTP struct {
-	Port            int           `env:"HTTP_PORT" envDefault:"8080"`
-	ReadTimeout     time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"10s"`
-	WriteTimeout    time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"10s"`
-	IdleTimeout     time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"10s"`
-	MaxBodySize     int64         `env:"HTTP_MAX_BODY_SIZE" envDefault:"16384"` // 16KiB
-	ShutdownTimeout time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
-	CORS            CORS
-	Sentry          Sentry
+	Port               int           `env:"HTTP_PORT" envDefault:"8080"`
+	ReadTimeout        time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"10s"`
+	WriteTimeout       time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"10s"`
+	IdleTimeout        time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"10s"`
+	MaxBodySize        int64         `env:"HTTP_MAX_BODY_SIZE" envDefault:"16384"` // 16KiB
+	ShutdownTimeout    time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
+	HealthCheckTimeout time.Duration `env:"HTTP_HEALTHCHECK_TIMEOUT" envDefault:"2s"`
+	CORS               CORS
+	Sentry             Sentry
 }
 
 // CORS contains Cross-Origin Resource Sharing settings.

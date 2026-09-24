@@ -80,6 +80,7 @@ Durations use Go duration syntax such as `2s`, `5m`, or `12h`. `HTTP_MAX_BODY_SI
 | `HTTP_IDLE_TIMEOUT` | HTTP keep-alive idle timeout | `10s` |
 | `HTTP_MAX_BODY_SIZE` | Maximum request body size in bytes | `16384` |
 | `HTTP_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout | `10s` |
+| `HTTP_HEALTHCHECK_TIMEOUT` | Maximum wait for the PostgreSQL readiness check | `2s` |
 | `HTTP_CORS_ALLOW_ORIGINS` | Comma-separated allowed CORS origins | `*` |
 | `HTTP_CORS_MAX_AGE` | Browser CORS preflight cache duration | `12h` |
 | `DATABASE_URL` | PostgreSQL connection URL | required |
@@ -114,13 +115,25 @@ Keep `HTTP_PORT=8080` inside the container because the bundled Caddy configurati
 
 ## API
 
-### Health Check
+### Health Checks
+
+The liveness endpoint reports whether the HTTP process is running:
 
 ```http
 GET /ping
 ```
 
 Returns `200 OK` with the plain-text body `pong`.
+
+The readiness endpoint checks whether PostgreSQL is reachable within `HTTP_HEALTHCHECK_TIMEOUT`:
+
+```http
+GET /health
+```
+
+It returns `200 OK` with `{"ok":true}` when the application is ready to serve data-dependent requests. If PostgreSQL is unavailable or the check times out, it returns `503 Service Unavailable` with `{"ok":false}`. Database error details are written to the server log and are not exposed to the client.
+
+Configure the deployment readiness probe or load balancer health check to use `/health`; `/ping` should be used only as a liveness probe.
 
 ### Create Link
 

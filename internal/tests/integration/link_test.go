@@ -88,7 +88,7 @@ func startApp(t *testing.T, databaseURL string) string {
 		database.LinkVisits,
 	)
 
-	server := httpserver.New(service, &cfg.HTTP, cfg.App.BaseURL)
+	server := httpserver.New(service, database, &cfg.HTTP, cfg.App.BaseURL)
 	application := app.New(server, database, cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())

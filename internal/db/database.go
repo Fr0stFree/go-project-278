@@ -2,6 +2,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -52,6 +53,15 @@ func New(cfg *config.Database) (*Database, error) {
 func (d *Database) Close() error {
 	if err := d.pool.Close(); err != nil {
 		return fmt.Errorf("close PostgreSQL connection pool: %w", err)
+	}
+
+	return nil
+}
+
+// PingContext verifies that PostgreSQL is reachable.
+func (d *Database) PingContext(ctx context.Context) error {
+	if err := d.pool.PingContext(ctx); err != nil {
+		return fmt.Errorf("ping PostgreSQL: %w", err)
 	}
 
 	return nil
