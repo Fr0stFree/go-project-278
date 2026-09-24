@@ -1,0 +1,7 @@
+{
+  "name": "shortener",
+  "private": true,
+  "devDependencies": {
+    "@hexlet/project-url-shortener-frontend": "1.0.0"
+  }
+}

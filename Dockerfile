@@ -3,8 +3,10 @@ FROM node:24-alpine AS frontend-builder
 
 WORKDIR /build/frontend
 
-RUN npm install @hexlet/project-url-shortener-frontend
+COPY package.json package-lock.json ./
 
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # 2. Build backend
 FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS backend-builder
@@ -37,7 +39,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 
 # 3. Runtime
-FROM node:24-alpine
+FROM node:24-alpine AS runtime
 
 RUN apk add --no-cache \
     bash \
@@ -46,7 +48,7 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-RUN npm install concurrently
+RUN npm install concurrently@10.0.5
 
 COPY --from=backend-builder \
     /build/shortener \
@@ -65,6 +67,7 @@ COPY --from=frontend-builder \
     ./public
 
 COPY Caddyfile /etc/caddy/Caddyfile
+
 COPY bin/run.sh ./bin/run.sh
 
 RUN chmod +x ./bin/run.sh
