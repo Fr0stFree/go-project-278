@@ -21,7 +21,7 @@ type getLinkResponseBody linkResponseBody
 type listLinksResponseBody []linkResponseBody
 
 type updateLinkRequestBody struct {
-	OriginalURL string `json:"original_url" binding:"required"`
+	OriginalURL string `json:"original_url" binding:"required,http_url"`
 	ShortName   string `json:"short_name" binding:"required,min=3,max=32"`
 }
 

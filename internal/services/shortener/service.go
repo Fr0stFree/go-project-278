@@ -61,6 +61,10 @@ func NewService(
 func (s *Service) CreateLink(ctx context.Context, originalURL, shortName string) (Link, error) {
 	isShortNameProvided := shortName != ""
 
+	if err := s.validateOriginalURL(originalURL); err != nil {
+		return Link{}, NewValidationError(err.Error(), "original_url")
+	}
+
 	for range s.opts.shortNameGenerationMaxAttempts {
 		if !isShortNameProvided {
 			shortName = textutils.RandomString(s.opts.shortNameDefaultLength)
@@ -147,6 +151,10 @@ func (s *Service) ListLinksWithCount(ctx context.Context, builder *LinkListOptio
 
 // UpdateLink replaces URL fields for a shortened link by ID.
 func (s *Service) UpdateLink(ctx context.Context, id uint, originalURL, shortName string) (Link, error) {
+	if err := s.validateOriginalURL(originalURL); err != nil {
+		return Link{}, NewValidationError(err.Error(), "original_url")
+	}
+
 	if err := s.validateShortName(shortName); err != nil {
 		return Link{}, NewValidationError(err.Error(), "short_name")
 	}

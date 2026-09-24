@@ -274,6 +274,22 @@ func TestService_CreateLink(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("should return validation error for invalid original url", func(t *testing.T) {
+		mocks := newServiceMocks(t)
+
+		var (
+			originalURL   = "not-a-url"
+			shortName     = "validshortname"
+			validationErr *ValidationError
+		)
+
+		result, err := mocks.service.CreateLink(t.Context(), originalURL, shortName)
+
+		require.Error(t, err)
+		require.ErrorAs(t, err, &validationErr)
+		assert.Equal(t, Link{}, result)
+	})
 }
 
 func TestService_GetLink(t *testing.T) {
@@ -587,6 +603,23 @@ func TestService_UpdateLink(t *testing.T) {
 				assert.Equal(t, Link{}, result)
 			})
 		}
+	})
+
+	t.Run("should return validation error for invalid original url", func(t *testing.T) {
+		mocks := newServiceMocks(t)
+
+		var (
+			id            uint = 1
+			originalURL        = "not-a-url"
+			shortName          = "validshortname"
+			validationErr *ValidationError
+		)
+
+		result, err := mocks.service.UpdateLink(t.Context(), id, originalURL, shortName)
+
+		require.Error(t, err)
+		require.ErrorAs(t, err, &validationErr)
+		assert.Equal(t, Link{}, result)
 	})
 }
 
