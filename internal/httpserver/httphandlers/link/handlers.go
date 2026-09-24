@@ -5,11 +5,12 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
 	"shortener/internal/httpserver/httptools/httperror"
 	"shortener/internal/httpserver/httptools/httpparam"
 	"shortener/internal/services/shortener"
-
-	"github.com/gin-gonic/gin"
 )
 
 // Service defines the link management operations used by the HTTP layer.

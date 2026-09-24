@@ -4,14 +4,14 @@ package db
 import (
 	"database/sql"
 	"fmt"
-
 	"log/slog"
-	"shortener/internal/config"
-	"shortener/internal/db/models/link"
-	"shortener/internal/db/models/linkvisit"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"shortener/internal/config"
+	"shortener/internal/db/models/link"
+	"shortener/internal/db/models/linkvisit"
 )
 
 // Database owns the SQL connection pool and its repositories.

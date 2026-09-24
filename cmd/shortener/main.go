@@ -7,13 +7,14 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"syscall"
+
 	"shortener/internal/app"
 	"shortener/internal/config"
 	"shortener/internal/db"
 	"shortener/internal/httpserver"
 	"shortener/internal/integrations/sentry"
 	"shortener/internal/services/shortener"
-	"syscall"
 )
 
 func main() {

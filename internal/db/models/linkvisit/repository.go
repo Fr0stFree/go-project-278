@@ -4,9 +4,10 @@ package linkvisit
 import (
 	"context"
 	"fmt"
-	"shortener/internal/services/shortener"
 
 	"gorm.io/gorm"
+
+	"shortener/internal/services/shortener"
 )
 
 // Repository stores redirect visits in PostgreSQL.

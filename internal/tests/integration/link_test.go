@@ -4,25 +4,25 @@ package integration
 
 import (
 	"bytes"
-	"encoding/json"
-	"net/http"
-	"shortener/internal/services/shortener"
-	"strconv"
-	"testing"
-
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"shortener/internal/app"
-	"shortener/internal/config"
-	"shortener/internal/db"
-	"shortener/internal/httpserver"
+	"net/http"
+	"strconv"
+	"testing"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+
+	"shortener/internal/app"
+	"shortener/internal/config"
+	"shortener/internal/db"
+	"shortener/internal/httpserver"
+	"shortener/internal/services/shortener"
 )
 
 const (

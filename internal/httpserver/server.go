@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
 	"shortener/internal/config"
 	"shortener/internal/httpserver/httphandlers/health"
 	"shortener/internal/httpserver/httphandlers/link"
 	"shortener/internal/httpserver/httphandlers/linkvisit"
 	"shortener/internal/httpserver/httptools/middleware"
 	"shortener/internal/integrations/sentry"
-
-	"github.com/gin-gonic/gin"
 )
 
 type service interface {

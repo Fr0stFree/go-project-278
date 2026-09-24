@@ -2,8 +2,9 @@
 package linkvisit
 
 import (
-	"shortener/internal/services/shortener"
 	"time"
+
+	"shortener/internal/services/shortener"
 )
 
 type linkVisitResponseBody struct {

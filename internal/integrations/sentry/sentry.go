@@ -3,10 +3,10 @@ package sentry
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/getsentry/sentry-go"
 
-	"log/slog"
 	"shortener/internal/config"
 )
 

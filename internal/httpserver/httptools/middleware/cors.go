@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"net/http"
-	"shortener/internal/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"shortener/internal/config"
 )
 
 // CORS returns a middleware that handles Cross-Origin Resource Sharing requests.

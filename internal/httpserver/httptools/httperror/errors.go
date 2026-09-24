@@ -7,12 +7,13 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"shortener/internal/common/textutils"
-	"shortener/internal/httpserver/httptools/httpparam"
-	"shortener/internal/services/shortener"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+
+	"shortener/internal/common/textutils"
+	"shortener/internal/httpserver/httptools/httpparam"
+	"shortener/internal/services/shortener"
 )
 
 // WriteResponse translates a service error into an HTTP response.

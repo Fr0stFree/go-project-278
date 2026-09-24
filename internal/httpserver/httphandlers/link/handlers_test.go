@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"shortener/internal/services/shortener"
 	"strings"
 	"testing"
 
@@ -13,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"shortener/internal/services/shortener"
 )
 
 type mockService struct {

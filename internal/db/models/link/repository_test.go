@@ -2,7 +2,6 @@ package link
 
 import (
 	"errors"
-	"shortener/internal/services/shortener"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -10,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	gormpostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"shortener/internal/services/shortener"
 )
 
 func newRepositoryMock(t *testing.T) (*Repository, sqlmock.Sqlmock) {

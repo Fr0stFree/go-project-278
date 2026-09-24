@@ -2,14 +2,14 @@ package shortener
 
 import (
 	"context"
-	"shortener/internal/common/textutils"
-
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"shortener/internal/common/textutils"
 )
 
 type mockLinkRepository struct {

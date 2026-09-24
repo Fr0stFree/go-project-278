@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"shortener/internal/services/shortener"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"shortener/internal/services/shortener"
 )
 
 // Repository stores shortened links in PostgreSQL.
