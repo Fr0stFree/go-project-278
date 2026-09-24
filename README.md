@@ -92,6 +92,8 @@ Durations use Go duration syntax such as `2s`, `5m`, or `12h`. `HTTP_MAX_BODY_SI
 | `SENTRY_ENVIRONMENT` | Environment label sent to Sentry | `development` |
 | `SENTRY_FLUSH_TIMEOUT` | Maximum Sentry event delivery wait | `2s` |
 
+The default CORS origin `*` is intended for local development. In a deployed environment, set `HTTP_CORS_ALLOW_ORIGINS` to the exact frontend origins, separated by commas. Cross-origin cookie credentials are disabled.
+
 ## Docker
 
 Build the production image:
