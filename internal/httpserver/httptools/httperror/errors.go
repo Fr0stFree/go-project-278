@@ -70,7 +70,7 @@ func WriteResponse(ctx *gin.Context, err error) {
 			slog.String("reason", err.Error()),
 			slog.String("operation", ctx.HandlerName()),
 			slog.String("method", ctx.Request.Method),
-			slog.String("url", ctx.Request.URL.String()),
+			slog.String("url", ctx.Request.URL.Path),
 		)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
 	}
