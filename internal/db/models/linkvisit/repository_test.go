@@ -130,3 +130,27 @@ func TestRepository_Count(t *testing.T) {
 		assert.Equal(t, 42, count)
 	})
 }
+
+func TestToSortOrder(t *testing.T) {
+	type subTest struct {
+		name      string
+		field     shortener.LinkVisitSortField
+		direction shortener.SortDirection
+		expected  string
+	}
+
+	subTests := []subTest{
+		{name: "id", field: shortener.LinkVisitSortByID, direction: shortener.SortAscending, expected: "id ASC"},
+		{name: "link id", field: shortener.LinkVisitSortByLinkID, direction: shortener.SortDescending, expected: "link_id DESC, id DESC"},
+		{name: "created at", field: shortener.LinkVisitSortByCreatedAt, direction: shortener.SortAscending, expected: "created_at ASC, id ASC"},
+		{name: "ip", field: shortener.LinkVisitSortByIP, direction: shortener.SortDescending, expected: "ip DESC, id DESC"},
+		{name: "user agent", field: shortener.LinkVisitSortByUserAgent, direction: shortener.SortAscending, expected: "user_agent ASC, id ASC"},
+		{name: "status", field: shortener.LinkVisitSortByStatus, direction: shortener.SortDescending, expected: "status DESC, id DESC"},
+	}
+
+	for _, subTest := range subTests {
+		t.Run(subTest.name, func(t *testing.T) {
+			assert.Equal(t, subTest.expected, toSortOrder(subTest.field, subTest.direction))
+		})
+	}
+}

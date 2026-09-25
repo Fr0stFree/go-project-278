@@ -198,3 +198,25 @@ func TestRepository_DeleteByID(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestToSortOrder(t *testing.T) {
+	type subTest struct {
+		name      string
+		field     shortener.LinkSortField
+		direction shortener.SortDirection
+		expected  string
+	}
+
+	subTests := []subTest{
+		{name: "id", field: shortener.LinkSortByID, direction: shortener.SortAscending, expected: "id ASC"},
+		{name: "original url", field: shortener.LinkSortByOriginalURL, direction: shortener.SortDescending, expected: "original_url DESC, id DESC"},
+		{name: "short name", field: shortener.LinkSortByShortName, direction: shortener.SortAscending, expected: "short_name ASC, id ASC"},
+		{name: "created at", field: shortener.LinkSortByCreatedAt, direction: shortener.SortDescending, expected: "created_at DESC, id DESC"},
+	}
+
+	for _, subTest := range subTests {
+		t.Run(subTest.name, func(t *testing.T) {
+			assert.Equal(t, subTest.expected, toSortOrder(subTest.field, subTest.direction))
+		})
+	}
+}

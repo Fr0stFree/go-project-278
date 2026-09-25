@@ -146,4 +146,57 @@ func TestHandler_list(t *testing.T) {
 
 		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
 	})
+
+	t.Run("should handle sort parameter", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		mocks.shortener.
+			On("ListLinkVisitsWithCount", mock.Anything, mock.Anything).
+			Return([]shortener.LinkVisit{}, 0, nil).
+			Once()
+
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, `/api/link_visits?sort=["status","asc"]`, nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusOK, recorder.Code)
+		assert.JSONEq(t, `[]`, recorder.Body.String())
+	})
+
+	t.Run("should reject invalid sort format", func(t *testing.T) {
+		mocks := newHandlerMocks(t)
+		router := newRouter(t, mocks.shortener)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "/api/link_visits?sort=invalid", nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+		assert.JSONEq(t, `{"errors":{"sort":"invalid sort format: invalid"}}`, recorder.Body.String())
+	})
+
+	t.Run("should reject unsupported sort field", func(t *testing.T) {
+		service := shortener.NewService(nil, nil)
+		router := newRouter(t, service)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, `/api/link_visits?sort=["referrer","ASC"]`, nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+		assert.JSONEq(t, `{"errors":{"sort":"unsupported sort field: \"referrer\""}}`, recorder.Body.String())
+	})
+
+	t.Run("should reject unsupported sort direction", func(t *testing.T) {
+		service := shortener.NewService(nil, nil)
+		router := newRouter(t, service)
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, `/api/link_visits?sort=["status","sideways"]`, nil)
+
+		router.ServeHTTP(recorder, request)
+
+		require.Equal(t, http.StatusUnprocessableEntity, recorder.Code)
+		assert.JSONEq(t, `{"errors":{"sort":"unsupported sort order: \"SIDEWAYS\""}}`, recorder.Body.String())
+	})
 }

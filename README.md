@@ -239,10 +239,10 @@ curl -I http://localhost:8080/r/example
 GET /api/link_visits
 ```
 
-The endpoint supports the inclusive `range=[from,to]` query parameter, defaults to `[0,9]`, and allows at most 100 records. Visits are ordered by `created_at DESC`.
+The endpoint supports the inclusive `range=[from,to]` query parameter, defaults to `[0,9]`, and allows at most 100 records. The `sort` parameter is a JSON pair `["field","ASC"]` or `["field","DESC"]`; supported fields are `id`, `link_id`, `created_at`, `ip`, `user_agent`, and `status`. The default order is `created_at DESC`.
 
 ```bash
-curl 'http://localhost:8080/api/link_visits?range=[0,9]'
+curl 'http://localhost:8080/api/link_visits?range=[0,9]&sort=["status","DESC"]'
 ```
 
 ```http

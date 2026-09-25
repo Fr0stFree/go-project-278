@@ -90,6 +90,12 @@ func toSortOrder(field shortener.LinkVisitSortField, order shortener.SortDirecti
 		return fmt.Sprintf("link_id %s, id %s", order, order)
 	case shortener.LinkVisitSortByCreatedAt:
 		return fmt.Sprintf("created_at %s, id %s", order, order)
+	case shortener.LinkVisitSortByIP:
+		return fmt.Sprintf("ip %s, id %s", order, order)
+	case shortener.LinkVisitSortByUserAgent:
+		return fmt.Sprintf("user_agent %s, id %s", order, order)
+	case shortener.LinkVisitSortByStatus:
+		return fmt.Sprintf("status %s, id %s", order, order)
 	default:
 		return fmt.Sprintf("id %s", order)
 	}

@@ -33,6 +33,9 @@ const (
 	LinkVisitSortByID        LinkVisitSortField = "id"
 	LinkVisitSortByLinkID    LinkVisitSortField = "link_id"
 	LinkVisitSortByCreatedAt LinkVisitSortField = "created_at"
+	LinkVisitSortByIP        LinkVisitSortField = "ip"
+	LinkVisitSortByUserAgent LinkVisitSortField = "user_agent"
+	LinkVisitSortByStatus    LinkVisitSortField = "status"
 )
 
 // ListOptions contains pagination and ordering shared by list operations.
@@ -167,6 +170,9 @@ func NewLinkVisitListOptionsBuilder() *LinkVisitListOptionsBuilder {
 			string(LinkVisitSortByID):        {},
 			string(LinkVisitSortByLinkID):    {},
 			string(LinkVisitSortByCreatedAt): {},
+			string(LinkVisitSortByIP):        {},
+			string(LinkVisitSortByUserAgent): {},
+			string(LinkVisitSortByStatus):    {},
 		},
 		sortBy: string(LinkVisitSortByCreatedAt), maxLimit: 100,
 		options: ListOptions{Limit: 10, SortOrder: SortDescending},

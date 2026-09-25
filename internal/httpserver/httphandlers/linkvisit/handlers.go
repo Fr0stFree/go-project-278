@@ -52,5 +52,14 @@ func parseFilterOpts(ctx *gin.Context) (*shortener.LinkVisitListOptionsBuilder, 
 		builder.WithRange(rangeQuery.From, rangeQuery.Count)
 	}
 
+	sortQuery, err := httpparam.ReadSortQuery(ctx, "sort")
+	if err != nil {
+		return nil, shortener.NewValidationError(err.Error(), "sort")
+	}
+
+	if sortQuery != nil {
+		builder.WithSort(sortQuery.Field, sortQuery.Direction)
+	}
+
 	return builder, nil
 }
