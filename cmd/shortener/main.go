@@ -36,13 +36,14 @@ func main() {
 	defer cancel()
 
 	service := shortener.NewService(database.Links, database.LinkVisits)
-	server := httpserver.New(service, database, &cfg.HTTP, cfg.App.BaseURL)
 
-	if err := sentry.Connect(cfg.HTTP.Sentry); err != nil {
+	sentryIntegration, err := sentry.New(cfg.HTTP.Sentry)
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	app := app.New(server, database, cfg)
+	server := httpserver.New(service, sentryIntegration, database, &cfg.HTTP, cfg.App.BaseURL)
+	app := app.New(server, database, sentryIntegration, cfg)
 
 	if err := app.Run(ctx); err != nil {
 		log.Fatal(err)

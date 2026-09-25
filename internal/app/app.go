@@ -20,20 +20,27 @@ type database interface {
 	Close() error
 }
 
+type sentry interface {
+	Flush()
+}
+
 // App owns the configured HTTP server.
 type App struct {
 	server server
 	db     database
+	sentry sentry
 	cfg    *config.Root
 }
 
 // New builds App with the given server and database, applying options.
-func New(server server, db database, cfg *config.Root) *App {
-	return &App{server: server, db: db, cfg: cfg}
+func New(server server, db database, sentry sentry, cfg *config.Root) *App {
+	return &App{server: server, db: db, sentry: sentry, cfg: cfg}
 }
 
 // Run starts the HTTP server and returns unexpected server errors.
 func (a *App) Run(ctx context.Context) error {
+	defer a.sentry.Flush()
+
 	var errs []error
 
 	errCh := make(chan error, 1)

@@ -63,6 +63,7 @@ func WriteResponse(ctx *gin.Context, err error) {
 			gin.H{"errors": map[string]string{validationErr.Field: validationErr.Message}},
 		)
 	default: // 500
+		_ = ctx.Error(err)
 		slog.ErrorContext(
 			ctx,
 			"internal error",

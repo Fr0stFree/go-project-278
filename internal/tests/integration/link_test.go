@@ -22,6 +22,7 @@ import (
 	"shortener/internal/config"
 	"shortener/internal/db"
 	"shortener/internal/httpserver"
+	"shortener/internal/integrations/sentry"
 	"shortener/internal/services/shortener"
 )
 
@@ -95,9 +96,11 @@ func startApp(t *testing.T, databaseURL string) string {
 	database, err := db.New(&cfg.Database)
 	require.NoError(t, err)
 
+	sentryIntegration, err := sentry.New(cfg.HTTP.Sentry)
+	require.NoError(t, err)
 	service := shortener.NewService(database.Links, database.LinkVisits)
-	server := httpserver.New(service, database, &cfg.HTTP, cfg.App.BaseURL)
-	application := app.New(server, database, cfg)
+	server := httpserver.New(service, sentryIntegration, database, &cfg.HTTP, cfg.App.BaseURL)
+	application := app.New(server, database, sentryIntegration, cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	errCh := make(chan error, 1)
