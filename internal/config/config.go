@@ -15,19 +15,19 @@ type Root struct {
 	Database Database
 }
 
-// App contains settings used by business logic.
+// App contains application lifecycle settings.
 type App struct {
-	BaseURL string `env:"APP_BASE_URL" envDefault:"http://localhost:8080"`
+	ShutdownTimeout time.Duration `env:"APP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
 }
 
 // HTTP contains server address and timeout settings.
 type HTTP struct {
+	BaseURL            string        `env:"HTTP_BASE_URL" envDefault:"http://localhost:8080"`
 	Port               int           `env:"HTTP_PORT" envDefault:"8080"`
 	ReadTimeout        time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"10s"`
 	WriteTimeout       time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"10s"`
 	IdleTimeout        time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"10s"`
 	MaxBodySize        int64         `env:"HTTP_MAX_BODY_SIZE" envDefault:"16384"` // 16KiB
-	ShutdownTimeout    time.Duration `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10s"`
 	HealthCheckTimeout time.Duration `env:"HTTP_HEALTHCHECK_TIMEOUT" envDefault:"2s"`
 	CORS               CORS
 	Sentry             Sentry

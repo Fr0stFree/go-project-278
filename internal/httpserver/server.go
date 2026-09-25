@@ -13,7 +13,6 @@ import (
 	"shortener/internal/httpserver/httphandlers/link"
 	"shortener/internal/httpserver/httphandlers/linkvisit"
 	"shortener/internal/httpserver/httptools/middleware"
-	"shortener/internal/integrations/sentry"
 )
 
 type service interface {
@@ -22,21 +21,26 @@ type service interface {
 }
 
 // New creates an HTTP server for the provided handler and configuration.
-func New(service service, sentryIntegration sentry.Integration, checker health.ReadinessChecker, cfg *config.HTTP, baseURL string) *http.Server {
+func New(
+	service service,
+	checker health.ReadinessChecker,
+	cfg *config.HTTP,
+	extraMiddleware ...gin.HandlerFunc,
+) *http.Server {
 	router := gin.New()
 	router.Use(middleware.RequestID())
 	router.Use(middleware.AccessLogger())
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS(cfg.CORS))
 	router.Use(middleware.MaxBodySize(cfg.MaxBodySize))
-	router.Use(sentry.Middleware(cfg.Sentry, sentryIntegration))
+	router.Use(extraMiddleware...)
 
 	router.NoRoute(handleRouteNotFound)
 	router.HandleMethodNotAllowed = true
 	router.NoMethod(handleMethodNotAllowed)
 
 	health.RegisterRoutes(checker, cfg.HealthCheckTimeout, router)
-	link.RegisterRoutes(service, router, baseURL)
+	link.RegisterRoutes(service, router, cfg.BaseURL)
 	linkvisit.RegisterRoutes(service, router)
 
 	server := &http.Server{

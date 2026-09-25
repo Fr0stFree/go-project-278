@@ -42,8 +42,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := httpserver.New(service, sentryIntegration, database, &cfg.HTTP, cfg.App.BaseURL)
-	app := app.New(server, database, sentryIntegration, cfg)
+	server := httpserver.New(service, database, &cfg.HTTP, sentryIntegration.Middleware())
+
+	app := app.New(server, &cfg.App)
+	app.AddShutdownCallback(func() error {
+		sentryIntegration.Flush()
+
+		return nil
+	})
+	app.AddShutdownCallback(database.Close)
 
 	if err := app.Run(ctx); err != nil {
 		log.Fatal(err)

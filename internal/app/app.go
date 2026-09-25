@@ -16,31 +16,25 @@ type server interface {
 	Shutdown(context.Context) error
 }
 
-type database interface {
-	Close() error
-}
-
-type sentry interface {
-	Flush()
-}
-
 // App owns the configured HTTP server.
 type App struct {
-	server server
-	db     database
-	sentry sentry
-	cfg    *config.Root
+	server            server
+	cfg               *config.App
+	shutdownCallbacks []func() error
 }
 
-// New builds App with the given server and database, applying options.
-func New(server server, db database, sentry sentry, cfg *config.Root) *App {
-	return &App{server: server, db: db, sentry: sentry, cfg: cfg}
+// New builds an application with the given server and lifecycle configuration.
+func New(server server, cfg *config.App) *App {
+	return &App{server: server, cfg: cfg}
+}
+
+// AddShutdownCallback registers a callback to be executed during application shutdown.
+func (a *App) AddShutdownCallback(callback func() error) {
+	a.shutdownCallbacks = append(a.shutdownCallbacks, callback)
 }
 
 // Run starts the HTTP server and returns unexpected server errors.
 func (a *App) Run(ctx context.Context) error {
-	defer a.sentry.Flush()
-
 	var errs []error
 
 	errCh := make(chan error, 1)
@@ -53,26 +47,22 @@ func (a *App) Run(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), a.cfg.HTTP.ShutdownTimeout)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), a.cfg.ShutdownTimeout)
 		defer cancel()
 
 		err := a.server.Shutdown(shutdownCtx)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("shutdown HTTP server: %w", err))
 		}
-
-		err = a.db.Close()
-		if err != nil {
-			errs = append(errs, fmt.Errorf("close database: %w", err))
-		}
 	case err := <-errCh:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errs = append(errs, fmt.Errorf("run HTTP server: %w", err))
 		}
+	}
 
-		err = a.db.Close()
-		if err != nil {
-			errs = append(errs, fmt.Errorf("close database: %w", err))
+	for _, callback := range a.shutdownCallbacks {
+		if err := callback(); err != nil {
+			errs = append(errs, fmt.Errorf("on shutdown: %w", err))
 		}
 	}
 

@@ -73,13 +73,13 @@ Durations use Go duration syntax such as `2s`, `5m`, or `12h`. `HTTP_MAX_BODY_SI
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `APP_BASE_URL` | Public base URL used to build `short_url` in API responses | `http://localhost:8080` |
+| `APP_SHUTDOWN_TIMEOUT` | Graceful application shutdown timeout | `10s` |
+| `HTTP_BASE_URL` | Public base URL used to build `short_url` in API responses | `http://localhost:8080` |
 | `HTTP_PORT` | Backend HTTP port | `8080` |
 | `HTTP_READ_TIMEOUT` | HTTP request read timeout | `10s` |
 | `HTTP_WRITE_TIMEOUT` | HTTP response write timeout | `10s` |
 | `HTTP_IDLE_TIMEOUT` | HTTP keep-alive idle timeout | `10s` |
 | `HTTP_MAX_BODY_SIZE` | Maximum request body size in bytes | `16384` |
-| `HTTP_SHUTDOWN_TIMEOUT` | Graceful shutdown timeout | `10s` |
 | `HTTP_HEALTHCHECK_TIMEOUT` | Maximum wait for the PostgreSQL readiness check | `2s` |
 | `HTTP_CORS_ALLOW_ORIGINS` | Comma-separated allowed CORS origins | `*` |
 | `HTTP_CORS_MAX_AGE` | Browser CORS preflight cache duration | `12h` |
@@ -113,7 +113,7 @@ The container listens on port `80`. Caddy serves the frontend from `/app/public`
 
 The image does not include PostgreSQL. Supply a `DATABASE_URL` that is reachable from the container. On every container start, `/app/bin/run.sh` applies all pending Goose migrations before launching the backend and Caddy; startup stops immediately if a migration fails.
 
-Keep `HTTP_PORT=8080` inside the container because the bundled Caddy configuration proxies to that port. Set `APP_BASE_URL` to the public URL through which clients reach the container.
+Keep `HTTP_PORT=8080` inside the container because the bundled Caddy configuration proxies to that port. Set `HTTP_BASE_URL` to the public URL through which clients reach the container.
 
 ## API
 
